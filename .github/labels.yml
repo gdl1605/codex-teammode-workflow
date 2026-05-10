@@ -1,0 +1,28 @@
+labels:
+  - name: bug
+    color: d73a4a
+    description: Something is wrong or confusing.
+  - name: documentation
+    color: 0075ca
+    description: Documentation, wording, or examples.
+  - name: good first issue
+    color: 7057ff
+    description: Small, well-scoped contribution.
+  - name: kernel
+    color: 5319e7
+    description: Workflow kernel behavior.
+  - name: bootstrap
+    color: 1d76db
+    description: Bootstrap prompt or installation flow.
+  - name: claude-code
+    color: c5def5
+    description: Claude Code compatibility.
+  - name: codex
+    color: bfdadc
+    description: Codex compatibility.
+  - name: translation
+    color: fef2c0
+    description: Language translation work.
+  - name: security
+    color: ee0701
+    description: Prompt-injection, leakage, or safety issue.

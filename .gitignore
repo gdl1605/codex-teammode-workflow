@@ -1,0 +1,34 @@
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+
+# Node (in case future tooling lands)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Python (in case future tooling lands)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local / secrets
+*.local
+.env
+.env.local
