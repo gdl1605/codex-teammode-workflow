@@ -15,7 +15,7 @@
 - 对 current code 的真实状态不确定。
 - docs、handoff、用户描述之间存在冲突。
 - 多个页面 / 模块可能共享同一个根因。
-- 执行轮可能触及业务状态机 / 权限 / 行级授权 / 复杂资源链路 / 高风险产品域（具体列表由目标仓库维护）。
+- 执行轮可能触及业务状态机、权限、行级授权、多版本资源链路、跨角色协作、并发资源或目标仓库定义的其他敏感域。
 
 ## 审计轮产物
 
@@ -96,7 +96,7 @@ docs/evidence/<feature>-audit.md
 - `../docs/workflow/team-loop.md`：Team Loop 的 Leader / planner subagent / generator / scout / evaluator 调度规则。
 - `../docs/planner/planner-input-template.md`：普通工作流 plan-only / read-only audit / review 输入模板。
 - `../docs/planner/planner-output-schema.md`：普通工作流 plan / execute / review 输出结构。
-- `../AGENTS.md` 或 `../CLAUDE.md`：声明普通工作流、Team Loop 与 legacy `@planner` alias。
+- `../AGENTS.md`：声明普通工作流、Team Loop 与 legacy `@planner` alias。
 
 对应关系：
 
@@ -116,7 +116,7 @@ docs/evidence/<feature>-audit.md
 - 本轮采用 schema：plan / review
 
 ## 必读
-- AGENTS.md 或 CLAUDE.md
+- AGENTS.md
 - docs/README.md
 - docs/handoff/latest.md
 - 相关 docs：
@@ -138,11 +138,11 @@ docs/evidence/<feature>-audit.md
 
 ## 输出
 - Read Scope Ack
-- files_read
+- freshly_read / satisfied_from_verified_cache / stale_or_rechecked
 - verified_facts with citations
 - 审计结论摘要
 - evidence 写入建议
 - 执行 prompt 前置条件
-- subagent 决策
+- 工作流决策（普通工作流；只有显式 Team Loop 才涉及 subagent）
 - GUI / computer-use 是否使用，默认 0
 ```

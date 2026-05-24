@@ -12,7 +12,8 @@ You are working in a target project root. A folder named `codex-teammode-workflo
 Install and adapt Codex-teammode Workflow so this target project can use the same AI collaboration process:
 
 - normal workflow: plan-only / read-only audit / docs-only / execute / review
-- Team Mode workflow: Leader + planner / generator / scout / evaluator
+- Team Loop workflow: explicit-only Leader + planner / generator / scout / evaluator
+  - planner / scout may be reused with freshness checks; generator / evaluator are fresh per round
 - audit-first evidence flow
 - planner input and output schemas
 - docs impact check
@@ -26,6 +27,7 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
 - If target docs conflict with target code, target code wins.
 - If the target repo has existing `AGENTS.md`, `CLAUDE.md`, `docs/`, or `workflow/`, inspect and merge.
 - Keep edits limited to workflow/process files and docs scaffolding unless the user explicitly allows business code changes.
+- Ordinary workflow is the default; do not enable Team Loop unless the user explicitly requests it.
 
 ## Required Read Scope
 

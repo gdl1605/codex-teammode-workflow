@@ -18,7 +18,7 @@ Linear, single-agent. Each turn is one of these "round types":
 | **execute** | Audit first, then make minimal code changes. |
 | **review** | Read the diff, output a review. No edits. |
 
-Default rule: do not exceed the round type the user asked for.
+Default rule: do not exceed the round type the user asked for. Normal workflow does not default to subagents or independent planner/generator/evaluator roles.
 
 ### 2. Team Loop workflow
 
@@ -37,6 +37,8 @@ User
 Hard rules:
 
 - Subagents never talk to each other. They only report to Leader.
+- Leader schedules, curates evidence, validates, and summarizes; it does not implement changes inside Team Loop.
+- planner and scout may be reused with freshness checks; generator and evaluator are fresh each round.
 - generator / scout / evaluator may not spawn their own subagents.
 - The loop ends at `human_acceptance_required` or `blocked`. **Never auto-`accepted`.**
 
@@ -68,10 +70,11 @@ Handoffs and summaries are *fast entry points*, not the source of truth.
 
 ## Schemas
 
-The kit defines two structured output schemas (see `workflow-kernel/docs/planner/planner-output-schema.md`):
+The kit defines three structured output schemas (see `workflow-kernel/docs/planner/planner-output-schema.md`):
 
 - **plan schema** — for plan-only / audit rounds
 - **execute schema** — for execute rounds
+- **review schema** — for explicit review / evaluator rounds
 
 Every round must declare which schema it is using.
 

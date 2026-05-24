@@ -7,7 +7,7 @@ Codex-teammode Workflow 是一个面向 **Codex** 和 **Claude Code** 的 prompt
 - plan / audit / execute / review 轮次
 - audit-first 根因锁定
 - docs impact check
-- 可选 Team Mode：Leader + planner / generator / scout / evaluator
+- 可选 Team Loop：Leader + planner / generator / scout / evaluator
 - 最终停在 `human_acceptance_required`，由人类验收
 
 ## 非官方说明
@@ -40,7 +40,7 @@ CLAUDE.md                          # Claude Code 入口，与 AGENTS.md 同步
 workflow/audit-first.md            # 根因审计优先流程
 docs/
   README.md                        # docs 入口地图
-  workflow/                        # 协作、prompt、Team Mode、docs maintenance
+  workflow/                        # 协作、prompt、Team Loop、docs maintenance
   planner/                         # plan / execute / review schema
   product/                         # 项目事实占位，需按目标仓库填写
   architecture/                    # 架构占位，需按目标仓库填写

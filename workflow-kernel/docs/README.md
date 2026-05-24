@@ -1,11 +1,13 @@
 # docs 索引
 
-> 最后更新时间：2026-04-30
+> 最后更新时间：2026-05-19
 > 适用范围：整个 `docs/` 目录的阅读入口与分工说明
 > 本文主职责：告诉新线程先看什么、每份文档写什么、哪些内容只能去别处找
 > 推荐下一跳：`handoff/latest.md`
 
 ## 先读顺序
+
+下列顺序只适用于确需建立项目级背景的轮次；普通工作流默认先看 current code，再按任务需要补读对应 docs，不要求每轮全量读取。
 
 1. `handoff/latest.md`
 2. `product/current-state.md`
@@ -29,8 +31,9 @@
 - 要确认跨域边界和合同：先看 `architecture/domain-boundaries.md`
 - 要确认目录、服务、后端映射：先看 `architecture/system-map.md`
 - 要发起执行轮：先看 `workflow/collaboration.md` 和 `workflow/prompt-template.md`
-- 要发起 `@team-loop` / Leader 调度多个 subagent 的类 team-mode 闭环：先看 `workflow/team-loop.md`，再看 `workflow/prompt-template.md`
-- 要做 plan-only / 执行 prompt framing / review framing：先看 `workflow/collaboration.md`、`workflow/prompt-template.md`，再按需看 `planner/planner-system.md`、`planner/planner-input-template.md`、`planner/planner-output-schema.md`；输出必须声明 schema、subagent 决策、阶段控制面板和仓库状态分层
+- 默认执行普通工作流：先看 current code，按需补读 docs，最小实现，做 docs impact check，再收口验证或人工验收清单
+- 要发起 `@team-loop` / Leader 调度多个 subagent 的类 team-mode 闭环：只有用户明确声明 Team Loop 时才看 `workflow/team-loop.md`，再看 `workflow/prompt-template.md`
+- 要做 plan-only / 执行 prompt framing / review framing：先看 `workflow/collaboration.md`、`workflow/prompt-template.md`，再按需看 `planner/planner-system.md`、`planner/planner-input-template.md`、`planner/planner-output-schema.md`；输出必须声明 schema、阶段控制面板和仓库状态分层
 - 根因未锁、需要“只读审计 -> evidence -> 回流执行 prompt”：先看根目录 `workflow/audit-first.md`
 - 要整理 docs 维护：先看 `workflow/docs-maintenance.md`
 - 要看当前候选方向或后置项：先看 `product/active-directions.md`
@@ -56,7 +59,7 @@
   - 只写当前候选方向、明确后置方向、backlog
   - 不写已解决历史，不重复 current-state
 - `workflow/collaboration.md`
-  - 只写长期协作规范、审计顺序、证据优先、根因锁定规则
+  - 只写长期协作规范、普通工作流轻闭环、审计顺序、证据优先、根因锁定规则
   - 不写当前产品状态
 - `workflow/docs-maintenance.md`
   - 只写 docs-only、更新节奏、刷新时机、目录职责
@@ -65,11 +68,12 @@
   - 只写固定 prompt 结构、输出结构、验收清单要求
   - 不写产品合同
 - `workflow/team-loop.md`
-  - 只写 Team Loop 可选增强流程、Leader 调度规则、plan-gated / auto-execute、scout request、Evidence Pack 和 Evaluation Bundle
+  - 只写显式触发的 Team Loop 可选增强流程、Leader 调度规则、planner / scout 复用、generator / evaluator fresh-only、model policy、plan-gated / auto-execute、scout request、Evidence Pack 和 Evaluation Bundle
   - 不写产品事实，不替代普通执行轮
 - `planner/`
   - 放普通工作流 planning / prompt-framing / review-framing 的参考规范、输入模板和输出 schema
-  - 固定承载 subagent 决策、schema 接入、GUI 约束、阶段控制面板和仓库状态分层要求
+  - 固定承载 schema 接入、GUI 约束、阶段控制面板和仓库状态分层要求
+  - 不负责正式 subagent 调度；正式 subagent 只属于用户明确声明的 Team Loop
   - 不放业务事实，不替代 `workflow/collaboration.md`
 - `../workflow/audit-first.md`
   - 放仓库级“只读审计 -> evidence -> 回流执行 prompt”机制

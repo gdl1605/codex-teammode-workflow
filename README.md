@@ -10,7 +10,7 @@ Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** �
 - plan / audit / execute / review 轮次
 - audit-first 根因锁定
 - docs impact check
-- 可选的 Team Mode：Leader + planner / generator / scout / evaluator
+- 可选的 Team Loop：Leader + planner / generator / scout / evaluator
 - 永远停在 `human_acceptance_required`，不让 agent 自己宣布验收
 
 ## 非官方说明
@@ -57,7 +57,7 @@ CLAUDE.md                          # Claude Code 入口，与 AGENTS.md 同步
 workflow/audit-first.md            # 根因审计优先流程
 docs/
   README.md                        # docs 入口地图
-  workflow/                        # 协作、prompt、Team Mode、docs maintenance
+  workflow/                        # 协作、prompt、Team Loop、docs maintenance
   planner/                         # plan / execute / review schema
   product/                         # 项目事实占位，需按目标仓库填写
   architecture/                    # 架构占位，需按目标仓库填写
@@ -75,7 +75,7 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 ## 核心概念
 
 - **Normal workflow**：单 agent 轮次，包括 `plan-only`、`read-only audit`、`docs-only`、`execute`、`review`。
-- **Team Mode**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
+- **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
 - **Fact priority**：current code > topic docs > `docs/handoff/latest.md` > archive。
 - **human_acceptance_required**：最终停点，只有人类可以验收。
@@ -105,7 +105,7 @@ User
 
 ### 角色规范
 
-- **Leader** 是唯一调度者。Leader 负责确认目标、判断 `plan-gated / auto-execute`、派生 subagent、附带 `Context Bootstrap`、核验每个 subagent 的 `Read Scope Ack`、整理 Evidence Pack、运行验证、组装 Evaluation Bundle，并决定返工、阻塞或停在 `human_acceptance_required`。Leader 不能让 subagent 彼此直接通信，也不能替 evaluator 自评通过。
+- **Leader** 是唯一调度者。Leader 负责确认目标、判断 `plan-gated / auto-execute`、派生 subagent、附带 `Context Bootstrap`、核验每个 subagent 的 `Read Scope Ack`、整理 Evidence Pack、运行验证、组装 Evaluation Bundle，并决定返工、阻塞或停在 `human_acceptance_required`。Leader 不能直接实现或改文件，不能让 subagent 彼此直接通信，也不能替 evaluator 自评通过。
 - **Planner subagent** 是 Team Loop 内部只读角色，不等于旧的独立 planner mode。它负责读取入口文档、目标相关 docs / code / handoff / evidence，收口目标和非目标，判断风险模式，定义 allowed scope / forbidden scope、minimum progress unit、generator 启动前核对清单、可能的 scout 问题和 evaluator focus。planner 不改代码，也不能把建议实现层写成已验证事实。
 - **Generator** 是默认唯一写代码角色。它必须消费 Leader 提供的 planner handoff 和 Evidence Pack，但仍要重新审计 current code，并在输出里给出 `Read Scope Ack`、touched files、修改摘要、验证建议、evaluator notes 和 docs impact。若审计范围过大，generator 只能向 Leader 提交 Scout Request，不能直接联系 scout 或自行派生 subagent。
 - **Scout** 是只读线索收集角色。它只回答 Leader 指定的问题，只读必要的 current code、docs、handoff 或 evidence，并输出 verified facts、inferences、unresolved 和 citations。Scout Evidence 只能回 Leader，不能直接传给 generator，也不能设计完整实现方案或评价结果是否通过。
@@ -115,6 +115,7 @@ User
 
 - subagent 之间禁止直接通信；所有 planner / generator / scout / evaluator 输出都只回 Leader。
 - Leader 每次派生 subagent 必须附带 `Context Bootstrap`，每个 subagent 输出开头必须有 `Read Scope Ack`。
+- planner / scout 可按 freshness check 有限复用；generator / evaluator 每轮 fresh。
 - Evidence Pack 不能替代 generator 自己读取 current code；事实优先级始终是 current code > topic docs > handoff。
 - P0 / P1、验证失败、越过 forbidden scope、缺少关键 read scope 时进入返工或 blocked。
 - Team Loop 的终态只能是 `human_acceptance_required` 或 `blocked`；`accepted` 只能由人类明确表达。
@@ -149,7 +150,7 @@ User
 
 Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
 
-It installs a normal plan / audit / execute / review workflow, an audit-first evidence flow, a docs impact check, and an optional Team Mode where a Leader coordinates planner, generator, scout, and evaluator roles.
+It installs a normal plan / audit / execute / review workflow, an audit-first evidence flow, a docs impact check, and an optional Team Loop where a Leader coordinates planner, generator, scout, and evaluator roles.
 
 This is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by OpenAI.
 

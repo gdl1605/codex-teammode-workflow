@@ -1,13 +1,13 @@
 # Prompt 模板
 
-> 最后更新时间：2026-05-02
+> 最后更新时间：2026-05-19
 > 适用范围：执行轮、方案轮、交接轮的固定输入和输出结构
 > 本文主职责：把 prompt 和输出的骨架固定下来
 > 推荐下一跳：`workflow/collaboration.md`
 
-## planning phase 输出顺序
+## 普通工作流输出顺序
 
-普通工作流中的 planning phase 在给用户输出执行 prompt 前，固定按下面顺序组织：
+普通工作流是默认路径，不拆成独立 planner / generator / evaluator。需要先给用户输出执行 prompt 时，固定按下面顺序组织：
 
 1. 问题
 2. 修改思路
@@ -23,7 +23,7 @@
 
 ## 固定执行 prompt 结构
 
-后续给 Codex / Claude Code 的执行 prompt 固定为 7 段：
+后续给 Codex / Claude Code 等目标 coding agent 的执行 prompt 固定为 7 段：
 
 1. 当前已知事实
 2. 本轮目标
@@ -41,7 +41,7 @@
 - `建议实现层`
   - 只写推荐切入点、推荐 slice、推荐文件范围、推荐修法顺序。
   - 这一层不是已验证事实，也不是唯一实现答案。
-  - generator 必须以 current code 审计结果为准，对建议实现层做最小调整。
+  - 执行者必须以 current code 审计结果为准，对建议实现层做最小调整。
   - 如果 current code 与建议实现层冲突，以 current code 为准，并在输出中明确说明。
 
 ## 固定输出结构
@@ -63,11 +63,13 @@
 - 为什么更新这些
 - 或为什么本轮无需更新 docs
 
+普通工作流中，docs 按需读取；不要为了启动一轮执行而重复读取全量 docs。只有当本轮涉及产品合同、状态机、权限、数据库 schema / 服务端函数、多版本资源链路、shared 设计合同、计划状态或 docs 与代码冲突时，才按 `docs/README.md` 补读专题 docs。
+
 ## Team Loop 启动模板
 
-当用户明确使用 `@team-loop`，或要求 Leader 调度多个 subagent 形成类 team-mode 闭环时，使用下面模板。
+当用户明确声明使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 形成类 team-mode 闭环时，使用下面模板。
 
-Team Loop 不是普通执行轮的默认要求；未明确触发时，仍按 `workflow/collaboration.md` 的普通执行轮推进。
+Team Loop 不是普通执行轮的默认要求；未明确声明时，始终按 `workflow/collaboration.md` 的普通工作流推进，不因任务复杂度自动升级。
 
 Team Loop 中的 `planner` 是 Leader 调度的只读 subagent，不代表旧独立 planner 模式。
 
@@ -77,6 +79,24 @@ Team Loop 中的 `planner` 是 Leader 调度的只读 subagent，不代表旧独
 task_id:
 mode: plan-gated / auto-execute
 max_rounds: 3
+
+role_session_reuse:
+  reusable_roles:
+    planner:
+      ttl_dispatches: 10
+      model: gpt-5.5
+      reasoning_effort: high
+    scout:
+      ttl_dispatches: 10
+      model: gpt-5.5
+      reasoning_effort: high
+  fresh_roles:
+    generator:
+      model: gpt-5.5
+      reasoning_effort: high
+    evaluator:
+      model: gpt-5.4
+      reasoning_effort: medium
 
 problem:
 
@@ -103,13 +123,17 @@ context_bootstrap:
 - allowed_write_scope:
 - forbidden_write_scope:
 - expected_output_schema:
-- read_scope_ack_required: planner / generator / scout / evaluator 均必须输出 Read Scope Ack
+- read_scope_ack_required: planner / generator / scout / evaluator 均必须输出 Read Scope Ack，且包含 freshly_read / satisfied_from_verified_cache / stale_or_rechecked / files_not_read_but_relevant / scope_conflicts / confidence
+- delta_output_required: 复用的 planner / scout 只输出本轮额外需要读取的 docs / code / evidence，不复述已验证缓存的基线 docs
 
 team_loop:
 - Leader 是唯一调度者。
-- Leader 每次派生 subagent 必须附带 Context Bootstrap。
+- Leader 每次派生或复用 subagent 必须附带 Context Bootstrap 或复用场景下的 cache manifest / freshness check。
+- Leader 只负责调度、裁剪证据、验证和汇总，不直接做 implementation。
 - planner / generator / scout / evaluator 只能回报 Leader。
 - planner / generator / scout / evaluator 都必须回报 Read Scope Ack。
+- planner / scout 可按 role session 复用；generator / evaluator 每轮 fresh。
+- 复用 planner / scout 时，只允许把已验证缓存作为范围索引，不允许把缓存替代 current code 或本轮专题证据。
 - planner 是 Team Loop 内部只读 subagent，不代表旧独立 planner 模式。
 - subagent 之间禁止直接通信。
 - generator 如审计范围过大，只能向 Leader 提交 Scout Request。
@@ -118,15 +142,20 @@ team_loop:
 - audit-first 场景必须复用 workflow/audit-first.md 的必读与 evidence 回流骨架。
 - Leader 跑验证。
 - Leader 派 evaluator 独立核验。
+- 缺少 generator_result 或 generator_read_scope_ack 时，本轮必须标记为 blocked / protocol_violation。
 - P0 / P1 不通过则最多返工 3 轮。
 - 最后停在 human_acceptance_required。
 
 output:
 - 最终状态
 - rounds / attempts
+- implementation_owner: generator
 - 修改文件
 - subagent_read_scope_acks
+- generator_result
+- generator_read_scope_ack
 - context_bootstrap_deviations
+- role_session_reuse_status
 - 验证结果
 - evaluator 结论
 - 人工验收清单
@@ -135,12 +164,14 @@ output:
 
 ### Team Loop 模式选择
 
-- `plan-gated`：用于数据库 schema / 服务端函数 / 权限 / 状态机 / 高风险产品域 / 复杂资源链路 / 根因未锁或用户要求先批准 plan 的任务（高风险域由目标仓库自行列出）。
-- `auto-execute`：用于文案、轻 UI、局部样式、docs 小修和 allowed scope 清楚的低风险任务。
+本节只在用户已经明确进入 Team Loop 后使用，用于选择 Team Loop 内部节奏，不作为自动触发 Team Loop 的条件。
+
+- `plan-gated`：先把 planner 收口结果交给用户确认，再派 generator。
+- `auto-execute`：Leader 在 planner 快速收口后直接派 generator，最后仍停在人工验收。
 
 ### Team Loop subagent 启动片段
 
-Leader 派生 planner / generator / scout / evaluator 时，至少附带下面片段；具体 docs 和 code scope 由 Leader 按 `docs/README.md` 的入口地图裁剪。
+Leader 派生 planner / generator / scout / evaluator，或复用 planner / scout 时，至少附带下面片段；具体 docs 和 code scope 由 Leader 按 `docs/README.md` 的入口地图裁剪。
 
 ```md
 You are <planner/generator/scout/evaluator> subagent in Team Loop.
@@ -166,15 +197,53 @@ You only report to Leader.
 - allowed_write_scope:
 - forbidden_write_scope:
 - expected_output_schema:
+- role_session_reuse:
+  - role:
+  - reuse_status: fresh / reused
+  - dispatch_count:
+  - cache_manifest:
+  - freshness_check:
 
 ## Required Read Scope Ack
 
-- files_read:
-- docs_read:
-- code_read:
-- evidence_or_handoff_read:
+- freshly_read:
+- satisfied_from_verified_cache:
+- stale_or_rechecked:
 - files_not_read_but_relevant:
 - scope_conflicts:
+- confidence:
+```
+
+复用 planner 的输出应优先使用短格式：
+
+```md
+## Planner Delta Output
+
+- cache_status:
+- task_classification:
+- additional_read_scope:
+  - docs:
+  - code:
+  - evidence_or_handoff:
+- docs_not_needed:
+- recommended_execution_path:
+- scout_need:
+- generator_required_read_scope:
+- forbidden_scope:
+- docs_impact_prediction:
+```
+
+复用 scout 的输出应优先使用短格式：
+
+```md
+## Scout Delta Evidence
+
+- question_answered:
+- freshly_read:
+- satisfied_from_verified_cache:
+- verified_facts:
+- unresolved:
+- next_read_if_needed:
 - confidence:
 ```
 
@@ -245,7 +314,7 @@ Leader 给 evaluator：
 ## 与 collaboration 对齐
 
 - prompt 结构应与 [`workflow/collaboration.md`](collaboration.md) 的协作闭环保持一致。
-- 执行轮若默认包含独立 evaluator，prompt 里的输出要求也应预留审计 / review 结果，而不是只写生成结果。
+- 普通执行轮不默认包含独立 evaluator；只有用户明确要求 review / evaluator 或进入 Team Loop 时，prompt 里的输出要求才需要预留 Evaluation Bundle / evaluator 结果。
 - 执行轮开头的上下文、git 和环境检查，继续按 [`workflow/session-startup.md`](session-startup.md) 执行。
 
 ## 人工验收清单

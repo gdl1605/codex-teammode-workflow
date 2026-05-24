@@ -17,9 +17,9 @@
 
 因为 Codex 和 Claude Code 的项目入口约定不同。这个项目会让两份文件保持同一套协作流程，避免同一个仓库里不同 agent 读到不同规则。
 
-### Team Mode 是什么？
+### Team Loop 是什么？
 
-Team Mode 是一个在单个人类驱动会话里运行的多角色流程。Leader 是主线程，负责调度 planner、generator、scout、evaluator。它不是后台服务，也不是自动化多 agent 平台。
+Team Loop 是一个显式触发、在单个人类驱动会话里运行的多角色流程。Leader 是主线程，负责调度 planner、generator、scout、evaluator，但不直接实现或改文件。它不是后台服务，也不是自动化多 agent 平台。
 
 ### 为什么不自动 accepted？
 

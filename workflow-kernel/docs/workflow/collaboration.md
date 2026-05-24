@@ -1,6 +1,6 @@
 # 协作规范
 
-> 最后更新时间：2026-05-02
+> 最后更新时间：2026-05-19
 > 适用范围：长期协作规则、审计顺序、证据优先、根因锁定
 > 本文主职责：只写跨轮次都要遵守的规则
 > 推荐下一跳：`workflow/session-startup.md`
@@ -10,42 +10,38 @@
 - 没有明确本轮目标前，默认不改代码
 - plan 轮只出方案，不改代码
 - 执行轮先审计，再最小实现
+- 默认采用普通工作流；只有用户明确声明使用 Team Loop 时，才进入 Team Loop
 - 每轮只做一个主目标
 - 已确认事实与推测必须分开写
 - 继承背景、当前用户描述、本轮已验证事实必须分层
+- docs 按需读取；不要为了启动普通轮次而重复读取全量 docs
 
 ## 普通工作流轮次
 
 - 当前仓库默认只有两个顶层 AI 工作流：普通工作流与 Team Loop。
-- 普通工作流覆盖 `plan-only`、`read-only audit`、`docs-only`、`execute`、`review` 轮次。
-- `@planner` 或“帮我做一轮方案”只作为历史兼容入口，等价于普通工作流中的 `plan-only` 或 `read-only audit` 轮，不再表示独立 planner 模式。
-- 普通工作流中的 planning 阶段负责做问题收口、边界确认、合同层 / 建议实现层拆分、执行 prompt framing 和 review framing。
-- 根因未锁、建议实现层不确定、只看到现象不是原因时，普通工作流先进入 `read-only audit` / `audit-first`，不直接进入 generator 实现。
+- 普通工作流是默认路径，覆盖 `plan-only`、`read-only audit`、`docs-only`、`execute`、`review` 轮次。
+- 普通工作流不再保留独立的 `planner / generator / evaluator` 顶层工作流，也不默认调度 subagent。
+- `@planner` 或“帮我做一轮方案”只作为历史兼容入口，等价于普通工作流中的 `plan-only` 或 `read-only audit` 轮，不再表示独立 planner 模式或 subagent 调度。
+- 普通工作流默认闭环是：理解问题 -> 判断是否需要补读 docs -> 读取 current code / 必要 docs -> 最小实现或只读结论 -> docs impact check -> 必要时更新 docs -> 验证 / 人工验收清单 -> 结束。
+- 根因未锁、建议实现层不确定、只看到现象不是原因时，普通工作流先进入 `read-only audit` / `audit-first`，不直接试修。
+- Team Loop 只有在用户明确声明 `@team-loop`、明确说“使用 Team Loop / teamloop / Leader 调度 subagent”时才启用；不要因为任务看起来复杂就自动升级。
 - Team Loop 派生 subagent 时的项目知识启动包、read scope 回执和 evidence 回流，以 [`workflow/team-loop.md`](team-loop.md) 为主；根因未锁时同时遵守根目录 [`../../workflow/audit-first.md`](../../workflow/audit-first.md)。
 
 ## 执行轮默认闭环
 
-- 执行轮默认按 `planning phase -> generator -> evaluator -> human acceptance` 理解。
-- `planning phase`
-  - 锁本轮问题、边界、合同层与建议实现层。
-  - 必要时产出执行 prompt 或 review prompt。
-- `generator`
-  - 按当前代码事实做最小实现，不把 planning 阶段的建议路径硬写成唯一事实。
-- `evaluator`
-  - 独立复核行为回归、边界偏移、遗漏验证和文档影响。
-- `human acceptance`
-  - 用人工复测清单确认主链、非回归点和剩余风险。
+- 执行轮默认由当前线程完成审计与最小实现，不拆成独立 planner / generator / evaluator。
+- 启动时先确认本轮目标、修改边界和当前 worktree 分层。
+- 先读 current code；只有当本轮涉及产品合同、状态机、权限、数据库 schema / 服务端函数、多版本资源链路、shared 设计合同、计划状态或 docs 与代码冲突时，才按 `docs/README.md` 补读专题 docs。
+- 实现时按 current code 做最小修改，不把历史计划或 handoff 的建议路径写成唯一事实。
+- 结束前做 docs impact check；如本轮改变流程规则、项目事实、产品合同、阶段状态、候选方向或长期债务，更新对应 docs 主落点。
+- 最后给出验证结果或人工复测清单；未运行的验证必须说明原因。
 
-## evaluator 默认规则
+## review / evaluator 规则
 
-- 只要是执行轮，默认应有独立 evaluator / review pass。
-- evaluator 可以由独立线程、独立模型、独立 review 阶段承担，但不应和生成实现完全混成同一步。
-- 以下轮次允许跳过独立 evaluator：
-  - plan-only 轮
-  - docs-only 轮
-  - 纯交接、背景补齐、只读审计轮
-  - 本轮产物本身就是 review / evaluator 结果的轮次
-- 若执行轮确实跳过独立 evaluator，输出里必须明确说明原因，而不是默认省略。
+- 普通工作流不默认启动独立 evaluator。
+- 用户明确要求 review / evaluator，或本轮已经进入 Team Loop 时，才使用独立 evaluator。
+- 普通执行轮仍应在当前线程内做最小自检：diff 是否符合边界、关键合同是否被破坏、docs impact 是否诚实、验证是否充分。
+- 若风险较高但用户未声明 Team Loop，应在输出里建议后续单开 review 或 Team Loop，而不是本轮自动升级。
 
 ## session-startup
 

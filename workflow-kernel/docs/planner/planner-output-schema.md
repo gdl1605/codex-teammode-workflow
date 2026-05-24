@@ -1,6 +1,6 @@
 # 普通工作流输出 Schema
 
-> 最后更新时间：2026-04-30
+> 最后更新时间：2026-05-19
 > 适用范围：普通工作流的 plan / execute / review 输出结构
 > 本文主职责：让普通工作流中的 planning、执行和 review 输出可审查、可交接、可回流
 > 推荐下一跳：`../../workflow/audit-first.md`
@@ -10,13 +10,14 @@
 - 输出必须基于 `current code > docs > handoff`。
 - 已验证事实、推断、建议实现层必须分开。
 - 每轮开头必须显式声明：当前按 `plan / execute / review` 哪一种 schema 输出。
-- 每轮都必须显式说明 subagent 决策：拆分时写 `Subagent A / B / C`，不拆时写原因。
+- 普通工作流不默认调度 subagent；只有用户明确声明 Team Loop 时，才按 `docs/workflow/team-loop.md` 进入 Leader / subagent 流程。
+- 普通工作流可简短说明本轮采用普通工作流，且不启用 Team Loop；不再要求每轮输出 subagent 拆分。
 - 每轮都应包含“当前阶段控制面板”：当前主线、暂停项、前置条件、下一步允许推进、下一步不允许推进。
 - 每轮都应分层表达仓库状态：历史脏项 / 在途开发面、本轮真实候选范围、不可混入本轮 bundle 的残留。
 - plan-only / read-only audit 轮默认不使用 computer-use / GUI；若本轮允许，必须写明范围、次数和为什么不能转人工。
 - 如果根因未锁，先产出只读审计 prompt，并按 `../../workflow/audit-first.md` 沉淀 evidence。
 - 不把 planning 阶段的建议路径伪装成 current code 事实。
-- 若输出执行 prompt，必须让 generator 在执行前重新审计 current code。
+- 若输出执行 prompt，必须要求执行者在执行前重新审计 current code。
 - 不允许只总结原则而不给结构。
 
 ## Plan 轮输出结构
@@ -31,8 +32,8 @@
 
 1. `A. Startup 结果`
    - 说明已读文件、git 状态、是否有历史脏项。
-2. `B. Subagent 决策`
-   - 说明拆 / 不拆；若拆，列出各 subagent 的审计目标、读取文件、期望输出。
+2. `B. 工作流决策`
+   - 说明本轮采用普通工作流还是用户明确声明的 Team Loop；普通工作流默认不派 subagent。
 3. `C. 当前阶段控制面板`
    - 写清当前主线、暂停项、前置条件、下一步允许推进和不允许推进。
 4. `D. 问题定义`
@@ -63,7 +64,7 @@
 
 适用场景：
 
-- 用户明确要求 implement / generator。
+- 用户明确要求 implement / execute。
 - 已有足够 plan 或 evidence。
 - 本轮允许按边界改文件。
 
@@ -71,8 +72,8 @@
 
 1. `A. Startup 结果`
    - 已读文件、git status、git log、必要验证命令。
-2. `B. Subagent 决策与审计结果`
-   - 说明是否拆分；若不拆，说明原因。
+2. `B. 工作流决策与审计结果`
+   - 说明本轮是否按普通工作流直接执行；只有用户明确声明 Team Loop 时，才记录 subagent 调度。
 3. `C. 当前阶段控制面板`
    - 写清当前主线、暂停项、前置条件、下一步允许推进和不允许推进。
 4. `D. 审计结论摘要`
@@ -82,11 +83,11 @@
 6. `F. 实际修改`
    - 文件列表、每个文件改什么、明确没做什么。
 7. `G. 兼容 / 边界策略`
-   - 说明如何不破坏产品合同、状态机、权限、复杂资源链路等。
+   - 说明如何不破坏产品合同、状态机、权限、多版本资源链路等。
 8. `H. 验证结果`
    - typecheck/build/命令结果；docs-only 轮说明为什么不跑。
-9. `I. Evaluator Bundle`
-   - 给独立 evaluator 接手的摘要。
+9. `I. Review Notes`
+   - 给本轮自检、后续人工验收或显式 review 轮接手的摘要；只有用户明确要求 evaluator / Team Loop 时才产出 Evaluator Bundle。
 10. `J. 详细人工验收清单`
    - 按“操作步骤 / 预期结果”写。
 11. `K. 非回归风险`

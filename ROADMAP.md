@@ -4,7 +4,7 @@
 
 - Stabilize Codex and Claude Code installation flows.
 - Keep `AGENTS.md` and `CLAUDE.md` synchronized.
-- Collect feedback on Team Mode wording, audit-first evidence flow, and docs impact check.
+- Collect feedback on Team Loop wording, audit-first evidence flow, and docs impact check.
 - Add lightweight CI for shell syntax, markdown links, and secret scanning.
 
 ## v0.2

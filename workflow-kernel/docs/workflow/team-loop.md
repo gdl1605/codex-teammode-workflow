@@ -1,13 +1,13 @@
 # Team Loop Workflow
 
-> 最后更新时间：2026-05-02
+> 最后更新时间：2026-05-19
 > 适用范围：需要由 Leader 主线程调度多个独立 subagent 的类 team-mode 闭环
 > 本文主职责：定义 plan-gated / auto-execute 两种模式、角色边界、通信规则、Context Bootstrap、Read Scope Ack、scout 支援机制和人工验收停点
 > 推荐下一跳：`collaboration.md`、`prompt-template.md`
 
 ## 1. 定位
 
-Team Loop 是当前人工工作流的可选增强形态。
+Team Loop 是当前人工工作流的可选增强形态，只在用户明确声明使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时启用。
 
 它用于让一个 Leader 主线程调度多个独立 subagent，形成：
 
@@ -25,6 +25,8 @@ Team Loop 运行在 Codex 或 Claude Code 等单个编码 agent 会话内，由 
 
 Team Loop 中的 `planner subagent` 是 Leader 调度的内部只读角色，不等于旧独立 planner mode，也不等于普通工作流里的 planning phase。
 
+普通工作流是默认路径。即使任务复杂、根因未锁或风险较高，也不自动升级为 Team Loop；Leader 只能提示用户可另开 Team Loop，不能替用户默认启用。
+
 ## 2. 非目标
 
 Team Loop 不做：
@@ -34,19 +36,20 @@ Team Loop 不做：
 - 不自动进入 `accepted`。
 - 不替代 `current code > docs > handoff` 的事实优先级。
 - 不把 scout 结论直接当作 generator 的正式输入。
+- 不作为普通工作流的默认执行方式。
+- 不复用 generator / evaluator role session。
 
 ## 3. 两种模式
 
 ### 3.1 plan-gated
 
-适用：
+进入 Team Loop 后，`plan-gated` 适用于用户希望先批准 plan 再执行的轮次。模式选择只影响 Team Loop 内部节奏，不作为自动触发 Team Loop 的条件。
 
-- 数据库 schema / migration / 服务端函数（RPC / 存储过程 / serverless 或 edge function 等）。
-- 权限、状态机、数据合同。
-- 高风险产品域（例如多步状态机、跨角色协作链路、并发受限资源；具体列表由目标仓库维护）。
-- 复杂资源链路（如上传、处理、派生、缓存、发布等多步骤资源合同）。
-- 根因未锁或 current code / docs / handoff 存在冲突。
-- 用户明确要求先看 plan 再批准执行。
+特点：
+
+- planner 收口后先交给用户确认。
+- 用户批准后再派 generator。
+- 最后仍停在 `human_acceptance_required`。
 
 流程：
 
@@ -69,13 +72,14 @@ Leader 接收任务
 
 ### 3.2 auto-execute
 
-适用：
+进入 Team Loop 后，`auto-execute` 适用于用户允许 Leader 在 planner 快速收口后直接派 generator 的轮次。
 
-- 文案。
-- 轻 UI。
-- 局部样式。
-- docs 小修。
-- allowed scope 清楚、forbidden scope 简单、无需人工先批准 plan 的低风险任务。
+特点：
+
+- 不需要把 planner subagent 的 plan 先交给用户批准。
+- `auto-execute` 只跳过人工 plan approval，不跳过 generator。
+- Leader 仍要核验 planner 输出、generator read scope 和 evaluator verdict。
+- 最后仍停在 `human_acceptance_required`。
 
 流程：
 
@@ -94,7 +98,7 @@ Leader 接收任务
 -> 通过则停在 human_acceptance_required
 ```
 
-auto-execute 不是跳过 Team Loop 的 planner subagent，而是不需要把 planner subagent 的 plan 先交给用户批准。
+auto-execute 不是跳过 Team Loop 的 planner subagent，也不是让 Leader 自己实现；它只是不需要把 planner subagent 的 plan 先交给用户批准，后续实现仍必须由 fresh generator subagent 完成。
 
 ## 4. 通信硬规则
 
@@ -133,7 +137,8 @@ Leader 是唯一调度者。
 
 - 与用户确认目标、模式、风险和停点。
 - 判断 `plan-gated / auto-execute`。
-- 派 planner subagent / generator / scout / evaluator，并为每次派生附带 `Context Bootstrap`。
+- 派 planner subagent / generator / scout / evaluator；复用 planner / scout 时附带 cache manifest 和 freshness check，新建或 fresh 角色时附带 `Context Bootstrap`。
+- 维护 planner / scout role session 复用状态、dispatch count 和失效条件。
 - 核验每个 subagent 输出中的 `Read Scope Ack`，确认其已读材料覆盖本轮合同。
 - 审批或拒绝 generator 的 Scout Request。
 - 汇总 scout 输出，形成 Leader Evidence Pack。
@@ -143,7 +148,7 @@ Leader 是唯一调度者。
 
 禁止：
 
-- 不绕过 generator 做大范围实现。
+- 不绕过 generator 做任何实现，包括单文件 patch、小范围 UI / docs patch 或低风险修复。
 - 不替 evaluator 自评通过。
 - 不自动 accepted。
 - 不让 subagent 之间直接通信。
@@ -156,6 +161,7 @@ planner subagent 默认只读。
 职责：
 
 - 输出 `Read Scope Ack`，说明实际读取的入口、docs、code、handoff 或 evidence。
+- 复用时只输出本轮 delta：需要额外读取的 docs / code / evidence、无需读取的 docs 及理由、建议执行路径和 scout 需求。
 - 收口本轮问题、目标和非目标。
 - 判断风险模式。
 - 输出 allowed scope / forbidden scope。
@@ -169,6 +175,7 @@ planner subagent 默认只读。
 
 - 不改代码。
 - 不省略 `Read Scope Ack`。
+- 复用时不复述已验证缓存的基线 docs。
 - 不把建议实现层写成已验证事实。
 - 不绕过 current code 证据做想象式方案。
 
@@ -205,7 +212,8 @@ scout subagent 是只读线索收集角色。
 
 - 只回答 Leader 指定的问题。
 - 只读必要 current code、docs、handoff 或 evidence。
-- 输出 `Scout Evidence`；其中 `files_read` 等价于本角色的 `Read Scope Ack`。
+- 输出 `Scout Evidence`；其中 `freshly_read` 与 `satisfied_from_verified_cache` 等价于本角色的 `Read Scope Ack`。
+- 复用时只输出本轮 delta evidence，不复述已验证缓存的背景。
 - 输出 verified facts、inferences、unresolved 和 citations。
 - 帮助缩短 generator 的审计路径。
 
@@ -231,6 +239,7 @@ evaluator subagent 是独立核验角色。
 - 若缺少关键 docs / code / diff 导致无法判断，应输出 `request changes` 或 `blocked`，而不是 pass。
 - P2 / P3 默认进入 residual risk、backlog 或后续优化。
 - 输出 pass / request changes / blocked。
+- 使用 fresh role session；默认模型为 `gpt-5.4`，reasoning effort 为 `medium`。
 
 禁止：
 
@@ -239,10 +248,57 @@ evaluator subagent 是独立核验角色。
 - 不直接联系 generator。
 - 不自动 accepted。
 - 不把个人偏好写成阻塞，除非违反合同、业务逻辑、可访问性或可用性。
+- 不复用上一轮 evaluator 上下文。
 
-## 6. Context Bootstrap
+## 6. Role Session Reuse / Model Policy
 
-Leader 每次派生 planner subagent / generator / scout / evaluator 时，必须附带 `Context Bootstrap`。它不是可选背景摘要，而是 subagent 启动合同；subagent 必须按该合同读取材料并回报实际 read scope。
+Team Loop 支持有限 role session 复用，用于降低重复读取 workflow docs 和项目索引的 token 消耗。复用只允许加速 read scope 路由，不允许替代 current code、task docs、Evidence Pack 或 Evaluation Bundle。
+
+默认策略：
+
+```yaml
+role_session_reuse:
+  reusable_roles:
+    planner:
+      ttl_dispatches: 10
+      model: gpt-5.5
+      reasoning_effort: high
+    scout:
+      ttl_dispatches: 10
+      model: gpt-5.5
+      reasoning_effort: high
+  fresh_roles:
+    generator:
+      model: gpt-5.5
+      reasoning_effort: high
+    evaluator:
+      model: gpt-5.4
+      reasoning_effort: medium
+```
+
+规则：
+
+- planner / scout 可以复用，最多 `10` 次 dispatch；达到上限后关闭并重建。
+- generator / evaluator 每轮 fresh，不复用。
+- planner 初始化时读取 workflow 基线 docs；后续复用时只接收本轮问题、cache manifest、freshness check 和必要 task hints。
+- 复用 planner 每轮只输出 `Planner Delta Output`，重点是本轮需要额外读什么，不复述初始 docs。
+- scout 建议按领域复用，例如 workflow / product-area / integration-area / high-risk-domain；复用 scout 每轮只回答 Leader 指定问题。
+- Leader 维护 cache manifest：文件路径、hash 或 `mtime + size`、读取时间、scope tag、dispatch count 和上次 ack。
+
+失效条件：
+
+- 复用次数达到 `ttl_dispatches`。
+- `AGENTS.md`、`docs/README.md`、workflow docs 或本轮缓存命中的 task docs 发生变化。
+- 本轮跨到未缓存领域，或 task scope 与缓存 scope tag 不匹配。
+- current code 与缓存摘要冲突。
+- subagent 省略 `Read Scope Ack` / delta ack。
+- Leader 判断输出引用了旧事实或越过 allowed scope。
+
+## 7. Context Bootstrap
+
+Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须附带 `Context Bootstrap`。它不是可选背景摘要，而是 subagent 启动合同；subagent 必须按该合同读取材料并回报实际 read scope。
+
+复用 planner / scout 时，Leader 可以用 `Reuse Bootstrap` 替代完整基线 docs 重发，但必须附带 cache manifest、freshness check、本轮问题和本轮 allowed / forbidden scope。
 
 最低字段：
 
@@ -266,6 +322,12 @@ Leader 每次派生 planner subagent / generator / scout / evaluator 时，必�
 - allowed_write_scope:
 - forbidden_write_scope:
 - expected_output_schema:
+- role_session_reuse:
+  - role:
+  - reuse_status: fresh / reused
+  - dispatch_count:
+  - cache_manifest:
+  - freshness_check:
 ```
 
 规则：
@@ -277,7 +339,7 @@ Leader 每次派生 planner subagent / generator / scout / evaluator 时，必�
 - Evidence Pack 不能替代 generator 自己读取 current code。
 - Evaluation Bundle 是 evaluator 的叙事入口；actual diff、referenced files、required docs 是 evaluator 可读取的核验材料。
 
-## 7. Read Scope Ack
+## 8. Read Scope Ack
 
 每个 subagent 输出开头必须包含 `Read Scope Ack`。Leader 需要先核验该回执，再采纳 subagent 结论、Evidence Pack 或 evaluation verdict。
 
@@ -286,10 +348,9 @@ Leader 每次派生 planner subagent / generator / scout / evaluator 时，必�
 ```md
 ## Read Scope Ack
 
-- files_read:
-- docs_read:
-- code_read:
-- evidence_or_handoff_read:
+- freshly_read:
+- satisfied_from_verified_cache:
+- stale_or_rechecked:
 - files_not_read_but_relevant:
 - scope_conflicts:
 - confidence:
@@ -297,13 +358,14 @@ Leader 每次派生 planner subagent / generator / scout / evaluator 时，必�
 
 角色要求：
 
-- planner subagent 必须证明读过 `AGENTS.md` 或 `CLAUDE.md`、`docs/README.md`、Team Loop 主文档、prompt-template、本轮相关 docs / code。
+- fresh planner subagent 必须证明读过 `AGENTS.md` 或 `CLAUDE.md`、`docs/README.md`、Team Loop 主文档、prompt-template、本轮相关 docs / code。
+- reused planner subagent 必须证明 workflow 基线来自已验证缓存，并列出本轮额外需要读的 docs / code / evidence。
 - generator 必须证明启动前重新审计了 current code；不能只消费 planner handoff / Evidence Pack。
-- scout 保留 `Scout Evidence` 模板；其中 `files_read` 等价于本角色的 `Read Scope Ack`。
+- scout 保留 `Scout Evidence` / `Scout Delta Evidence` 模板；其中 `freshly_read` 和 `satisfied_from_verified_cache` 等价于本角色的 `Read Scope Ack`。
 - evaluator 必须证明只消费 Leader 的 Evaluation Bundle 作为叙事入口，并读取必要 diff / code / docs 做独立核验。
 - 如果 subagent 发现 `Context Bootstrap` 与 current code、专题 docs 或 allowed scope 冲突，必须写入 `scope_conflicts`，由 Leader 决定返工、补 evidence 或 blocked。
 
-## 8. Scout Request
+## 9. Scout Request
 
 generator 只能向 Leader 提交 Scout Request：
 
@@ -335,7 +397,7 @@ Leader 可以：
 - 升级为 plan-gated。
 - 停到 blocked。
 
-## 9. Scout Evidence
+## 10. Scout Evidence
 
 scout 只能回 Leader：
 
@@ -343,19 +405,21 @@ scout 只能回 Leader：
 ## Scout Evidence to Leader
 
 - question_answered:
-- files_read:
+- freshly_read:
+- satisfied_from_verified_cache:
 - verified_facts:
 - inferences:
 - unresolved:
+- next_read_if_needed:
 - citations:
 - confidence:
 ```
 
-`files_read` 等价于 scout 的 `Read Scope Ack`。如果 scout 发现 Leader 给出的 read scope 不足，应在 `unresolved` 中说明缺失材料，而不是扩范围自行设计完整方案。
+`freshly_read` 与 `satisfied_from_verified_cache` 等价于 scout 的 `Read Scope Ack`。如果 scout 发现 Leader 给出的 read scope 不足，应在 `unresolved` 中说明缺失材料，而不是扩范围自行设计完整方案。
 
 Scout Evidence 不是 generator 正式输入。只有经 Leader 整理后的 Evidence Pack 才能交给 generator。
 
-## 10. Leader Evidence Pack
+## 11. Leader Evidence Pack
 
 Leader 给 generator 的正式证据包：
 
@@ -376,7 +440,7 @@ Leader 给 generator 的正式证据包：
 
 Leader 应把 scout 的低可信推断、无关发现、重复信息和越界建议过滤掉。Leader Evidence Pack 不能替代 generator 的 current code 审计；generator 必须输出 `Read Scope Ack` 后才能进入实现结论。
 
-## 11. Evaluation Bundle
+## 12. Evaluation Bundle
 
 Leader 给 evaluator：
 
@@ -400,7 +464,7 @@ Leader 给 evaluator：
 
 Evaluation Bundle 应避免包含 generator 完整对话历史，除非 evaluator 明确需要核对某个 claim。Evaluator 要核验 `Context Bootstrap` 是否被执行、generator 的 read scope 是否覆盖关键文件、actual diff 是否符合 allowed scope、docs impact check 是否匹配本轮事实变化。
 
-## 12. 状态与返工
+## 13. 状态与返工
 
 Team Loop 使用轻量状态，不引入 repo 状态机：
 
@@ -444,15 +508,15 @@ max_rounds = 3
 
 `accepted` 永远只能由用户人工表达，不由 Team Loop 自动写入。
 
-## 13. 与现有工作流的关系
+## 14. 与现有工作流的关系
 
 Team Loop 是可选增强流程，不替代普通执行轮。
 
-默认执行轮仍按 `collaboration.md` 的 `planning phase -> generator -> evaluator -> human acceptance` 理解。只有当用户明确使用 `@team-loop`、要求类 team-mode 闭环，或明确要求 Leader 调度多个 subagent 时，才进入 Team Loop。
+默认执行轮按 `collaboration.md` 的普通工作流推进：先审计 current code，按需读 docs，最小实现，做 docs impact check，再收口验证或人工验收清单。只有当用户明确使用 `@team-loop` / `Team Loop` / `teamloop`，或明确要求 Leader 调度 subagent 时，才进入 Team Loop。
 
 docs-only、plan-only、read-only audit 轮不应被强制升级为 Team Loop。
 
-## 14. 触发 prompt 模板
+## 15. 触发 prompt 模板
 
 ```md
 @team-loop
@@ -460,6 +524,24 @@ docs-only、plan-only、read-only audit 轮不应被强制升级为 Team Loop。
 task_id: <short-task-id>
 mode: plan-gated / auto-execute
 max_rounds: 3
+
+role_session_reuse:
+  reusable_roles:
+    planner:
+      ttl_dispatches: 10
+      model: gpt-5.5
+      reasoning_effort: high
+    scout:
+      ttl_dispatches: 10
+      model: gpt-5.5
+      reasoning_effort: high
+  fresh_roles:
+    generator:
+      model: gpt-5.5
+      reasoning_effort: high
+    evaluator:
+      model: gpt-5.4
+      reasoning_effort: medium
 
 problem:
 <本轮要解决的问题、目标和验收停点。>
@@ -487,13 +569,17 @@ context_bootstrap:
 - allowed_write_scope:
 - forbidden_write_scope:
 - expected_output_schema:
-- read_scope_ack_required: 每个 subagent 输出必须带 files_read / docs_read / code_read / evidence_or_handoff_read
+- read_scope_ack_required: 每个 subagent 输出必须带 freshly_read / satisfied_from_verified_cache / stale_or_rechecked / files_not_read_but_relevant / scope_conflicts / confidence
+- delta_output_required: 复用 planner / scout 只输出本轮额外 read scope 与 delta evidence，不复述初始 docs
 
 team_loop:
 - Leader 是唯一调度者
-- Leader 每次派生 subagent 必须附带 Context Bootstrap
+- Leader 每次派生 fresh subagent 必须附带 Context Bootstrap；复用 planner / scout 时必须附带 cache manifest 和 freshness check
+- Leader 只负责调度、裁剪证据、验证和汇总，不直接做 implementation
 - planner subagent / generator / scout / evaluator 只能回报 Leader
 - planner / generator / evaluator / scout 都必须回报 Read Scope Ack
+- planner / scout 可复用，generator / evaluator 不复用
+- evaluator 使用 gpt-5.4 medium；其他角色默认 gpt-5.5 high
 - planner 是 Team Loop 内部只读 subagent，不代表旧独立 planner mode 或普通工作流 planning phase
 - subagent 之间禁止直接通信
 - generator 如审计范围过大，只能向 Leader 提交 Scout Request
@@ -502,6 +588,7 @@ team_loop:
 - audit-first 场景必须复用 workflow/audit-first.md 的必读与 evidence 回流骨架
 - Leader 跑验证
 - Leader 派 evaluator 独立核验
+- 缺少 generator_result 或 generator_read_scope_ack 时，本轮必须标记为 blocked / protocol_violation
 - P0 / P1 不通过则最多返工 3 轮
 - 最后停在 human_acceptance_required
 ```
