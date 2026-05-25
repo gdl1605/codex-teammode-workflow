@@ -44,8 +44,8 @@ Hard rules:
 
 Two execution modes inside Team Loop:
 
-- **plan-gated** — planner output must be approved by the human before generator runs. Used for high-risk changes (data contracts, permissions, state machines, anything where a wrong move is costly).
-- **auto-execute** — Leader hands off to generator immediately after a fast plan. Used for low-risk changes (copy edits, small UI tweaks, doc fixes).
+- **plan-gated** — planner output must be approved by the human before generator runs.
+- **auto-execute** — Leader hands off to generator immediately after a fast plan. Both modes still end at human acceptance.
 
 ## audit-first
 
@@ -96,3 +96,8 @@ End-of-round ritual: ask "did this round change a project fact, contract, plan s
 | Residual risk | A P2/P3 issue noted but not blocking acceptance. |
 | `human_acceptance_required` | Terminal state — only a human can move to `accepted`. |
 | `blocked` | Terminal state — loop cannot proceed without external input. |
+| `role_session_reuse` | Planner and scout may be reused across dispatches; generator and evaluator are always fresh. |
+| `freshly_read` | Files the subagent opened in this dispatch. Replaces the old `files_read`. |
+| `satisfied_from_verified_cache` | Files a reused subagent trusts from a previous dispatch's verified cache. |
+| `Planner Delta Output` | Short-form output from a reused planner, covering only new reads and changes. |
+| `Scout Delta Evidence` | Short-form output from a reused scout, covering only new findings. |

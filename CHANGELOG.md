@@ -6,6 +6,27 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed "Team Mode" to "Team Loop" across all files.
+- Normal workflow is now the explicit default; no longer defaults to subagent scheduling or independent planner/generator/evaluator roles.
+- `@planner` is now a legacy-compat alias for `plan-only` or `read-only audit`, not an independent planner mode.
+- `plan-gated` / `auto-execute` descriptions no longer bind to risk levels; they are Team Loop internal pacing choices.
+- Leader is explicitly forbidden from implementing changes directly.
+- `files_read` replaced by `freshly_read` / `satisfied_from_verified_cache` in Read Scope Ack.
+- Execution prompt structure changed from 7 sections to 8 (removed "建议的并行只读审计", added "建议实现路径").
+- Session startup protocol changed from mandatory to on-demand for low-risk tasks.
+- Removed project-specific examples (Supabase, `author_user_id`, posting contracts) and replaced with generic language.
+
+### Added
+
+- `role_session_reuse`: planner / scout may be reused with freshness checks; generator / evaluator are fresh each round.
+- `Planner Delta Output` and `Scout Delta Evidence` short-form templates for reused roles.
+- `delta_output_required` flag in Team Loop context bootstrap.
+- `implementation_owner: generator` in Team Loop output.
+- `generator_result` / `generator_read_scope_ack` as required output fields; missing them triggers `blocked / protocol_violation`.
+- Evaluator model strategy: `gpt-5.4 medium` by default; other roles `gpt-5.5 high`.
+
 ## [0.1.0] - 2026-05-10
 
 ### Added

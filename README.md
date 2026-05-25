@@ -84,7 +84,7 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 
 ## Team Loop 工作流
 
-Team Loop 是普通工作流的可选增强形态，适合需要一个 Leader 主线程调度多个独立 subagent 的任务。它不会替代普通的 `plan / audit / execute / review` 轮次；只有当用户明确使用 `@team-loop`、要求类 team-mode 闭环，或要求 Leader 调度多个 subagent 时才进入。
+Team Loop 是普通工作流的可选增强形态，适合需要一个 Leader 主线程调度多个独立 subagent 的任务。它不会替代普通的 `plan / audit / execute / review` 轮次；只有当用户明确使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时才进入。普通工作流不因任务复杂度自动升级为 Team Loop。
 
 Team Loop 的核心通信结构是：
 
@@ -100,8 +100,10 @@ User
 
 ### 两种运行模式
 
-- **plan-gated**：用于数据库 schema / migration、服务端函数、权限、状态机、数据合同、高风险产品域、复杂资源链路、根因未锁，或用户明确要求先批准 plan 的任务。Leader 先派 planner 做只读收口，把 plan 交给用户确认后，才进入 generator 实现。
-- **auto-execute**：用于文案、轻 UI、局部样式、docs 小修，以及 allowed scope 清楚、forbidden scope 简单的低风险任务。Leader 仍会先派 planner 快速只读收口，但不需要把 plan 先交给用户批准。
+本节只在用户已经明确进入 Team Loop 后使用，用于选择 Team Loop 内部节奏，不作为自动触发 Team Loop 的条件。
+
+- **plan-gated**：先把 planner 收口结果交给用户确认，再派 generator。
+- **auto-execute**：Leader 在 planner 快速收口后直接派 generator，最后仍停在人工验收。
 
 ### 角色规范
 
@@ -114,7 +116,7 @@ User
 ### 硬规则
 
 - subagent 之间禁止直接通信；所有 planner / generator / scout / evaluator 输出都只回 Leader。
-- Leader 每次派生 subagent 必须附带 `Context Bootstrap`，每个 subagent 输出开头必须有 `Read Scope Ack`。
+- Leader 每次派生 fresh subagent 必须附带 `Context Bootstrap`；复用 planner / scout 时必须附带 cache manifest 和 freshness check。每个 subagent 输出开头必须有 `Read Scope Ack`。
 - planner / scout 可按 freshness check 有限复用；generator / evaluator 每轮 fresh。
 - Evidence Pack 不能替代 generator 自己读取 current code；事实优先级始终是 current code > topic docs > handoff。
 - P0 / P1、验证失败、越过 forbidden scope、缺少关键 read scope 时进入返工或 blocked。
@@ -166,12 +168,14 @@ Then open Codex or Claude Code in the target project and paste the bootstrap pro
 
 ### Team Loop At A Glance
 
-Team Loop is an optional workflow for tasks that benefit from one Leader coordinating multiple isolated subagents. It is only triggered when the user explicitly asks for `@team-loop`, a team-mode loop, or Leader-driven subagent coordination.
+Team Loop is an optional workflow for tasks that benefit from one Leader coordinating multiple isolated subagents. It is only triggered when the user explicitly asks for `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven subagent coordination. The normal workflow never auto-upgrades to Team Loop based on task complexity.
 
-- **Leader** is the only scheduler. It chooses `plan-gated` or `auto-execute`, sends each subagent a Context Bootstrap, checks Read Scope Ack, prepares Evidence Packs and Evaluation Bundles, runs validation, and stops at `human_acceptance_required`.
+- **Leader** is the only scheduler. It chooses `plan-gated` or `auto-execute`, sends each subagent a Context Bootstrap, checks Read Scope Ack, prepares Evidence Packs and Evaluation Bundles, runs validation, and stops at `human_acceptance_required`. Leader does not implement changes directly.
 - **Planner subagent** is read-only. It narrows the problem, risk mode, allowed scope, forbidden scope, minimum progress unit, generator startup checks, possible scout questions, and evaluator focus.
 - **Generator** is the default writing role. It must re-audit current code before implementation, respect forbidden scope, report touched files and docs impact, and request scout support only through Leader.
 - **Scout** is read-only evidence support. It answers Leader-scoped questions with verified facts, inferences, unresolved items, citations, and confidence.
 - **Evaluator** is independent verification. It reviews the Evaluation Bundle, diff, code, docs, validation output, generator read scope, and docs impact claim before returning pass, request changes, or blocked.
+
+Planner and scout may be reused across dispatches with freshness checks; generator and evaluator are always fresh per round.
 
 Subagents never talk directly to each other. The final state is `human_acceptance_required` or `blocked`; only a human can mark the work accepted.

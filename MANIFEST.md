@@ -67,7 +67,7 @@ The target agent must adapt these before treating the workflow as installed:
 
 - Target project fact-priority paths, especially `docs/handoff/latest.md`.
 - Validation commands in `docs/workflow/session-startup.md`.
-- Stack-specific terms such as database, auth, migrations, server functions, build commands, hosted deploys, or package managers.
+- Stack-specific terms such as database schema, authorization policy, migrations, helper functions, RPC/stored procedures, serverless/edge functions, build commands, hosted deploys, or package managers.
 - High-risk domain examples such as state machines, permissions, cross-role writes, external integrations, concurrent resources, or multi-step resource pipelines.
 - Product phase language in `docs/planner/planner-system.md`.
 - `docs/README.md` task routing and file responsibilities.

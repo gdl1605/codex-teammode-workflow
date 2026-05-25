@@ -49,6 +49,12 @@ docs/
   evidence/                        # audit evidence
 ```
 
+## Team Loop 工作流
+
+Team Loop 是普通工作流的可选增强，只有用户明确声明 `@team-loop` / `Team Loop` / `teamloop` 时才启用。Leader 调度 planner / generator / scout / evaluator，planner / scout 可复用，generator / evaluator 每轮 fresh。终态只能是 `human_acceptance_required` 或 `blocked`。
+
+完整规范见 [`workflow-kernel/docs/workflow/team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)。
+
 ## 重要边界
 
 这个项目只安装 **工作流机制**，不安装任何业务事实。目标仓库的 current code 永远是最高事实源。

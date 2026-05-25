@@ -28,6 +28,7 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
 - If the target repo has existing `AGENTS.md`, `CLAUDE.md`, `docs/`, or `workflow/`, inspect and merge.
 - Keep edits limited to workflow/process files and docs scaffolding unless the user explicitly allows business code changes.
 - Ordinary workflow is the default; do not enable Team Loop unless the user explicitly requests it.
+- Normal workflow does not default to subagent scheduling. `@planner` is a legacy alias for `plan-only` or `read-only audit`.
 
 ## Required Read Scope
 
@@ -113,7 +114,7 @@ Use `plan` schema for the initial audit, then switch to `execute` schema only if
 
 Final response must include:
 
-- files read
+- freshly_read / satisfied_from_verified_cache
 - files created or changed
 - existing files merged versus newly created
 - path conventions chosen

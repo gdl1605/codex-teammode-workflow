@@ -19,7 +19,7 @@
 
 ### Team Loop 是什么？
 
-Team Loop 是一个显式触发、在单个人类驱动会话里运行的多角色流程。Leader 是主线程，负责调度 planner、generator、scout、evaluator，但不直接实现或改文件。它不是后台服务，也不是自动化多 agent 平台。
+Team Loop 是一个显式触发、在单个人类驱动会话里运行的多角色流程。Leader 是主线程，负责调度 planner、generator、scout、evaluator，但不直接实现或改文件。planner / scout 可跨 dispatch 复用，generator / evaluator 每轮 fresh。它不是后台服务，也不是自动化多 agent 平台。
 
 ### 为什么不自动 accepted？
 
@@ -40,3 +40,7 @@ Bootstrap prompt 明确要求先审查再合并。如果目标仓库已有 `AGEN
 ### 可以用于非软件项目吗？
 
 可以部分借鉴，但默认事实优先级是 `current code > docs > handoff`，偏软件项目。非软件项目需要把 `current code` 替换成自己的 primary artifact。
+
+### 普通工作流和 Team Loop 的关系是什么？
+
+普通工作流是默认路径，不拆成独立 planner / generator / evaluator，不调度 subagent。Team Loop 是可选增强，只有用户明确声明时才启用。普通工作流不因任务复杂度自动升级为 Team Loop。
