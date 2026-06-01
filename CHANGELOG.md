@@ -17,6 +17,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Execution prompt structure changed from 7 sections to 8 (removed "建议的并行只读审计", added "建议实现路径").
 - Session startup protocol changed from mandatory to on-demand for low-risk tasks.
 - Removed project-specific examples (Supabase, `author_user_id`, posting contracts) and replaced with generic language.
+- Clarified that optional `longterm-planning` skill decision interviews take precedence over the normal Markdown `plan schema`, and that `plan schema` is not Codex Plan Mode or `request_user_input`.
 
 ### Added
 

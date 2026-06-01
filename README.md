@@ -72,7 +72,7 @@ docs/
 
 Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、计划、证据、架构结论或领域示例。目标仓库的 current code 永远是最高事实源。
 
-复杂长规划可选使用独立 skill 包 [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划的方向选择、HTML Selection 和小规划产出。
+复杂长规划可选使用独立 skill 包 [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划：优先在 Codex Plan Mode 中通过原生 `request_user_input` 逐项询问架构决策；若该工具不可用，则退回对话内编号选择；HTML 仅作为可视化 fallback。
 
 ## 核心概念
 
@@ -158,7 +158,7 @@ It installs a normal plan / audit / execute / review workflow, an audit-first ev
 
 This is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by OpenAI.
 
-For complex long-horizon planning, use the optional standalone [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills) skill package; its `longterm-planning` skill handles direction selection, local HTML Selection, and scoped mini-plan output.
+For complex long-horizon planning, use the optional standalone [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills) skill package. Its `longterm-planning` skill prioritizes native `request_user_input` decision prompts in Codex Plan Mode, falls back to in-chat numbered choices when that tool is unavailable, and uses local HTML only as a visual fallback.
 
 Install:
 
