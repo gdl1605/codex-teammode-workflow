@@ -72,6 +72,8 @@ docs/
 
 Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、计划、证据、架构结论或领域示例。目标仓库的 current code 永远是最高事实源。
 
+复杂长规划可选使用独立 skill 包 [`codex-planning-skillpack`](https://github.com/gdl1605/codex-planning-skillpack)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划的方向选择、HTML Selection 和小规划产出。
+
 ## 核心概念
 
 - **Normal workflow**：单 agent 轮次，包括 `plan-only`、`read-only audit`、`docs-only`、`execute`、`review`。
@@ -155,6 +157,8 @@ Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **C
 It installs a normal plan / audit / execute / review workflow, an audit-first evidence flow, a docs impact check, and an optional Team Loop where a Leader coordinates planner, generator, scout, and evaluator roles.
 
 This is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by OpenAI.
+
+For complex long-horizon planning, use the optional standalone [`codex-planning-skillpack`](https://github.com/gdl1605/codex-planning-skillpack) skill package; its `longterm-planning` skill handles direction selection, local HTML Selection, and scoped mini-plan output.
 
 Install:
 
