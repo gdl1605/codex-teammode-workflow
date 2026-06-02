@@ -14,8 +14,8 @@
 5. `architecture/ia-and-navigation.md`
 6. `workflow/collaboration.md`
 7. `workflow/prompt-template.md`
-8. `workflow/team-loop.md` only when Team Loop is explicitly requested
-9. `planner/*` only for plan-only / read-only audit / prompt framing / review framing
+8. `workflow/team-loop.md` only when Team Loop is explicitly requested; dispatch subagents with `workflow/team-loop-core.md` and only the matching `workflow/team-loop-roles/<role>.md`
+9. `planner/*` only for normal-workflow plan-only / read-only audit / prompt framing / review framing; Team Loop subagents do not read it by default
 10. `workflow/docs-maintenance.md`
 11. `product/active-directions.md`
 12. `plans/tech-debt.md`
@@ -33,8 +33,8 @@
 
 - `architecture/`: system map, information architecture, domain boundaries
 - `product/`: current state and active directions
-- `workflow/`: collaboration rules, prompt templates, docs maintenance
-- `planner/`: plan / audit / review schema and templates
+- `workflow/`: collaboration rules, prompt templates, Team Loop, role capsules, docs maintenance
+- `planner/`: normal-workflow plan / audit / review schema and templates
 - `plans/`: active plans, completed plans, long-term debt
 - `handoff/`: latest handoff and archived handoff snapshots
 - `evidence/`: audit evidence and read-only findings

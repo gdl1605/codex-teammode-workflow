@@ -28,7 +28,13 @@ docs/workflow/collaboration.md
 docs/workflow/docs-maintenance.md
 docs/workflow/session-startup.md
 docs/workflow/prompt-template.md
+docs/workflow/team-loop-core.md
 docs/workflow/team-loop.md
+docs/workflow/team-loop-roles/leader.md
+docs/workflow/team-loop-roles/planner.md
+docs/workflow/team-loop-roles/generator.md
+docs/workflow/team-loop-roles/scout.md
+docs/workflow/team-loop-roles/evaluator.md
 docs/planner/planner-output-schema.md
 docs/planner/planner-input-template.md
 docs/planner/planner-system.md

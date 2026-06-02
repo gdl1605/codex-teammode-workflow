@@ -28,7 +28,7 @@ plan-only / read-only audit 默认只读，除非后续明确切换为执行轮�
 - 是否允许运行命令：否 / 是，范围：
 - 是否允许 GUI / computer-use：默认否；若允许，范围和次数上限：
 - 是否明确启用 Team Loop：否 / 是（只有明确为“是”时才进入 Leader / subagent 流程）
-- 普通工作流默认不拆分 subagent；如需 Team Loop，请改用 `docs/workflow/prompt-template.md` 的 Team Loop 模板。
+- 普通工作流默认不拆分 subagent；如需 Team Loop，请改用 `docs/workflow/team-loop.md` 的触发模板，并按 `docs/workflow/team-loop-roles/<role>.md` 裁剪 subagent Context Bootstrap。
 
 # 当前阶段控制面板
 

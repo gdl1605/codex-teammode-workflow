@@ -1,9 +1,9 @@
 # Team Loop Workflow
 
-> 最后更新时间：2026-05-19
+> 最后更新时间：2026-06-02
 > 适用范围：需要由 Leader 主线程调度多个独立 subagent 的类 team-mode 闭环
 > 本文主职责：定义 plan-gated / auto-execute 两种模式、角色边界、通信规则、Context Bootstrap、Read Scope Ack、scout 支援机制和人工验收停点
-> 推荐下一跳：`collaboration.md`、`prompt-template.md`
+> 推荐下一跳：`team-loop-core.md`、`team-loop-roles/`
 
 ## 1. 定位
 
@@ -128,6 +128,8 @@ scout 自己派生 subagent
 Leader 不是简单转发器。Leader 必须对 subagent 产物做裁剪、去噪、可信度标注和正式输入封装。
 
 ## 5. 角色边界
+
+本节是完整主规范中的角色摘要。Leader 派生 subagent 时，不应把完整主规范或所有角色段落都作为默认上下文发给每个角色；默认应使用 `docs/workflow/team-loop-core.md` 和对应 `docs/workflow/team-loop-roles/<role>.md`。
 
 ### Leader
 
@@ -305,15 +307,18 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
 ```md
 ## Context Bootstrap
 
+- context_bootstrap_level: slim / full
 - repo_entry:
-  - AGENTS.md
-  - CLAUDE.md
-  - docs/README.md
-- workflow_docs:
-  - docs/workflow/team-loop.md
-  - docs/workflow/prompt-template.md
-  - docs/workflow/collaboration.md
-  - workflow/audit-first.md（根因未锁 / 高风险 / 审计回流时必读）
+  - primary_entry: AGENTS.md / CLAUDE.md（按当前工具选择一个；不要默认同时读取）
+  - docs_index: docs/README.md
+- workflow_contract:
+  - docs/workflow/team-loop-core.md
+  - docs/workflow/team-loop-roles/<leader|planner|generator|scout|evaluator>.md
+- conditional_workflow_docs:
+  - docs/workflow/team-loop.md（需要完整规范核对时）
+  - docs/workflow/collaboration.md（仅需对齐普通工作流边界时）
+  - docs/workflow/prompt-template.md（仅需生成可复制 prompt 时）
+  - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
 - fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
@@ -332,10 +337,15 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
 
 规则：
 
-- `repo_entry` 默认必须包含 `AGENTS.md`、`CLAUDE.md` 和 `docs/README.md`。
+- `context_bootstrap_level` 默认用 `slim`；只有 fresh 首次建立跨领域背景、workflow 规则刚变化或本轮跨到未缓存领域时才用 `full`。
+- `repo_entry.primary_entry` 在 Codex / AGENTS.md-aware 工具中使用 `AGENTS.md`，在 Claude Code 中使用 `CLAUDE.md`；不要默认同时读取两者。只有目标仓库存在工具特有差异时，才把另一个入口列入条件核对。
+- `workflow_contract` 是本轮 subagent 的必须合同；Leader 应只给 Team Loop core 和当前角色对应的 role capsule。
+- `conditional_workflow_docs` 是上限列表，不是每个 subagent 的必读列表。
 - `task_docs` 由 Leader 按 `docs/README.md` 的入口地图裁剪，不能要求 subagent 盲读全量 `docs/`。
+- Team Loop subagent 不默认读取 `docs/planner/*`；Team Loop 的 planner subagent 规则来自 `team-loop-core.md`、`team-loop.md` 的完整规范和 `team-loop-roles/planner.md`，不是普通工作流的 planner docs。
 - 允许 Leader 缩小专题 docs 范围，但必须说明裁剪理由，并要求 subagent 在 `Read Scope Ack` 中列出未读但可能相关的材料。
 - `handoff_or_evidence` 按阶段选择；根因未锁、高风险或审计回流时优先引用 `docs/evidence/<feature>-audit.md` 或 root `workflow/audit-first.md` 的审计产物。
+- `workflow/audit-first.md` 只有在根因未锁、高风险或审计回流时才进入 Context Bootstrap；普通 Team Loop 不默认读取。
 - Evidence Pack 不能替代 generator 自己读取 current code。
 - Evaluation Bundle 是 evaluator 的叙事入口；actual diff、referenced files、required docs 是 evaluator 可读取的核验材料。
 
@@ -358,7 +368,7 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
 
 角色要求：
 
-- fresh planner subagent 必须证明读过 `AGENTS.md` 或 `CLAUDE.md`、`docs/README.md`、Team Loop 主文档、prompt-template、本轮相关 docs / code。
+- fresh planner subagent 必须证明读过 `AGENTS.md` 或 `CLAUDE.md` 中的当前工具入口、`docs/README.md`、Team Loop core、planner role capsule、本轮相关 docs / code。
 - reused planner subagent 必须证明 workflow 基线来自已验证缓存，并列出本轮额外需要读的 docs / code / evidence。
 - generator 必须证明启动前重新审计了 current code；不能只消费 planner handoff / Evidence Pack。
 - scout 保留 `Scout Evidence` / `Scout Delta Evidence` 模板；其中 `freshly_read` 和 `satisfied_from_verified_cache` 等价于本角色的 `Read Scope Ack`。
@@ -552,15 +562,18 @@ constraints:
 - validation: <Leader 需要运行或人工检查的验证项>
 
 context_bootstrap:
+- context_bootstrap_level: slim
 - repo_entry:
-  - AGENTS.md
-  - CLAUDE.md
-  - docs/README.md
-- workflow_docs:
-  - docs/workflow/team-loop.md
-  - docs/workflow/prompt-template.md
-  - docs/workflow/collaboration.md
-  - workflow/audit-first.md（根因未锁 / 高风险 / 审计回流时必读）
+  - primary_entry: AGENTS.md / CLAUDE.md（按当前工具选择一个；不要默认同时读取）
+  - docs_index: docs/README.md
+- workflow_contract:
+  - docs/workflow/team-loop-core.md
+  - docs/workflow/team-loop-roles/<role>.md（Leader 派生每个 subagent 时替换为具体角色）
+- conditional_workflow_docs:
+  - docs/workflow/team-loop.md（需要完整规范核对时）
+  - docs/workflow/collaboration.md（仅需对齐普通工作流边界时）
+  - docs/workflow/prompt-template.md（仅需生成可复制 prompt 时）
+  - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
 - fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
@@ -571,6 +584,7 @@ context_bootstrap:
 - expected_output_schema:
 - read_scope_ack_required: 每个 subagent 输出必须带 freshly_read / satisfied_from_verified_cache / stale_or_rechecked / files_not_read_but_relevant / scope_conflicts / confidence
 - delta_output_required: 复用 planner / scout 只输出本轮额外 read scope 与 delta evidence，不复述初始 docs
+- planner_docs_exclusion: Team Loop subagent 不默认读取 docs/planner/*；只有普通工作流 plan-only / prompt-framing / review-framing 才按需读取
 
 team_loop:
 - Leader 是唯一调度者

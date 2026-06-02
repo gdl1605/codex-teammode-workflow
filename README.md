@@ -124,7 +124,7 @@ User
 - P0 / P1、验证失败、越过 forbidden scope、缺少关键 read scope 时进入返工或 blocked。
 - Team Loop 的终态只能是 `human_acceptance_required` 或 `blocked`；`accepted` 只能由人类明确表达。
 
-完整规范见 [`workflow-kernel/docs/workflow/team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)，启动模板见 [`workflow-kernel/docs/workflow/prompt-template.md`](./workflow-kernel/docs/workflow/prompt-template.md)。
+完整规范和启动模板见 [`workflow-kernel/docs/workflow/team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)，subagent 默认核心合同见 [`workflow-kernel/docs/workflow/team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md)，轻量角色胶囊见 [`workflow-kernel/docs/workflow/team-loop-roles/`](./workflow-kernel/docs/workflow/team-loop-roles/)。
 
 ## 当前状态
 
@@ -181,5 +181,7 @@ Team Loop is an optional workflow for tasks that benefit from one Leader coordin
 - **Evaluator** is independent verification. It reviews the Evaluation Bundle, diff, code, docs, validation output, generator read scope, and docs impact claim before returning pass, request changes, or blocked.
 
 Planner and scout may be reused across dispatches with freshness checks; generator and evaluator are always fresh per round.
+
+Each fresh subagent should receive a slim Context Bootstrap with the current tool's primary entry file, `docs/README.md`, `team-loop-core.md`, and only its matching role capsule.
 
 Subagents never talk directly to each other. The final state is `human_acceptance_required` or `blocked`; only a human can mark the work accepted.

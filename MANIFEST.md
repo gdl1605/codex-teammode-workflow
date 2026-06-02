@@ -15,14 +15,20 @@ workflow-kernel/
   docs/workflow/docs-maintenance.md
   docs/workflow/session-startup.md
   docs/workflow/prompt-template.md
+  docs/workflow/team-loop-core.md
   docs/workflow/team-loop.md
+  docs/workflow/team-loop-roles/leader.md
+  docs/workflow/team-loop-roles/planner.md
+  docs/workflow/team-loop-roles/generator.md
+  docs/workflow/team-loop-roles/scout.md
+  docs/workflow/team-loop-roles/evaluator.md
   docs/planner/planner-system.md
   docs/planner/planner-input-template.md
   docs/planner/planner-output-schema.md
   workflow/audit-first.md
 ```
 
-`AGENTS.md` and `CLAUDE.md` are intentionally synchronized so Codex and Claude Code start from the same process rules.
+`AGENTS.md` and `CLAUDE.md` are intentionally synchronized so Codex and Claude Code start from the same process rules. Team Loop dispatch should use the current tool's primary entry file instead of reading both by default.
 
 ## Included Docs Structure Template
 

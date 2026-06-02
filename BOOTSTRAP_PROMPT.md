@@ -39,7 +39,13 @@ First read:
 - `codex-teammode-workflow/workflow-kernel/AGENTS.md`
 - `codex-teammode-workflow/workflow-kernel/CLAUDE.md`
 - `codex-teammode-workflow/workflow-kernel/docs/README.md`
+- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-core.md`
 - `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop.md`
+- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/leader.md`
+- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/planner.md`
+- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/generator.md`
+- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/scout.md`
+- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/evaluator.md`
 - `codex-teammode-workflow/workflow-kernel/docs/workflow/collaboration.md`
 - `codex-teammode-workflow/workflow-kernel/docs/workflow/prompt-template.md`
 - `codex-teammode-workflow/workflow-kernel/docs/workflow/session-startup.md`
@@ -72,7 +78,13 @@ Then inspect the target repo:
 3. Create or merge workflow docs:
    - `docs/workflow/collaboration.md`
    - `docs/workflow/prompt-template.md`
+   - `docs/workflow/team-loop-core.md`
    - `docs/workflow/team-loop.md`
+   - `docs/workflow/team-loop-roles/leader.md`
+   - `docs/workflow/team-loop-roles/planner.md`
+   - `docs/workflow/team-loop-roles/generator.md`
+   - `docs/workflow/team-loop-roles/scout.md`
+   - `docs/workflow/team-loop-roles/evaluator.md`
    - `docs/workflow/session-startup.md`
    - `docs/workflow/docs-maintenance.md`
 

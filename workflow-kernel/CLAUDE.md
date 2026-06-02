@@ -50,10 +50,11 @@
 - Team Loop 是单独的显式模式，不是普通工作流的自动升级。
 - 只有当用户 prompt 以 `@team-loop` 开头，或明确说“使用 Team Loop / teamloop / Leader 调度多个 subagent / 类 team-mode 闭环 / 自动返工直到人工验收”时，当前 agent 才进入 Team Loop 模式。
 - Team Loop 规范落点见 [`docs/workflow/team-loop.md`](docs/workflow/team-loop.md)。
+- 派生 subagent 时，`Context Bootstrap` 默认使用 `slim`：当前工具入口 `AGENTS.md` 或 `CLAUDE.md` 二选一、`docs/README.md`、`docs/workflow/team-loop-core.md`、对应 `docs/workflow/team-loop-roles/<role>.md`、本轮必要 docs / code / evidence；完整 `docs/workflow/team-loop.md` 仅在需要核对完整规范时加入，`workflow/audit-first.md` 仅在根因未锁 / 高风险 / 审计回流时加入，Team Loop subagent 不默认读取 `docs/planner/*`。
 - Team Loop 是可选增强流程，不替代普通执行轮；用户未明确触发时，不默认升级为 Team Loop。
 - Leader 主线程是唯一调度者：
   - Leader 派 planner / generator / scout / evaluator。
-  - Leader 派生任何 subagent 时必须附带 `Context Bootstrap`，并要求 subagent 输出 `Read Scope Ack`。
+  - Leader 派生任何 subagent 时必须附带裁剪后的 `Context Bootstrap`，并要求 subagent 输出 `Read Scope Ack`。
   - Leader 只负责调度、裁剪证据、验证和汇总；进入 Team Loop 后不得直接改代码或 docs。
   - Team Loop 中的 planner 是 Leader 调度的只读 subagent，不是旧的独立 planner 模式。
   - 所有 subagent 只能回报 Leader。
