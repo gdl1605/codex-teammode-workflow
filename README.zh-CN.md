@@ -59,7 +59,7 @@ Team Loop 是普通工作流的可选增强，只有用户明确声明 `@team-lo
 
 这个项目只安装 **工作流机制**，不安装任何业务事实。目标仓库的 current code 永远是最高事实源。
 
-复杂长规划可选使用独立 skill 包 [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划：优先在 Codex Plan Mode 中通过原生 `request_user_input` 逐项询问架构决策；若该工具不可用，则退回对话内编号选择；HTML 仅作为可视化 fallback。
+复杂长规划可选使用独立 skill 包 [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划的方向选择、HTML Selection 和小规划产出。
 
 ## 当前状态
 

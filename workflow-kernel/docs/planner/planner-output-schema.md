@@ -10,9 +10,6 @@
 - 输出必须基于 `current code > docs > handoff`。
 - 已验证事实、推断、建议实现层必须分开。
 - 每轮开头必须显式声明：当前按 `plan / execute / review` 哪一种 schema 输出。
-- `plan schema` 只是普通工作流的 Markdown 输出结构，不等于 Codex Plan Mode，也不会自动提供 `request_user_input` 原生选择 UI。
-- 若用户触发 `longterm-planning` skill，其 Decision Interview 阶段优先于普通 `plan schema`：先完成架构决策点询问和 decision record，再合成 mini plan；不要在决策未完成前套完整 A-L plan 输出。
-- 当 `longterm-planning` 的原生选择 UI 不可用时，应明确说明当前模式没有 `request_user_input`，再使用对话内编号选择 fallback。
 - 普通工作流不默认调度 subagent；只有用户明确声明 Team Loop 时，才按 `docs/workflow/team-loop.md` 进入 Leader / subagent 流程。
 - 普通工作流可简短说明本轮采用普通工作流，且不启用 Team Loop；不再要求每轮输出 subagent 拆分。
 - 每轮都应包含“当前阶段控制面板”：当前主线、暂停项、前置条件、下一步允许推进、下一步不允许推进。
