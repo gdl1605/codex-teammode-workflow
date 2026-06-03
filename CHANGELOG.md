@@ -20,6 +20,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Workflow update protocol: `UPDATE_PROMPT.md`, `UPDATE_MANIFEST.md`, `workflow-kernel/VERSION`, and `docs/workflow/update-policy.md`.
+- Ownership-based upgrade strategies: `overwrite-if-clean`, `managed-block`, `create-if-missing`, and `never-overwrite`.
 - `role_session_reuse`: planner / scout may be reused with freshness checks; generator / evaluator are fresh each round.
 - `Planner Delta Output` and `Scout Delta Evidence` short-form templates for reused roles.
 - `delta_output_required` flag in Team Loop context bootstrap.

@@ -63,6 +63,8 @@ DEST="$TARGET/codex-teammode-workflow"
 
 PAYLOAD=(
   "BOOTSTRAP_PROMPT.md"
+  "UPDATE_PROMPT.md"
+  "UPDATE_MANIFEST.md"
   "MANIFEST.md"
   "CURRENT_DOCS_STRUCTURE.md"
   "README.md"

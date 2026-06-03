@@ -24,6 +24,7 @@ docs/
 ## Workflow / Planner Files Copied Into Kernel
 
 ```text
+VERSION
 docs/workflow/collaboration.md
 docs/workflow/docs-maintenance.md
 docs/workflow/session-startup.md
@@ -35,9 +36,19 @@ docs/workflow/team-loop-roles/planner.md
 docs/workflow/team-loop-roles/generator.md
 docs/workflow/team-loop-roles/scout.md
 docs/workflow/team-loop-roles/evaluator.md
+docs/workflow/update-policy.md
 docs/planner/planner-output-schema.md
 docs/planner/planner-input-template.md
 docs/planner/planner-system.md
+```
+
+## Update Protocol Files
+
+```text
+UPDATE_PROMPT.md
+UPDATE_MANIFEST.md
+workflow-kernel/VERSION
+workflow-kernel/docs/workflow/update-policy.md
 ```
 
 ## Product / Architecture Template Slots

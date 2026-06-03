@@ -1,5 +1,7 @@
 # AGENTS.md
 
+<!-- codex-teammode:managed:start scope=agent-entry version=0.1.0 -->
+
 ## 默认工作方式
 
 - 这是 AI 编码 agent（Codex / Claude Code 等支持 `AGENTS.md` 或 `CLAUDE.md` 约定的工具）的仓库默认工作入口。
@@ -85,3 +87,5 @@
 
 - 涉及项目知识时，以 `docs/README.md` 为入口地图，不要把本文件写成项目百科。
 - 若当前轮次没有明确目标，先补上下文或做只读审查，不要直接写实现。
+
+<!-- codex-teammode:managed:end -->

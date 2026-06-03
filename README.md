@@ -66,6 +66,18 @@ docs/
   evidence/                        # audit evidence
 ```
 
+## 升级旧项目
+
+当目标项目已经安装过旧版工作流时，不要重新粘贴 bootstrap prompt 做全量覆盖。把新版 `codex-teammode-workflow/` 文件夹放进目标项目后，粘贴 [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md)。
+
+升级流程按 [`UPDATE_MANIFEST.md`](./UPDATE_MANIFEST.md) 的 ownership 策略执行：
+
+- **workflow kernel**：`docs/workflow/*`、`docs/planner/*`、`workflow/audit-first.md` 等仅在目标文件未被本地修改时覆盖。
+- **mixed files**：`AGENTS.md`、`CLAUDE.md`、`docs/README.md` 只替换 `codex-teammode:managed` block，保留 block 外的目标项目规则。
+- **target facts**：`docs/product/*`、`docs/architecture/*`、`docs/handoff/*`、`docs/plans/*`、`docs/evidence/*` 永不自动覆盖。
+
+升级完成后，目标项目应写入 `docs/workflow/.codex-teammode-version`，用于记录版本和已安装文件 hash。后续升级会用这个 marker 判断哪些文件可以安全替换。
+
 ## 重要边界
 
 这个项目只安装 **工作流机制**，不安装任何业务事实。
@@ -169,6 +181,8 @@ cd codex-teammode-workflow
 ```
 
 Then open Codex or Claude Code in the target project and paste the bootstrap prompt printed by the installer.
+
+Upgrade an existing target project by copying in the newer package and pasting [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md). Updates are ownership-based: workflow kernel files can be replaced only when clean, mixed files use managed blocks, and target project facts are never overwritten.
 
 ### Team Loop At A Glance
 

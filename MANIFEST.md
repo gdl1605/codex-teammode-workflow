@@ -8,6 +8,7 @@ Codex-teammode Workflow is a prompt-first workflow package for Codex and Claude 
 
 ```text
 workflow-kernel/
+  VERSION
   AGENTS.md
   CLAUDE.md
   docs/README.md
@@ -22,6 +23,7 @@ workflow-kernel/
   docs/workflow/team-loop-roles/generator.md
   docs/workflow/team-loop-roles/scout.md
   docs/workflow/team-loop-roles/evaluator.md
+  docs/workflow/update-policy.md
   docs/planner/planner-system.md
   docs/planner/planner-input-template.md
   docs/planner/planner-output-schema.md
@@ -29,6 +31,8 @@ workflow-kernel/
 ```
 
 `AGENTS.md` and `CLAUDE.md` are intentionally synchronized so Codex and Claude Code start from the same process rules. Team Loop dispatch should use the current tool's primary entry file instead of reading both by default.
+
+`VERSION`, `UPDATE_MANIFEST.md`, `UPDATE_PROMPT.md`, and `docs/workflow/update-policy.md` define the upgrade protocol for replacing old workflow installs without overwriting target project facts.
 
 ## Included Docs Structure Template
 
@@ -58,6 +62,7 @@ docs/
   architecture/
   product/
   workflow/
+    .codex-teammode-version
   planner/
   plans/
     active/
@@ -75,8 +80,19 @@ The target agent must adapt these before treating the workflow as installed:
 - Validation commands in `docs/workflow/session-startup.md`.
 - Stack-specific terms such as database schema, authorization policy, migrations, helper functions, RPC/stored procedures, serverless/edge functions, build commands, hosted deploys, or package managers.
 - High-risk domain examples such as state machines, permissions, cross-role writes, external integrations, concurrent resources, or multi-step resource pipelines.
-- Product phase language in `docs/planner/planner-system.md`.
+- Planning / prompt-framing defaults in `docs/planner/planner-system.md`, especially schema use, audit-first thresholds, and review-framing expectations.
 - `docs/README.md` task routing and file responsibilities.
+
+## Update Ownership
+
+Workflow updates use `UPDATE_MANIFEST.md` and `UPDATE_PROMPT.md`.
+
+- `overwrite-if-clean`: workflow kernel files such as `docs/workflow/*`, `docs/planner/*`, and `workflow/audit-first.md`.
+- `managed-block`: mixed files such as `AGENTS.md`, `CLAUDE.md`, and `docs/README.md`.
+- `create-if-missing`: scaffold placeholders from `docs-structure-template/`.
+- `never-overwrite`: target-owned facts under `docs/product/**`, `docs/architecture/**`, `docs/handoff/**`, `docs/plans/**`, and `docs/evidence/**`.
+
+Target projects should record installed workflow hashes in `docs/workflow/.codex-teammode-version` after bootstrap or update.
 
 ## Do Not Copy As Facts
 

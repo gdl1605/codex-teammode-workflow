@@ -49,6 +49,18 @@ docs/
   evidence/                        # audit evidence
 ```
 
+## 升级旧项目
+
+目标项目已经安装过旧版工作流时，不要重新用 bootstrap 做全量覆盖。把新版 `codex-teammode-workflow/` 文件夹放进目标项目后，粘贴 [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md)。
+
+升级按 [`UPDATE_MANIFEST.md`](./UPDATE_MANIFEST.md) 的 ownership 策略执行：
+
+- workflow kernel：`docs/workflow/*`、`docs/planner/*`、`workflow/audit-first.md` 等仅在目标文件未被本地修改时覆盖。
+- mixed files：`AGENTS.md`、`CLAUDE.md`、`docs/README.md` 只替换 `codex-teammode:managed` block。
+- target facts：`docs/product/*`、`docs/architecture/*`、`docs/handoff/*`、`docs/plans/*`、`docs/evidence/*` 永不自动覆盖。
+
+升级后目标项目应写入 `docs/workflow/.codex-teammode-version`，用于记录版本和已安装文件 hash，方便后续判断哪些文件可以安全替换。
+
 ## Team Loop 工作流
 
 Team Loop 是普通工作流的可选增强，只有用户明确声明 `@team-loop` / `Team Loop` / `teamloop` 时才启用。Leader 调度 planner / generator / scout / evaluator，planner / scout 可复用，generator / evaluator 每轮 fresh。终态只能是 `human_acceptance_required` 或 `blocked`。

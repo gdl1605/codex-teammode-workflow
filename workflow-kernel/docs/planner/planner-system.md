@@ -1,683 +1,133 @@
 # Planning / Prompt Framing Reference
 
-> 最后更新时间：2026-05-19
-> 适用范围：普通工作流中的 planning / prompt-framing / review-framing 参考规范
-> 本文主职责：保留旧网页版 ChatGPT planner 迁移来的有效 planning 规则，并说明它与输入模板、输出 schema、audit-first 流程的关系
+> 最后更新时间：2026-06-03
+> 适用范围：普通工作流中的 plan-only / read-only audit / prompt-framing / review-framing
+> 本文主职责：保留当前有效的 planning 规则；旧迁移长规范已压缩为链接化规则
 > 推荐下一跳：`planner-input-template.md`
 
 ## 用途
 
-本文不再定义独立 planner mode；它是普通工作流中 plan-only / read-only audit / prompt-framing / review-framing 职责的参考规范。
+本文不定义独立 planner mode。它只服务普通工作流中的 planning / prompt-framing / review-framing。
 
-2026-05-19 起，普通工作流不再默认拆成独立 planner / generator / evaluator，也不默认建议 subagent。Team Loop 只有在用户明确声明使用 `@team-loop` / `Team Loop` / `teamloop` 或明确要求 Leader 调度 subagent 时才启用。下方旧网页版 ChatGPT planner 迁移文本中涉及旧式默认审查或默认并行角色的段落只保留为历史参考，以本节和 `docs/workflow/collaboration.md`、`docs/workflow/team-loop.md` 的当前规则为准。
+`@planner` 或“帮我做一轮方案”只是历史兼容入口，等价于普通工作流中的 `plan-only` 或 `read-only audit`，不触发 subagent。
 
-下方保留从旧网页版 ChatGPT planner 迁移来的详细规范。目标 coding agent 不应自动解析、转写或改写外部 `.rtf` 规范，也不应凭空补写尚未粘贴进来的完整条款。
+Team Loop 只有在用户明确声明 `@team-loop` / `Team Loop` / `teamloop`，或明确要求 Leader 调度 subagent 时才启用。Team Loop subagent 不默认读取 `docs/planner/*`；相关规则见 `../workflow/team-loop.md`、`../workflow/team-loop-core.md` 和 `../workflow/team-loop-roles/`。
 
 ## 关系
 
-- `planner-input-template.md`：普通工作流 plan-only / read-only audit / review 输入模板。
-- `planner-output-schema.md`：普通工作流 plan / execute / review 输出结构。
-- `../../workflow/audit-first.md`：规定根因未锁或实现层不确定时的“只读审计 -> evidence -> 回流执行 prompt”机制。
-- `../../AGENTS.md`：仓库默认入口，负责声明普通工作流、Team Loop 与 legacy `@planner` alias。
+- `../../AGENTS.md`：仓库默认入口，声明普通工作流、Team Loop 与 legacy `@planner` alias。
+- `../README.md`：docs 入口地图，决定本轮按需补读哪些专题 docs。
+- `../workflow/collaboration.md`：普通工作流的协作闭环、证据优先和根因锁定规则。
+- `../workflow/prompt-template.md`：普通执行 prompt、输出结构和人工验收清单主落点。
+- `planner-input-template.md`：plan-only / read-only audit / review framing 的输入模板。
+- `planner-output-schema.md`：普通工作流 `plan / execute / review` 输出 schema。
+- `../../workflow/audit-first.md`：根因未锁或实现层不确定时的只读审计和 evidence 回流机制。
+- `../workflow/session-startup.md`：执行轮 startup / git / validation / 环境健康检查规则。
 
-## 使用规则
+## 读取原则
 
-- plan-only / read-only audit 默认只读，先读 current code，再读对应 docs，最后参考 handoff。
-- 事实优先级固定为 `current code > docs > handoff`。
-- 根因未锁、建议实现层不确定、只看到现象还没看到原因时，优先进入 `../../workflow/audit-first.md`。
-- planning phase 输出必须遵循 `planner-output-schema.md`。
-- planning phase 可以产出 plan、只读审计 prompt，或基于 evidence 的执行 prompt；不应跳过审计直接给想象式方案。
+- 默认先读 current code，再按任务需要读对应 docs，最后参考 handoff。
+- 事实优先级固定为 `current code > topic docs > docs/handoff/latest.md > docs/handoff/archive/`。
 - docs 按需读取；不要为了普通轮次启动而重复读取全量 docs。
-- 普通工作流不调度 subagent；如用户明确启用 Team Loop，按 `docs/workflow/team-loop.md` 处理 planner / scout 复用和 generator / evaluator fresh-only。
+- `docs/README.md` 是入口地图，不是全量阅读要求。
+- 口头摘要、handoff 和旧 planner 结论都不能替代 current code。
+- 如果 docs 与 current code 冲突，先以 current code 再核实，再决定是否需要 docs impact。
 
-## 仓库内 v1.1 接入约束
+## 启动说明
 
-本节只记录仓库级接入规则，不改写下方旧规范的细节语义。
+planning / prompt-framing / review-framing 轮次启动时，应显式说明：
 
-planning / prompt-framing 轮次启动时，至少应显式说明：
+- 已读取文件：入口、current code、专题 docs、handoff 或 evidence。
+- 工作流决策：普通工作流，或用户明确声明的 Team Loop。
+- 当前职责：plan / execute prompt framing / review framing / docs-process。
+- 只读与否：是否允许改代码、是否允许改 docs。
+- schema 接入：当前采用 `planner-output-schema.md` 中的 `plan / execute / review` 哪一种。
+- audit-first 接入：根因是否已锁；未锁时 evidence 应沉淀到哪里。
+- 当前阶段控制面板：当前主线、暂停项、前置条件、下一步允许推进什么、下一步不允许推进什么。
+- 仓库状态分层：历史脏项 / 在途开发面、本轮候选范围、不可混入本轮 bundle 的残留。
+- docs impact check：本轮是否影响流程规则、计划状态、产品事实或 docs 主落点。
 
-- 已读取文件：列出 `AGENTS.md`、`docs/README.md`、`docs/handoff/latest.md`、本轮相关 docs / code / evidence。
-- 工作流决策：写明本轮采用普通工作流还是用户明确声明的 Team Loop；普通工作流默认不拆 subagent。
-- planning 职责约束：说明当前是 plan / execute / review / docs-process 中哪类工作，是否只读，是否允许改代码。
-- schema 接入情况：显式声明当前采用 `planner-output-schema.md` 中的 `plan / execute / review` 哪一种输出结构。
-- audit-first 接入情况：说明根因是否已锁；未锁时先产出只读审计 prompt，并把结果沉淀到 `docs/evidence/<feature>-audit.md`。
-- 当前阶段控制面板：区分当前主线、当前暂停项、当前前置条件、下一步允许推进什么、下一步不允许推进什么。
-- current code 关键证据：列出能由本地代码 / docs / evidence 直接证实的事实，不把口头摘要写成事实。
-- 仓库内 planning 能力：说明当前线程可直接读取 current code、docs、handoff、evidence，后续不依赖人工反复复制背景。
-- 当前仓库状态分层：区分历史脏项 / 在途开发面、本轮真实候选范围、不可混入本轮 bundle 的残留。
-- docs impact check：说明本轮是否影响流程规则、计划状态、产品事实或 docs 主落点。
+## 阶段职责
 
-plan-only / read-only audit 的 GUI / computer-use 约束：
+### plan-only / read-only audit
 
-- 默认不用 computer-use / GUI。
+- 默认只读，不改代码。
+- 先审计 current code，再读必要 docs / evidence。
+- 收口目标、非目标、allowed scope、forbidden scope 和风险。
+- 根因未锁时先走 `../../workflow/audit-first.md`，不要给猜测性 patch prompt。
+- 输出应说明哪些是 verified facts，哪些是 inferences，哪些仍需要人工确认。
+
+### prompt-framing
+
+- 把用户目标、current code 事实、专题 docs 和 evidence 转成可执行 prompt。
+- 固定先解释：问题、修改思路、为什么这样改，再给 Markdown prompt。
+- 执行 prompt 的结构、输出要求和人工验收清单以 `../workflow/prompt-template.md` 为准。
+- 建议实现层必须标注为建议路径，最终应以 current code 审计结果为准做最小调整。
+
+### review-framing
+
+- 只有用户明确要求 review / evaluator，或当前轮次本身是 review 轮，才准备 evaluator prompt。
+- 普通执行轮不默认启动独立 evaluator；执行者仍需做最小自检和 docs impact check。
+- review 输入至少包含本轮合同层目标、actual diff / 改动摘要、验证结果、风险说明和未完成验证项。
+- Team Loop 的 evaluator 操作方式以 `../workflow/team-loop.md` 和 `../workflow/team-loop-roles/evaluator.md` 为准。
+
+## Prompt 规则
+
+- 给目标 coding agent / generator / evaluator 的 prompt 必须使用 Markdown 代码块，方便复制。
+- 不要把 prompt 混在普通散文里，不要输出不可复制的碎片式 prompt。
+- 合同层和建议实现层必须分开。
+- 合同层只放已成立的目标、边界、数据 / 状态机 / 权限约束、输出要求、验收标准和 docs impact check。
+- 建议实现层只放推荐切入点、推荐文件范围、推荐修法顺序和切片顺序。
+- 不得把建议实现层写成唯一事实。
+
+## 关键约束
+
+- 单轮只允许一个主 feature / 主问题；跨主链请求应先拆轮次。
+- 一个主 feature 可以拆多个 slice，但每个 slice 应能到达 clean state。
+- 执行轮默认先审计，再最小实现，再验证 / 人工验收，再 docs impact check。
+- 涉及 database schema、migration、authorization policy、helper function、RPC / stored procedure、serverless / edge function 时，输出必须说明改的对象、语义差异、是否需要 deploy / apply、当前是否已生效。
+- 不要回改旧 migration；优先新增 patch migration。
+- 不要通过放宽 policy 掩盖真实问题。
+- 除非用户明确要求完整文件，否则输出关键片段、改动文件列表、风险、验证结果和人工复测步骤即可。
+
+## GUI / Computer-use 约束
+
+- plan-only / read-only audit 默认不用 computer-use / GUI。
 - plan 轮和只读审计轮禁止截图、禁止 GUI 试跑、禁止通过视觉 hunting 自证结论。
-- 若任务明确允许 GUI，只能做极简单只读确认；复杂运行态、视觉强弱、反复状态命中统一交给人工验收或后续执行轮。
+- 若任务明确允许 GUI，只能做极简单只读确认。
+- 复杂运行态、视觉强弱、反复状态命中统一交给人工验收或后续执行轮。
 
-planning phase 不得凭想象直接跳到执行层；当 root cause lock 不成立、证据不足或实现层不确定时，必须先走 `../../workflow/audit-first.md`。
+## Team Loop 边界
 
-## 正式规范占位区
+- 普通工作流不默认建议或调度 subagent。
+- 如果用户明确启用 Team Loop，Leader 应按 `../workflow/team-loop.md`、`../workflow/team-loop-core.md` 和 `../workflow/team-loop-roles/` 裁剪 subagent read scope。
+- 普通 plan-only / read-only audit 只需要说明普通工作流下的读取范围和下一步建议，不主动标注 subagent 块。
 
-# GPT Planning / Prompt Framing 工作规范约束（项目版，整合成稿）
+## 禁止事项
 
-## 0. 文档用途
+planning phase 不应：
 
-这份文档用于约束 **普通工作流中的 planning / prompt-architect / review-framer 职责** 的工作方式。
-它不是业务功能设计文档，也不是 generator（如 Codex）的执行说明；它定义的是：
+- 在根因未锁时生成猜测性 patch prompt。
+- 把建议路径写成唯一事实。
+- 把多个主 feature 混成一个执行轮。
+- 让执行者在未做必要 startup 的情况下直接开改。
+- 在用户明确要求 review / evaluator 或 Team Loop 时省略对应 review 输入。
+- 省略 docs impact check。
+- 把 docs 清债扩成无边界整理。
+- 自动解析、转写或改写外部 `.rtf` 规范。
+- 凭空补写尚未进入仓库 docs 的完整条款。
 
-- planning phase 应该做什么
-- planning phase 不该做什么
-- planning phase 如何生成 plan / 执行 / review prompt
-- planning phase 如何与 docs、Codex、人工验收协同
-- planning phase 的输出格式、节奏、边界与默认动作
+## 适用范围
 
-适用对象：
+适用于：
 
-- 任何新 GPT 窗口
-- 任何继续承担 planning / prompt-framing 职责的对话
-
----
-
-## 1. 职责定位
-
-普通工作流中的 planning / prompt-framing 轮次可承担以下职责之一：
-
-1. **Planning Phase**
-   负责理解问题、界定边界、拆分 feature / slice、生成执行 prompt、生成 plan prompt、生成 review prompt。
-
-2. **Prompt Architect**
-   负责把用户目标、项目上下文、docs 与 current code 事实，转成适合目标 coding agent 执行的 prompt。
-
-3. **Review Framer**
-   负责在用户明确要求 review / evaluator 或已进入 Team Loop 时，生成 review prompt / Evaluation Bundle，帮助做非自评式审查。
-
-### Planning phase 不负责
-
-- 默认不直接改代码
-- 不替代 generator 做整轮实施
-- 不在根因未锁时给出猜测性 patch
-- 不把建议实现路径包装成“已验证事实”
-
----
-
-## 2. 基本原则
-
-生成的prompt永远以markdown方便用户直接复制的形式
-
-### 2.1 事实判断优先级
-
-项目中的事实优先级固定为：
-
-`current code > 对应专题 docs > handoff/latest.md > handoff/archive`
-
-“当前用户目标”只决定本轮范围，不决定事实真伪。
-
-### 2.2 当前项目阶段
-
-默认把项目视为：
-
-**稳定演示版 + 轻产品化阶段**
-
-这意味着：
-
-- 优先做已成立主链路上的收口、修真实根因、体验增强、轻功能补齐
-- 不默认扩张大系统
-- 不把项目当成“从零搭建期”或“基础环境排障期”
-
-### 2.3 单轮单目标
-
-每个执行轮只允许有 **一个主 feature / 主问题**。
-
-允许一个主 feature 下拆多个 slices，但这些 slices 必须属于同一主链。
-如果请求跨两条主链，planning phase 必须先拆轮次，而不是揉成一个执行 prompt。
-
-### 2.4 先审计，再执行
-
-执行轮默认要求 generator：
-
-- 先读上下文
-- 先做只读审计
-- 再做最小实现
-
-planning phase 不应直接让 generator 跳过审计进入 patch。
-
-### 2.5 不猜根因
-
-如果问题根因未锁，planning phase 必须优先生成：
-
-- 审计 prompt
-- 或“审计 + 根因锁定 + 最小修复”的执行 prompt
-
-不能在根因未锁时让 generator 直接按猜测 patch。
-
----
-
-## 3. 默认工作流
-
-普通工作流固定为：
-
-1. **理解目标与边界**
-2. **读取 current code / 必要 docs**
-3. **只读结论或最小实现**
-4. **docs impact check**
-5. **验证 / 人工验收清单 / Closeout**
-
-普通工作流不默认拆成独立角色。只有用户明确启用 Team Loop，才由 Leader 调度 planner / generator / scout / evaluator 等内部角色。
-
----
-
-## 4. Planning phase 的固定输出顺序（强约束）
-
-Planning phase 输出时，必须先给用户解释，再给后续动作或 prompt。
-但不同轮次的固定顺序不同：
-
-### 4.1 执行轮
-
-输出顺序必须是：
-
-1. **当前问题**
-2. **修改思路**
-3. **为什么这样改**
-4. **执行 prompt**
-
-### 4.2 Plan 轮
-
-输出顺序必须是：
-
-1. **当前问题**
-2. **分析与方案**
-3. **建议的下一步**
-
-Plan 轮默认不直接输出执行 prompt，除非用户明确要求“把方案转成执行 prompt”。
-
-### 4.3 Review 轮
-
-输出顺序必须是：
-
-1. **当前问题**
-2. **评审重点**
-3. **evaluator prompt**
-
----
-
-## 5. Prompt 输出格式（强约束）
-
-### 5.1 所有给目标 coding agent / generator / evaluator 的 prompt
-
-必须用 **Markdown 代码块** 输出，方便复制。
-
-### 5.2 不允许
-
-- 不要把 prompt 混在普通散文里
-- 不要输出不可复制的碎片式 prompt
-- 不要省略 section 标题
-
----
-
-## 6. Prompt 的两层结构：合同层 vs 实现提示层
-
-Planning phase 生成执行 prompt 时，必须显式区分两层：
-
-### 6.1 合同层（硬约束，写死）
-
-包括但不限于：
-
-- 本轮目标
-- 修改边界
-- 数据 / 状态机 / 权限约束
-- 不做什么
-- 输出要求
-- 验收标准
-- docs impact check
-
-这层必须明确、稳定、不可自由发挥。
-
-### 6.2 实现提示层（建议路径）
-
-包括但不限于：
-
-- 建议优先审计的文件
-- 建议的 service / page / migration 落点
-- 建议先尝试的实现路线
-- 建议的切片顺序
-
-这层必须明确写出：
-
-**“以下为建议路径，最终应以 current code 审计结果为准做最小调整。”**
-
-### 6.3 禁止
-
-- 不得把实现提示层写成“唯一已验证事实”
-- 不得因为 planning phase 猜到了一个路径，就强迫 generator 忽略 current code
-
----
-
-## 7. 执行轮、plan 轮、docs-only 轮的区别
-
-### 7.1 Plan 轮
-
-目标：
-
-- 只审计
-- 只做规划
-- 只输出实施路径
-- 不改代码
-
-### 7.2 执行轮
-
-目标：
-
-- 在已明确目标与边界下实施改动
-- 默认先审计再最小实现
-- 结束时必须带验证结果和 docs impact check
-
-输出要求：普通执行轮默认不预设并行审计段，也不默认拆 subagent。只有用户明确启用 Team Loop 时，才由 Leader 按 `docs/workflow/team-loop.md` 调度 planner / scout / generator / evaluator。
-
-### 7.3 docs-only 轮
-
-目标：
-
-- 只改 docs
-- 不改业务代码
-- 不借机扩成仓库重构
-
-planning phase 必须先判断当前属于哪一轮，再生成对应 prompt。
-
----
-
-## 8. Review / Evaluator 机制
-
-### 8.1 Evaluator 不是普通工作流默认步骤
-
-普通执行轮不默认启动独立 evaluator / review pass。执行者仍应在本轮输出中做最小自检，包括修改边界、非回归点、验证结果和 docs impact check。
-
-只有以下情况使用独立 evaluator：
-
-- 用户明确要求 review / evaluator。
-- 用户明确启用 Team Loop。
-- 当前轮次本身就是 review 轮。
-
-若未进入上述情况，不需要额外解释“跳过 evaluator”；普通工作流默认就是轻闭环。
-
-### 8.2 Evaluator 的职责
-
-Evaluator 只做以下事：
-
-- 审查 generator 是否真的达成合同层目标
-- 审查是否破坏既有合同 / 边界
-- 审查是否存在自评过高
-- 指出最危险的非回归点
-- 帮用户确定人工验收优先级
-
-### 8.3 Evaluator 默认不做的事
-
-- 不写代码
-- 不替 generator 二次实现
-- 不临时重开大设计
-
-### 8.4 Evaluator 的操作流
-
-只有在用户明确要求 review / evaluator 或已经进入 Team Loop 时，才准备 evaluator prompt / Evaluation Bundle。
-
-evaluator prompt 的输入应包括：
-
-1. 本轮合同层目标
-2. generator 声称的改动清单
-3. generator 的验收结果
-4. 如可获得，再附：
-   - diff
-   - 改动文件列表
-   - 风险说明
-   - 未完成验证项
-
-Team Loop 中 evaluator 的操作方式以 `docs/workflow/team-loop.md` 为准。普通 review 轮可以使用下面输入：
-
-1. 本轮合同层目标
-2. 实际 diff / 改动摘要 / 验收结果
-3. 风险说明
-4. 未完成验证项
-5. evaluator 输出应包括：
-   - 逐条合同达成判定（`pass / fail + 理由`）
-   - 最危险的非回归点
-   - 建议的人工验收优先级排序
-
----
-
-## 9. Feature 与 Slice 规则
-
-### 9.1 一个执行轮只能有一个主 feature
-
-例如：
-
-- 可以是 “Tag v1 Phase 1”
-- 可以是 “修复新帖互动 403”
-- 不能是 “Tag v1 + 搜索 + 详情页收口”
-
-### 9.2 一个主 feature 可以拆多个 slices
-
-例如：
-
-- Slice 1：schema + types
-- Slice 2：service
-- Slice 3：page A
-- Slice 4：page B
-- Slice 5：可选收口
-
-### 9.3 每个 slice 结束后必须是 clean state
-
-最低要求：
-
-- `npm run typecheck` 通过
-- 如适用，`<target build command>` 通过
-- 当前 slice 最小人工 smoke test 通过
-- 不破坏上一 slice
-- 可以安全进入下一 slice 或回退
-
-此外，默认要求：
-
-- 每个 slice 完成后，generator 应做一次 git commit
-- commit message 推荐格式为：`[feature/slice] 简要描述`
-
-这样如果某个 slice 出问题，可以直接 `git revert`，而不必手动清理交织改动。
-
-Planning phase 应优先推动 **原子化执行**，而不是让 generator 一次性混改所有层。
-
----
-
-## 10. Session Startup Protocol（执行轮按需跑）
-
-执行轮在真正动代码前应先做轻量 startup；高风险任务再跑完整 startup protocol。
-
-### 10.1 上下文确认
-
-轻量 startup 至少确认：
-
-- 本轮目标和 allowed / forbidden scope。
-- `git status` 中历史脏项 / 在途开发面 / 本轮候选范围。
-- current code 的真实入口。
-
-必要时再读：
-
-- `AGENTS.md`
-- `docs/README.md`
-- `docs/handoff/latest.md`
-- 本轮相关专题 docs
-- handoff / workflow / plans
-
-### 10.2 仓库状态确认
-
-至少检查：
-
-- `git status`
-- `git log --oneline -10`
-
-### 10.3 环境健康检查
-
-至少运行：
-
-- `npm run typecheck`
-- `<target build command>`
-
-### 10.4 涉及 schema / migration / 授权规则时的额外检查
-
-还应确认：
-
-- 当前 migration 最新序号
-- 是否需要运行目标仓库的数据层 apply / deploy 命令
-- 当前目标环境是否已 apply / deploy
-- 本轮最可能影响的数据对象 / policy / helper function 是什么
-
-### 10.5 风险确认
-
-执行前必须明确：
-
-- 本轮最危险的非回归点
-- 本轮最可能命中的历史合同
-- 优先要人工回归的页面 / 主链
-
-### 10.6 Startup 失败时的处理（强约束）
-
-如果 startup protocol 阶段发现：
-
-- `npm run typecheck` 失败
-- 或 `<target build command>` 失败
-
-则 generator 必须：
-
-1. 暂停本轮目标
-2. 先向用户报告失败情况
-3. 由用户决定：
-   - 先另开一轮修环境 / 修基础健康问题
-   - 或在当前轮中先修环境再继续
-
-Generator **不得** 在未经确认的情况下静默顺手修复 startup 阶段发现的问题。
-
----
-
-## 11. 项目 docs 使用方式
-
-### 11.1 planning phase 默认阅读顺序
-
-新窗口接手时，默认按以下顺序读：
-
-1. `AGENTS.md`
-2. `docs/README.md`
-3. `docs/handoff/latest.md`
-4. `docs/product/current-state.md`
-5. `docs/architecture/ia-and-navigation.md`
-6. `docs/architecture/domain-boundaries.md`
-
-然后按本轮任务补读：
-
-- `system-map`
-- `workflow/*`
-- `plans/*`
-
-### 11.2 docs 维护闭环（强约束）
-
-每轮结束前都必须做一次 **docs impact check**。
-
-如果本轮改变了以下任一项，就更新对应 docs 主落点：
-
-- 项目事实
-- 产品合同 / 边界
-- 当前阶段已成立能力
-- 候选方向
-- 计划状态
-- 长期技术债 / 结构债 / 体验债 / 流程债
-
-如果没有改变，也必须明确写：
-
-**“本轮无需更新 docs”**，并说明原因。
-
-### 11.3 不要跨 docs 重复写同一事实
-
-遵循 docs 分工，只更新真正命中的主落点。
-
----
-
-## 12. 数据层 / 服务端函数 / 授权规则
-
-如果一轮改动涉及：
-
-- database schema
-- migration
-- authorization policy
-- helper function
-- RPC / stored procedure
-- serverless / edge function
-
-则输出必须明确写清：
-
-1. 改的是哪个对象
-2. 语义差异是什么
-3. 是否需要 deploy / apply
-4. 当前是否已生效
-
-### 默认规则
-
-- 不要回改旧 migration
-- 优先新增 patch migration
-- 不要把 policy 粗暴放宽来掩盖问题
-
----
-
-## 13. Team Loop / Subagent 规则
-
-### 13.1 默认策略
-
-普通工作流不默认建议或调度 subagent。只有用户明确启用 Team Loop，才进入 Leader / subagent 流程。
-
-### 13.2 派生写法规则
-
-- Team Loop 的 subagent 调度、planner / scout 复用、generator / evaluator fresh-only、模型策略和 Read Scope Ack，统一以 `docs/workflow/team-loop.md` 为准。
-- 普通 plan-only / read-only audit 只需要说明普通工作流下的读取范围和下一步建议。
-
-### 13.3 planning phase 在 prompt 中的写法
-
-如果用户明确启用 Team Loop，Leader 应显式拆分 subagent read scope；否则不要在普通 prompt 中预设 subagent。
-
-### 13.4  主动标注 subagent 块
-普通执行轮不主动标注 subagent 块。Team Loop 的 planner / scout delta 输出和 Evidence Pack 由 Leader 在 Team Loop 内维护。
-
-
----
-
-## 14. Planning phase 的默认行为约束
-
-### 14.1 没有明确“本轮目标”前
-
-默认不直接改代码，只做：
-
-- 分析
-- 梳理
-- 核实
-- 方案
-- prompt 生成
-
-### 14.2 连续两轮仍复现时
-
-如果同一问题连续两轮“已修复”后仍复现，planning phase 必须明确承认：
-
-- 上一轮 root cause lock 不成立
-- 或上一轮根因锁定不完整
-
-然后优先往更上游、更贴近运行时的失败点回溯。
-
-### 14.3 输出关键片段，不贴全文
-
-除非用户明确要求完整文件，否则执行轮输出默认只给：
-
-- 关键改动片段
-- 改动文件列表
-- 风险说明
-- 验证结果
-- 人工复测步骤
-
----
-
-## 15. 项目事实引用规则（替代长期事实快照）
-
-Planning phase 每轮开始时，必须从以下位置获取当前项目长期事实：
-
-- `docs/product/current-state.md`
-- 必要时再结合：
-  - `docs/architecture/domain-boundaries.md`
-  - `docs/architecture/ia-and-navigation.md`
-  - `docs/handoff/latest.md`
-
-这份规范只保留 **方法论层** 的长期规则，例如：
-
-- 事实判断优先级
-- 单轮单目标
-- 合同层 / 实现提示层分离
-- review / evaluator 机制
-- startup protocol
-- docs impact check
-
-这份规范 **不保留会变化的项目事实快照**。
-例如：
-
-- 某资源是否仍要求完整原始文件
-- `owner_id` 是否仍为 canonical owner
-- 当前 IA 是否已经把某入口收口到新导航层
-
-这些都应以 `current-state.md` 和 current code 为准，而不是以本规范中的旧快照为准。
-
----
-
-## 16. Prompt 结构唯一模板定义
-
-执行 prompt 默认推荐使用以下结构：
-
-1. 执行前必读文件
-2. 当前已知事实
-3. 本轮目标
-4. 修改边界
-5. 数据与状态机约束
-6. 建议实现路径
-7. 输出要求
-8. 验收标准
-
-其中：
-
-- 第 3 / 4 / 5 / 8 段属于**合同层**
-- 第 6 段属于**建议实现层**
-
-Planning phase 必须在语义上明确：
-
-**“建议实现层应以 current code 审计结果为准做最小调整。”**
-
----
-
-## 17. Planning phase 禁止事项
-
-Planning phase 不应：
-
-- 在根因未锁时生成猜测性 patch prompt
-- 把建议路径写成唯一事实
-- 把多个主 feature 混成一个执行轮
-- 让执行者在未做必要 startup 的情况下直接开改
-- 在用户明确要求 review / evaluator 或 Team Loop 时省略对应 review 输入
-- 省略 docs impact check
-- 把 docs 清债扩成无边界整理
-- 在 prompt 里遗漏“问题 / 修改思路 / 为什么这样改”的前置解释
-
----
-
-## 18. 交接给新 GPT 窗口时的最短说明
-
-交接时，至少说明：
-
-1. 当前项目阶段应从 `docs/product/current-state.md` 与 current code 读取
-2. 事实优先级是
-   `current code > 对应专题 docs > handoff/latest > handoff/archive`
-3. 当前顶层 IA 以 current code 为准
-4. 当前主链路与本轮目标
-5. 本轮属于 plan / execute / docs-only / review 哪一类
-6. planning phase 必须先输出：
-   - 问题
-   - 修改思路 / 分析与方案 / 评审重点
-   - 为什么这样改
-   - 再输出 Markdown prompt（如该轮需要 prompt）
-7. 执行轮默认有：
-   - startup protocol
-   - 当前线程自检
-   - docs impact check
-
----
-
-## 19. 适用范围
-
-这份规范适用于：
-
-- 生成 plan prompt
-- 生成执行 prompt
-- 生成 evaluator prompt
-- 对 Codex 输出做二次规划或二次审查 framing
+- 生成 plan prompt。
+- 生成执行 prompt。
+- 生成 evaluator prompt。
+- 对 coding agent 输出做二次规划或二次审查 framing。
 
 不适用于：
 
-- 纯闲聊
-- 纯翻译
-- 纯文案润色
-- 无代码 / 无 docs 变化的轻量交流
+- Team Loop subagent 启动合同。
+- 纯闲聊、纯翻译、纯文案润色。
+- 无代码 / 无 docs 变化的轻量交流。
