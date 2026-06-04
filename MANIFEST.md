@@ -87,12 +87,12 @@ The target agent must adapt these before treating the workflow as installed:
 
 Workflow updates use `UPDATE_MANIFEST.md` and `UPDATE_PROMPT.md`.
 
-- `overwrite-if-clean`: workflow kernel files such as `docs/workflow/*`, `docs/planner/*`, and `workflow/audit-first.md`.
+- `replace-workflow`: workflow kernel files such as `docs/workflow/*`, `docs/planner/*`, and `workflow/audit-first.md` are replaced in place.
 - `managed-block`: mixed files such as `AGENTS.md`, `CLAUDE.md`, and `docs/README.md`.
 - `create-if-missing`: scaffold placeholders from `docs-structure-template/`.
 - `never-overwrite`: target-owned facts under `docs/product/**`, `docs/architecture/**`, `docs/handoff/**`, `docs/plans/**`, and `docs/evidence/**`.
 
-Target projects should record installed workflow hashes in `docs/workflow/.codex-teammode-version` after bootstrap or update.
+Target projects should record installed workflow hashes in `docs/workflow/.codex-teammode-version` after bootstrap or update. The hashes are for reporting and future baseline tracking; workflow-owned files still replace in place on update.
 
 ## Do Not Copy As Facts
 

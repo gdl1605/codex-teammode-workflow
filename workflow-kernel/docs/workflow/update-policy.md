@@ -9,7 +9,7 @@
 
 升级不是把新版文件全量复制进目标项目。
 
-升级只替换开源工作流拥有的内核区域；目标项目自己的事实、规则和手改内容默认保留。
+升级会原地替换开源工作流拥有的内核文件；目标项目自己的事实、规则和 managed block 外的内容默认保留。
 
 ## 文件归属
 
@@ -30,7 +30,11 @@ docs/planner/**
 workflow/audit-first.md
 ```
 
-它们使用 `overwrite-if-clean`：只有目标文件没有本地改动时才覆盖；如果目标文件被手改过，必须报告冲突或生成 `.new` 提案。
+它们使用 `replace-workflow`：目标文件存在时直接原地替换为新版包里的文件；目标文件缺失时直接创建。
+
+不要为这些 workflow-owned 文件生成 `.new`。旧工作流文件就是要被新版工作流替换，不能在同一目录里留下旧版和新版两份规则。
+
+如果旧升级尝试已经留下了同名 `<target>.new`，在原目标文件完成原地替换后，应删除这些 stale `.new` 文件，并在输出中列出。
 
 ### 只能 managed-block 更新的混合文件
 
@@ -83,14 +87,15 @@ update_schema: 1
 package_source: codex-teammode-workflow
 managed_files:
   docs/workflow/team-loop.md:
-    strategy: overwrite-if-clean
+    strategy: replace-workflow
     installed_sha256: <sha256 after update>
 ```
 
-后续升级用 `installed_sha256` 判断目标文件是否被本地手改：
+后续升级可用 `installed_sha256` 做报告：
 
-- 当前 hash 等于 `installed_sha256`：可以安全覆盖。
-- 当前 hash 不等于 `installed_sha256`：不能静默覆盖，必须生成冲突报告或 `.new`。
+- 当前 hash 等于 `installed_sha256`：说明上次升级后未改动。
+- 当前 hash 不等于 `installed_sha256` 且策略为 `replace-workflow`：仍然原地替换，但在输出中说明本地 workflow 编辑已被新版替换。
+- 当前 hash 不等于 `installed_sha256` 且策略为 `managed-block`：只替换 managed block，保留 block 外内容。
 
 ## 旧项目接入
 
@@ -98,9 +103,11 @@ managed_files:
 
 1. 先按 `UPDATE_MANIFEST.md` 分类文件。
 2. 对 mixed files，只在已有 managed block 时替换；没有 block 就输出建议，不直接改。
-3. 对 workflow kernel 文件，只有在确认像未改动的旧内核文件时才覆盖。
-4. 对无法确认的文件，生成 `.new` 或冲突报告。
-5. 用户确认后再写入 `.codex-teammode-version`，作为后续升级基线。
+3. 对 workflow kernel 文件，按 `replace-workflow` 原地替换，不生成 `.new`。
+4. 清理 workflow kernel 对应的 stale `<target>.new` 文件。
+5. 对 `create-if-missing` 文件，只创建缺失项。
+6. 对 `never-overwrite` 路径，完全跳过。
+7. 升级后写入 `.codex-teammode-version`，作为后续升级基线。
 
 ## 输出要求
 
@@ -110,7 +117,9 @@ managed_files:
 - updated files。
 - created files。
 - managed blocks updated。
-- conflicts 或 `.new` proposals。
+- workflow-owned files replaced in place。
+- stale workflow `.new` files removed。
+- mixed-file conflicts requiring human review。
 - never-overwrite paths skipped。
 - marker file status。
 - manual migration notes。

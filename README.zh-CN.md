@@ -55,11 +55,11 @@ docs/
 
 升级按 [`UPDATE_MANIFEST.md`](./UPDATE_MANIFEST.md) 的 ownership 策略执行：
 
-- workflow kernel：`docs/workflow/*`、`docs/planner/*`、`workflow/audit-first.md` 等仅在目标文件未被本地修改时覆盖。
+- workflow kernel：`docs/workflow/*`、`docs/planner/*`、`workflow/audit-first.md` 等原地替换旧版工作流文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
 - mixed files：`AGENTS.md`、`CLAUDE.md`、`docs/README.md` 只替换 `codex-teammode:managed` block。
 - target facts：`docs/product/*`、`docs/architecture/*`、`docs/handoff/*`、`docs/plans/*`、`docs/evidence/*` 永不自动覆盖。
 
-升级后目标项目应写入 `docs/workflow/.codex-teammode-version`，用于记录版本和已安装文件 hash，方便后续判断哪些文件可以安全替换。
+升级后目标项目应写入 `docs/workflow/.codex-teammode-version`，用于记录版本和已安装文件 hash，作为后续升级基线和报告依据；workflow kernel 仍按新版原地替换。
 
 ## Team Loop 工作流
 

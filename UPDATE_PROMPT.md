@@ -13,7 +13,7 @@ Upgrade the target repo's installed Codex-teammode Workflow without overwriting 
 
 Use ownership-based updates:
 
-- Workflow-owned kernel files: update only if the target file is clean.
+- Workflow-owned kernel files: replace old workflow files in place.
 - Mixed files: update only inside `codex-teammode:managed` blocks.
 - Target project facts / handoff / plans / evidence: never overwrite.
 
@@ -25,7 +25,8 @@ Use ownership-based updates:
 - Current target repo code is the highest source of truth.
 - If target docs conflict with target code, target code wins.
 - Preserve all target-project content outside managed blocks.
-- If a file is locally modified and cannot be updated safely, create a `.new` proposal or conflict report instead of replacing it.
+- Do not create `.new` files for workflow-owned files. The goal is to replace old workflow files, not keep old and new copies side by side.
+- If a mixed file cannot be updated safely because managed markers are missing, report the required managed block insertion instead of creating `.new`.
 
 ## Required Read Scope
 
@@ -54,18 +55,20 @@ Then inspect the target repo:
    - If missing, treat the repo as a legacy install and use the Legacy Adoption rules in `UPDATE_MANIFEST.md`.
 
 2. Classify files by `UPDATE_MANIFEST.md`.
-   - `overwrite-if-clean`
+   - `replace-workflow`
    - `managed-block`
    - `create-if-missing`
    - `never-overwrite`
    - `marker-file`
    - `package-only`
 
-3. For `overwrite-if-clean` files:
+3. For `replace-workflow` files:
    - If target file is missing, create it from the package.
-   - If target file hash equals the hash recorded in `docs/workflow/.codex-teammode-version`, replace it with the package version.
-   - If no marker exists and the file appears to be an unmodified old workflow kernel file, replace it and note this as legacy adoption.
-   - If the file has local edits, do not overwrite. Create `<path>.new` or report a conflict.
+   - If target file exists, replace it in place from the package even when no marker exists or hashes differ.
+   - If a previous marker exists and the old hash differs, note that local workflow edits were replaced.
+   - Do not create `<path>.new` for this strategy.
+   - Do not preserve old workflow files beside new ones.
+   - If `<path>.new` exists from an earlier update attempt for the same workflow-owned file, remove that stale `.new` file after the real target file has been replaced.
 
 4. For `managed-block` files:
    - Replace only content between:
@@ -73,7 +76,7 @@ Then inspect the target repo:
      and
      `<!-- codex-teammode:managed:end -->`
    - Preserve all text outside the block.
-   - If markers are missing, do not rewrite the file. Propose a managed block or report a conflict requiring human review.
+   - If markers are missing, do not rewrite the file and do not create `.new`. Report the exact managed block that should be inserted or ask for human review.
 
 5. For `create-if-missing` files:
    - Create only missing placeholders.
@@ -98,7 +101,9 @@ Final response must include:
 - files updated
 - files created
 - managed blocks updated
-- conflicts or `.new` proposals
+- workflow-owned files replaced in place
+- stale workflow `.new` files removed
+- mixed-file conflicts requiring human review
 - never-overwrite paths skipped
 - marker file status
 - remaining manual migration notes
