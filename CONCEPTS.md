@@ -59,7 +59,7 @@ Goal: stop "imagined fixes" — every change must trace back to evidence, not vi
 
 ## Fact-priority order
 
-When code, docs, and handoffs disagree, this order decides truth:
+For ordinary implementation work, this is the default descriptive-fact routing order:
 
 1. **Current code** (highest)
 2. The relevant topic doc under `docs/`
@@ -67,6 +67,21 @@ When code, docs, and handoffs disagree, this order decides truth:
 4. `docs/handoff/archive/`
 
 Handoffs and summaries are *fast entry points*, not the source of truth.
+
+The explicitly invoked `$docs-review` macro does not use “current code always wins” across
+every kind of claim. It routes authority by fact type:
+
+| Claim type | Primary authority |
+|---|---|
+| Implementation | Current code, types, focused tests |
+| Data contract | Schema, migration contents, types, tests; file presence does not prove apply |
+| Business intent | Explicit human confirmation and the canonical domain contract |
+| Deployment | Environment-specific deployment/runtime evidence |
+| Acceptance | Explicit human acceptance for the named scope/version |
+| Legal | Explicit legal or accountable-owner confirmation |
+
+This distinction prevents an implementation bug from silently rewriting intended business
+behavior, while also preventing aspirational docs from being reported as implemented.
 
 ## Schemas
 
@@ -82,6 +97,45 @@ Every round must declare which schema it is using.
 
 End-of-round ritual: ask "did this round change a project fact, contract, plan state, or known debt?" If yes, update the **single owning doc**. If no, say so explicitly. Never write the same fact into two docs.
 
+It is the incremental **micro loop**. Its output also states
+`reconciliation_recommended: yes/no + reason`, but it cannot launch a macro review by itself.
+
+## `$docs-review`
+
+An optional, manually triggered **macro loop** for cross-document fact reconciliation. In
+Codex it runs as a read-only Plan Mode audit first, builds temporary Claim/Resolution Ledgers,
+uses native questions for ambiguous business facts, and emits a SHA-256-baselined correction
+plan. A later `$docs-review apply` in Default Mode may edit only the approved docs after a
+drift check.
+
+Cleanup is claim-preserving rather than line-minimizing. Canonical files carry a coverage
+manifest, active-to-completed moves require a full body/status/navigation closure pass, and
+frozen release scopes require every active plan to declare inclusion and blocking status.
+Navigation-like inline paths are validated alongside Markdown links.
+
+Version 2 uses a structured Finding Disposition Ledger. Every scanner-schema-4 occurrence
+binds its source fingerprint to a resolution group with one scoped claim, intended semantics,
+authority/evidence, and approved docs. Literal coverage is limited to real route, field, RPC,
+migration, and doc-path identifiers; natural-language business meaning is independently
+audited instead of being forced into validator-only anchor phrases. Audit IDs never belong in
+project docs.
+
+Post-apply semantic closure is a two-level independent gate. Full-read files are packed into
+bounded shards, no more than three shard auditors run concurrently, and every raw schema-2
+report is validated without main-Agent reconstruction. All shards must pass before one new
+synthesis auditor checks canonical owners, cross-shard consumers, and original evidence.
+Shard reports prove coverage, not business truth. A deficiency stops at a human approval gate;
+unchanged passing shards may be hash-reused in a correction round, but synthesis never is.
+Each shard receives only its assigned docs and before/after artifacts; shared code/evidence
+remains an explicit support dependency. Coverage accounting stays exact to Markdown targets,
+while the raw report separately enumerates every authorized support file actually opened.
+
+It separates `planned`, `implemented`, `validated`, `evaluator_passed`,
+`migration_applied`, `deployed`, `runtime_smoked`, `human_accepted`, `legal_accepted`, and
+`released` instead of collapsing them into “done.” Its verdict is `consistent`,
+`partially_consistent`, or `blocked`; none of those verdicts automatically means human
+acceptance or release.
+
 ## Glossary at a glance
 
 | Term | Meaning |
@@ -96,6 +150,12 @@ End-of-round ritual: ask "did this round change a project fact, contract, plan s
 | Residual risk | A P2/P3 issue noted but not blocking acceptance. |
 | `human_acceptance_required` | Terminal state — only a human can move to `accepted`. |
 | `blocked` | Terminal state — loop cannot proceed without external input. |
+| `$docs-review` | Explicit fact-reconciliation macro loop; never triggered by routine docs impact. |
+| Claim Ledger | Temporary per-review list of scoped factual assertions and their evidence. |
+| Resolution Ledger | Temporary per-review list of evidence-backed or human-confirmed dispositions. |
+| Resolution Group | Schema-v2 binding from one scoped claim and authority to intended semantics and approved docs. |
+| Shard auditor | Fresh read-only auditor responsible for one deterministic full-read/search batch. |
+| Synthesis auditor | Fresh final auditor that rechecks cross-shard semantic closure without treating shard reports as fact authority. |
 | `role_session_reuse` | Planner and scout may be reused across dispatches; generator and evaluator are always fresh. |
 | `freshly_read` | Files the subagent opened in this dispatch. Replaces the old `files_read`. |
 | `satisfied_from_verified_cache` | Files a reused subagent trusts from a previous dispatch's verified cache. |

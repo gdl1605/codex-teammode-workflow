@@ -23,8 +23,10 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
 
 - Do not blindly overwrite existing target repo files.
 - Do not copy product facts, architecture claims, plans, evidence, or domain assumptions from this workflow repo into the target repo.
-- Current target repo code is the highest source of truth.
-- If target docs conflict with target code, target code wins.
+- Current target repo code is the strongest evidence for current implementation behavior.
+- Classify a docs/code conflict before resolving it: code determines descriptive implementation
+  facts, while explicit human/canonical contracts determine business intent; deployment,
+  acceptance, legal, and release claims require their own direct evidence.
 - If the target repo has existing `AGENTS.md`, `CLAUDE.md`, `docs/`, or `workflow/`, inspect and merge.
 - Keep edits limited to workflow/process files and docs scaffolding unless the user explicitly allows business code changes.
 - Ordinary workflow is the default; do not enable Team Loop unless the user explicitly requests it.

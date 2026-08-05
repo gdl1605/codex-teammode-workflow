@@ -1,6 +1,6 @@
 # Planning / Prompt Framing Reference
 
-> 最后更新时间：2026-06-03
+> 最后更新时间：2026-08-04
 > 适用范围：普通工作流中的 plan-only / read-only audit / prompt-framing / review-framing
 > 本文主职责：保留当前有效的 planning 规则；旧迁移长规范已压缩为链接化规则
 > 推荐下一跳：`planner-input-template.md`
@@ -27,11 +27,11 @@ Team Loop 只有在用户明确声明 `@team-loop` / `Team Loop` / `teamloop`，
 ## 读取原则
 
 - 默认先读 current code，再按任务需要读对应 docs，最后参考 handoff。
-- 事实优先级固定为 `current code > topic docs > docs/handoff/latest.md > docs/handoff/archive/`。
+- 当前实现事实的证据优先级固定为 `current code > topic docs > docs/handoff/latest.md > docs/handoff/archive/`；业务意图与外部生命周期事实按各自权限/evidence 路由。
 - docs 按需读取；不要为了普通轮次启动而重复读取全量 docs。
 - `docs/README.md` 是入口地图，不是全量阅读要求。
 - 口头摘要、handoff 和旧 planner 结论都不能替代 current code。
-- 如果 docs 与 current code 冲突，先以 current code 再核实，再决定是否需要 docs impact。
+- 如果 docs 与 current code 冲突，先记录当前实现，再判断代码偏离业务合同还是 docs 陈述了错误的实现事实；不能自动让任一方覆盖另一方。
 
 ## 启动说明
 

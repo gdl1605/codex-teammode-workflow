@@ -1,6 +1,6 @@
 # Team Loop Workflow
 
-> 最后更新时间：2026-06-02
+> 最后更新时间：2026-08-04
 > 适用范围：需要由 Leader 主线程调度多个独立 subagent 的类 team-mode 闭环
 > 本文主职责：定义 plan-gated / auto-execute 两种模式、角色边界、通信规则、Context Bootstrap、Read Scope Ack、scout 支援机制和人工验收停点
 > 推荐下一跳：`team-loop-core.md`、`team-loop-roles/`
@@ -34,7 +34,7 @@ Team Loop 不做：
 - 不让 subagent 彼此直接通信。
 - 不让 generator / evaluator / scout 自己派生 subagent。
 - 不自动进入 `accepted`。
-- 不替代 `current code > docs > handoff` 的事实优先级。
+- 不替代“current code 优先证明当前实现事实、其他 claim 按权限/evidence 分流”的事实规则。
 - 不把 scout 结论直接当作 generator 的正式输入。
 - 不作为普通工作流的默认执行方式。
 - 不复用 generator / evaluator role session。
@@ -190,8 +190,8 @@ generator subagent 是默认唯一写代码角色。
 - 启动前读取 Leader 给出的 `Context Bootstrap`。
 - 输出 `Read Scope Ack`，说明已重新审计的 current code、docs、handoff 或 evidence。
 - 消费 Leader 给出的 planner subagent handoff 和 Evidence Pack，但不把它们当作 current code 的替代品。
-- 按 current code 做最小实现。
-- 若 `Context Bootstrap`、Evidence Pack、docs 与 current code 冲突，以 current code 为准，并回报 Leader。
+- 按 current code 做最小实现，同时遵守已确认的合同层。
+- 若 `Context Bootstrap`、Evidence Pack、docs 与 current code 冲突，先向 Leader 回报“当前实现行为”和冲突的 claim 类型；实现事实以代码为准，业务意图不得被代码静默覆盖。
 - 如审计范围过大，向 Leader 提交 Scout Request。
 - 输出 touched files、修改摘要、验证建议和给 Leader 的 evaluator notes。
 - 明确 docs impact。
@@ -321,7 +321,8 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
   - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
-- fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
+- implementation_fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
+- non_implementation_authority: explicit business contract or direct lifecycle evidence
 - allowed_read_scope:
 - forbidden_read_scope:
 - allowed_write_scope:
@@ -576,7 +577,8 @@ context_bootstrap:
   - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
-- fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
+- implementation_fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
+- non_implementation_authority: explicit business contract or direct lifecycle evidence
 - allowed_read_scope:
 - forbidden_read_scope:
 - allowed_write_scope:

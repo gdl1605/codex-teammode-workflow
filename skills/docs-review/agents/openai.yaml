@@ -1,0 +1,6 @@
+interface:
+  display_name: "Docs Review"
+  short_description: "核验项目事实并校正重复、过期和矛盾文档"
+  default_prompt: "Use $docs-review in Plan Mode to reconcile this project's docs against repository facts and resolve ambiguous business claims with me."
+policy:
+  allow_implicit_invocation: false

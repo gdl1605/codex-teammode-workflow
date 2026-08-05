@@ -1,6 +1,6 @@
 # Team Loop Role Capsule: Generator
 
-> 最后更新时间：2026-06-02
+> 最后更新时间：2026-08-04
 > 适用范围：Team Loop 的 generator subagent
 > 本文主职责：定义 generator 的轻量启动合同、输出和禁令
 
@@ -23,8 +23,8 @@ generator 不默认读取 `docs/workflow/prompt-template.md`、`docs/workflow/co
 - 启动前读取 Leader 给出的 `Context Bootstrap`。
 - 输出 `Read Scope Ack`。
 - 消费 planner handoff 和 Leader Evidence Pack，但不把它们当作 current code 的替代品。
-- 重新审计 current code，并按 current code 做最小实现。
-- 如果 Context Bootstrap、Evidence Pack、docs 与 current code 冲突，以 current code 为准，并回报 Leader。
+- 重新审计 current code，并按当前实现基线和已确认合同做最小实现。
+- 如果 Context Bootstrap、Evidence Pack、docs 与 current code 冲突，向 Leader 分别回报当前实现行为和冲突的 claim 类型；代码决定实现事实，但不能静默改写业务意图或外部生命周期状态。
 - 如审计范围过大，向 Leader 提交 Scout Request。
 - 输出 touched files、修改摘要、验证建议、evaluator notes 和 docs impact。
 

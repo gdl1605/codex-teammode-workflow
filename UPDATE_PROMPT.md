@@ -22,11 +22,14 @@ Use ownership-based updates:
 - Do not blindly overwrite existing target repo files.
 - Do not edit business code.
 - Do not copy product facts, architecture claims, handoff, plans, evidence, or domain assumptions from this workflow repo into the target repo.
-- Current target repo code is the highest source of truth.
-- If target docs conflict with target code, target code wins.
+- Current target repo code is the strongest evidence for current implementation behavior.
+- Classify a docs/code conflict before resolving it: code determines descriptive implementation
+  facts, while explicit human/canonical contracts determine business intent; deployment,
+  acceptance, legal, and release claims require their own direct evidence.
 - Preserve all target-project content outside managed blocks.
 - Do not create `.new` files for workflow-owned files. The goal is to replace old workflow files, not keep old and new copies side by side.
 - If a mixed file cannot be updated safely because managed markers are missing, report the required managed block insertion instead of creating `.new`.
+- Treat `package-only` skills as package content. Do not install or overwrite a personal/global skill directory during target-project update.
 
 ## Required Read Scope
 
@@ -86,11 +89,16 @@ Then inspect the target repo:
    - Do not change existing target facts, architecture docs, handoff, plans, or evidence.
    - If a new workflow version expects a convention change there, report it as a manual migration note.
 
-7. Refresh marker file.
+7. For `package-only` files:
+   - Keep the bundled source inside `codex-teammode-workflow/`.
+   - Do not copy it into target root workflow docs or a personal/global skill directory.
+   - If a newer optional skill is available, report the explicit installer command as a manual action.
+
+8. Refresh marker file.
    - Write `docs/workflow/.codex-teammode-version`.
    - Include the package version, timestamp, update schema, and `managed_files` entries with fresh sha256 hashes for updated / managed files.
 
-8. Run docs impact check.
+9. Run docs impact check.
 
 ## Required Output
 
@@ -105,6 +113,7 @@ Final response must include:
 - stale workflow `.new` files removed
 - mixed-file conflicts requiring human review
 - never-overwrite paths skipped
+- package-only paths retained and optional skill manual action, if any
 - marker file status
 - remaining manual migration notes
 - docs impact check

@@ -34,6 +34,35 @@ workflow-kernel/
 
 `VERSION`, `UPDATE_MANIFEST.md`, `UPDATE_PROMPT.md`, and `docs/workflow/update-policy.md` define the upgrade protocol for replacing old workflow installs without overwriting target project facts.
 
+## Included Optional Skill
+
+```text
+skills/docs-review/
+  SKILL.md
+  agents/openai.yaml
+  scripts/scan_docs.py
+  scripts/validate_docs_review.py
+  scripts/prepare_closure_audit.py
+  scripts/validate_closure_audit.py
+  scripts/merge_closure_audits.py
+  scripts/tests/
+  references/fact-model.md
+  references/reconciliation-rules.md
+  references/interaction-and-output.md
+  references/independent-closure-auditor.md
+  references/independent-closure-synthesizer.md
+```
+
+The skill source is part of the versioned workflow package. It is not installed into a
+personal Codex skill directory unless the user explicitly runs `install.sh` with
+`--install-docs-review`. A normal target-project bootstrap or workflow update never silently
+overwrites the personal copy.
+
+The bundled v2 protocol uses scanner schema 4 and plan/report schema 2. It requires
+structured finding dispositions, keeps audit IDs out of project docs, partitions large
+full-read audits into bounded shards, preserves raw auditor reports, and runs a fresh
+cross-shard synthesis auditor before a final verdict.
+
 ## Included Docs Structure Template
 
 ```text
@@ -91,6 +120,7 @@ Workflow updates use `UPDATE_MANIFEST.md` and `UPDATE_PROMPT.md`.
 - `managed-block`: mixed files such as `AGENTS.md`, `CLAUDE.md`, and `docs/README.md`.
 - `create-if-missing`: scaffold placeholders from `docs-structure-template/`.
 - `never-overwrite`: target-owned facts under `docs/product/**`, `docs/architecture/**`, `docs/handoff/**`, `docs/plans/**`, and `docs/evidence/**`.
+- `package-only`: `skills/docs-review/**` remains versioned inside the copied workflow package; personal skill installation and refresh are separate explicit actions.
 
 Target projects should record installed workflow hashes in `docs/workflow/.codex-teammode-version` after bootstrap or update. The hashes are for reporting and future baseline tracking; workflow-owned files still replace in place on update.
 

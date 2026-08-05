@@ -10,6 +10,7 @@ Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** �
 - plan / audit / execute / review 轮次
 - audit-first 根因锁定
 - docs impact check
+- 可选 `$docs-review`：人工触发的跨文档事实对账与清理
 - 可选的 Team Loop：Leader + planner / generator / scout / evaluator
 - 永远停在 `human_acceptance_required`，不让 agent 自己宣布验收
 
@@ -41,7 +42,15 @@ cd codex-teammode-workflow
 ./install.sh --dry-run /path/to/project
 ./install.sh --force /path/to/project
 ./install.sh --no-clipboard /path/to/project
+./install.sh --install-docs-review /path/to/project
+./install.sh --install-docs-review --skill-root /path/to/skills /path/to/project
 ```
+
+`docs-review` 是可选个人 skill。没有 `--install-docs-review` 时，安装器绝不修改个人
+skill 目录。默认目标是 `$CODEX_HOME/skills`，未设置时使用 `~/.codex/skills`。
+目标不存在时安装，内容完全一致时 no-op；内容不同时默认拒绝覆盖，只有
+显式加 `--force-skill` 才会先创建时间戳备份，再替换精确的 `docs-review` 目录。
+`--dry-run` 会同时显示 workflow package 目标和可选 skill 目标，不写文件。
 
 ### 手动安装
 
@@ -82,7 +91,7 @@ docs/
 
 这个项目只安装 **工作流机制**，不安装任何业务事实。
 
-Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、计划、证据、架构结论或领域示例。目标仓库的 current code 永远是最高事实源。
+Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、计划、证据、架构结论或领域示例。普通实现事实仍以目标仓库的 current code 为首要证据；显式运行 `$docs-review` 时则按 claim 类型路由权限，业务意图、部署、人工验收和法务状态不能被“代码已实现”替代。
 
 复杂长规划可选使用独立 skill 包 [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划的方向选择、HTML Selection 和小规划产出。
 
@@ -91,10 +100,49 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 - **Normal workflow**：单 agent 轮次，包括 `plan-only`、`read-only audit`、`docs-only`、`execute`、`review`。
 - **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
-- **Fact priority**：current code > topic docs > `docs/handoff/latest.md` > archive。
+- **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
+- **docs impact / docs-review**：前者是每轮增量微循环；后者是人工触发、Plan/Apply 两阶段的事实校正宏循环。
+- **docs-review v2 plan gate**：scanner schema 4 的每条 finding 都绑定 source fingerprint、结构化 resolution group、精确人工权限和批准文件；机器 Claim ID / 稳定锚点不得写进业务 docs。
+- **docs-review sharded closure**：大型全文审查按预算分片，原始 auditor JSON 无损校验；所有 shard pass 后再由全新 synthesis auditor 做跨分片终审，任一不足先停在人类确认门。
 - **human_acceptance_required**：最终停点，只有人类可以验收。
 
 更多术语见 [`CONCEPTS.md`](./CONCEPTS.md)。
+
+## Docs Review Skill
+
+[`skills/docs-review/`](./skills/docs-review/) 是随工作流包版本化、但只允许人工显式触发的
+项目事实校正 skill。它解决的是长期增量维护后常见的宏观偏差：同一业务事实散落在多份
+docs 中、current 与 candidate 混写、active/completed 生命周期错位、历史状态伪装成当前
+状态，以及实现、部署、验收、法务和发布被压缩成一个模糊的“已完成”。
+
+它和普通 `docs impact` 的分工是：
+
+- `docs impact` 是每轮结束时维护受影响主落点的微循环。
+- `$docs-review` 是人工触发、跨文档对账和清理的宏循环，不会被普通 docs 修改自动调用。
+
+Codex 中推荐分两阶段使用：
+
+```text
+Plan Mode:  $docs-review [scope=<domain-or-docs-path>]
+Default Mode: $docs-review apply
+```
+
+Plan Mode 只读 docs、current code、schema、tests 和已有 evidence，逐类判断事实权限并向人类
+询问无法由仓库证据唯一决定的业务含义。`apply` 只消费同一任务中已经批准、通过 schema-2
+计划门且 baseline 未漂移的方案，只修改批准列表中的 Markdown docs；它不会顺手修改业务
+代码、migration、测试、部署环境或外部系统。
+
+v2 为每条 scanner-schema-4 finding 记录 source fingerprint、结构化 disposition、目标语义、
+证据和精确人工权限；自然语言业务含义交给独立审计，不把 Claim ID、audit ID 或 validator
+专用锚点写进项目 docs。Apply 后，大型全文范围会按预算拆成多个 fresh shard auditor，原始
+JSON 报告必须无损保存并通过严格校验。全部 shard pass 后，还要由一个全新的 synthesis
+auditor 重新核验 canonical owner、跨分片 consumer 和原始 evidence。任一 deficiency 或协议
+错误都会立即停在人类确认门，不能在同一失败轮自行修复。
+
+最终 verdict 只有 `consistent`、`partially_consistent` 或 `blocked`；这些结果都不会自动推导
+`human_accepted`、`legal_accepted`、`deployed` 或 `released`。完整协议见
+[`SKILL.md`](./skills/docs-review/SKILL.md)，事实模型与独立审计角色见
+[`skills/docs-review/references/`](./skills/docs-review/references/)。
 
 ## Team Loop 工作流
 
@@ -132,7 +180,7 @@ User
 - subagent 之间禁止直接通信；所有 planner / generator / scout / evaluator 输出都只回 Leader。
 - Leader 每次派生 fresh subagent 必须附带 `Context Bootstrap`；复用 planner / scout 时必须附带 cache manifest 和 freshness check。每个 subagent 输出开头必须有 `Read Scope Ack`。
 - planner / scout 可按 freshness check 有限复用；generator / evaluator 每轮 fresh。
-- Evidence Pack 不能替代 generator 自己读取 current code；事实优先级始终是 current code > topic docs > handoff。
+- Evidence Pack 不能替代 generator 自己读取 current code；对当前实现事实，证据优先级是 current code > topic docs > handoff，业务意图和外部生命周期事实按各自权限/evidence 路由。
 - P0 / P1、验证失败、越过 forbidden scope、缺少关键 read scope 时进入返工或 blocked。
 - Team Loop 的终态只能是 `human_acceptance_required` 或 `blocked`；`accepted` 只能由人类明确表达。
 
@@ -166,7 +214,7 @@ User
 
 Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
 
-It installs a normal plan / audit / execute / review workflow, an audit-first evidence flow, a docs impact check, and an optional Team Loop where a Leader coordinates planner, generator, scout, and evaluator roles.
+It installs a normal plan / audit / execute / review workflow, an audit-first evidence flow, a docs impact check, an optional explicit-only `$docs-review` fact-reconciliation skill, and an optional Team Loop where a Leader coordinates planner, generator, scout, and evaluator roles.
 
 This is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by OpenAI.
 
@@ -180,9 +228,48 @@ cd codex-teammode-workflow
 ./install.sh /path/to/your-target-project
 ```
 
+Optionally install the bundled personal skill with:
+
+```bash
+./install.sh --install-docs-review /path/to/your-target-project
+./install.sh --install-docs-review --skill-root /path/to/skills /path/to/your-target-project
+```
+
+Without `--install-docs-review`, the installer never changes a personal skill directory.
+The default parent is `$CODEX_HOME/skills`, or `~/.codex/skills` when `CODEX_HOME` is unset.
+Use `--force-skill` only when you want the exact existing `docs-review` target backed up and
+replaced. Workflow package updates do not silently refresh the personal skill.
+
+Docs Review v2 uses scanner schema 4 and a schema-2 plan gate: each deterministic finding
+binds its source fingerprint to scoped authority, intended semantics, evidence, and approved
+docs. Audit-only IDs and validator phrases stay out of project documentation. After apply,
+large full-read scopes are split into bounded independent shards; raw reports are validated
+losslessly and a fresh synthesis auditor must pass before the final verdict. Any deficiency
+stops at a human approval gate. Unchanged passing shards may be safely reused by hash in a
+correction round, but synthesis is always fresh.
+
 Then open Codex or Claude Code in the target project and paste the bootstrap prompt printed by the installer.
 
 Upgrade an existing target project by copying in the newer package and pasting [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md). Updates are ownership-based: workflow kernel files replace old workflow files in place, mixed files use managed blocks, and target project facts are never overwritten.
+
+### Docs Review At A Glance
+
+[`skills/docs-review/`](./skills/docs-review/) is an explicit-only macro workflow for
+reconciling project facts after incremental documentation has accumulated duplication, stale
+state, lifecycle leakage, or conflicting business meaning. It complements the per-turn
+`docs impact` micro loop and is never invoked automatically by routine documentation edits.
+
+Run `$docs-review [scope=<domain-or-docs-path>]` in Plan Mode for a read-only audit and human
+arbitration, then run `$docs-review apply` in Default Mode only after the same task has an
+approved schema-2 plan and an unchanged baseline. Apply is docs-only: it does not change
+business code, migrations, tests, deployments, or external systems.
+
+Version 2 binds every scanner-schema-4 finding to an exact source fingerprint, structured
+disposition, evidence, intended semantics, and scoped authority. Post-apply closure uses
+bounded fresh shard auditors, losslessly validated raw JSON reports, and a new synthesis
+auditor for cross-shard consumers and original evidence. Any deficiency or protocol failure
+stops at a human approval gate. See the complete contract in
+[`skills/docs-review/SKILL.md`](./skills/docs-review/SKILL.md).
 
 ### Team Loop At A Glance
 

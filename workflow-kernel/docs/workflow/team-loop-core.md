@@ -75,7 +75,8 @@ Leader 自身参考 `team-loop-roles/leader.md`。每个 subagent 只需要自�
 - task_docs:
 - code_scope:
 - handoff_or_evidence:
-- fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
+- implementation_fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
+- non_implementation_authority: explicit business contract or direct lifecycle evidence
 - allowed_read_scope:
 - forbidden_read_scope:
 - allowed_write_scope:
