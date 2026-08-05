@@ -1,6 +1,6 @@
 # docs 维护规则
 
-> 最后更新时间：2026-04-03
+> 最后更新时间：2026-08-04
 > 适用范围：docs-only 轮、docs impact check、更新时间、刷新节奏、目录职责
 > 本文主职责：只写 docs 如何维护
 > 推荐下一跳：`workflow/collaboration.md`
@@ -24,6 +24,27 @@
 - 每轮结束前，先判断本轮是否改变了项目事实、合同 / 边界、已成立能力、候选方向、计划状态或长期债务。
 - 有变化就更新对应 docs 主落点；没有变化也要在输出里明确写“本轮无需更新 docs”及原因。
 - docs impact check 只判断“要不要更新”和“该更新哪份”，不要求每轮全量刷新 docs。
+- docs impact check 是每轮增量维护的**微循环**；它不负责跨文档整体对账，也不得自动触发 `$docs-review`。
+- 每轮 docs impact 输出应附带：
+
+  ```yaml
+  reconciliation_recommended: yes | no
+  reason: <是否出现重复、矛盾、状态混写、证据断链或长期未整体校正的简短原因>
+  ```
+
+- `reconciliation_recommended: yes` 只向人类建议另开宏循环，不授权当前 agent 扩大读取范围或调用 skill。
+
+## `$docs-review` 事实校正宏循环
+
+- `$docs-review` 是可选、人工显式触发的跨文档事实对账；普通 docs 修改、docs-only 轮和 docs impact 不自动进入它。
+- Codex 中优先在 Plan Mode 运行 `$docs-review`：只读 current code / schema / tests / 已有 evidence 与 docs，抽取冲突并请人类裁决业务意图、历史验收和无法证明的外部状态。
+- 用户批准 decision-complete 计划后，另在 Default Mode 调用 `$docs-review apply`；apply 只改批准列表中的 docs，并先检查 baseline hash 是否漂移。
+- 没有外部证据时，部署、运行态、人工验收、法务验收和发布状态只能写成未核验，不能从“代码已实现”推导。
+- `$docs-review` 的清理原则是替换旧事实、确立单一主落点、去重和迁移失效状态，不是在旧结论后追加一段纠正文。
+- v2 的 Plan Mode 必须先通过结构化事实处置 gate：每条 scanner finding 绑定 source fingerprint、resolution group、精确人工权限、证据、目标语义和批准文件；自然语言语义由独立审计判断，Claim ID / audit ID / validator 专用锚点不能污染业务 docs。
+- apply 后先按 120,000 bytes / 2,000 lines 预算拆分 full-read 文件，最多并发三个 fresh shard auditor；完整 raw JSON 不能由主 Agent 摘要或补字段。任一 shard deficiency 立即进入人类确认门，不得同轮自行修复。
+- 全部 shard pass 后仍须由全新的 synthesis auditor 读取经过验证的 shard 报告、canonical docs、跨分片 consumer 和原始 evidence；shard 报告只证明覆盖，不是业务事实权限。修正轮可按 hash 复用完全未变化的 pass shard，但 synthesis 永不复用。
+- skill 可随 workflow package 版本化，但个人 skill 目录只能通过安装器的 `--install-docs-review` 显式安装或更新。
 
 ## 按变化类型更新哪份 docs
 

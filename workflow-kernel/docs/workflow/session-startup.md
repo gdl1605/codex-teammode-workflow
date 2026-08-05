@@ -1,6 +1,6 @@
 # Session Startup Protocol
 
-> 最后更新时间：2026-04-30
+> 最后更新时间：2026-08-04
 > 适用范围：所有执行轮的开场检查
 > 本文主职责：把执行轮启动时必须先确认的上下文、仓库状态和风险点固定下来
 > 推荐下一跳：`workflow/collaboration.md`
@@ -22,8 +22,8 @@
 
 要求：
 
-- 事实判断优先级始终是 `current code -> 对应专题 docs -> handoff/latest.md -> handoff/archive/`
-- 若 docs 与 current code 不一致，以 current code 为准，并在输出中明确指出差异
+- 当前实现事实的证据优先级是 `current code -> 对应专题 docs -> handoff/latest.md -> handoff/archive/`。
+- 若 docs 与 current code 不一致，先明确代码的当前行为，再区分冲突是否属于业务意图或外部生命周期事实；不得用代码现状覆盖已确认合同，也不得从代码推导部署、验收、法务或发布状态。
 
 ## 2. git 状态确认
 

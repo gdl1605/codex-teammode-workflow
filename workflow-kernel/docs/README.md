@@ -2,7 +2,7 @@
 
 <!-- codex-teammode:managed:start scope=docs-index version=0.1.0 -->
 
-> 最后更新时间：2026-06-03
+> 最后更新时间：2026-08-04
 > 适用范围：整个 `docs/` 目录的阅读入口与分工说明
 > 本文主职责：告诉新线程先看什么、每份文档写什么、哪些内容只能去别处找
 > 推荐下一跳：`handoff/latest.md`
@@ -40,6 +40,7 @@
 - 根因未锁、需要“只读审计 -> evidence -> 回流执行 prompt”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实
 - 要整理 docs 维护：先看 `workflow/docs-maintenance.md`
+- 要做跨文档整体事实校正：只有用户显式触发 `$docs-review` 时，先看 `workflow/docs-maintenance.md`，再由已安装的可选 skill 在 Plan Mode 只读核验；v2 使用结构化 plan gate、分片独立审计和全新 synthesis 终审，docs impact 不自动进入该流程
 - 要看当前候选方向或后置项：先看 `product/active-directions.md`
 - 要看跨轮次技术债：先看 `plans/tech-debt.md`
 - 要管理当前计划或结束后的计划工件：先看 `plans/active/` 和 `plans/completed/`
@@ -66,7 +67,7 @@
   - 只写长期协作规范、普通工作流轻闭环、审计顺序、证据优先、根因锁定规则
   - 不写当前产品状态
 - `workflow/docs-maintenance.md`
-  - 只写 docs-only、更新节奏、刷新时机、目录职责
+  - 只写 docs-only、更新节奏、刷新时机、目录职责，以及 docs impact 微循环 / `$docs-review` 宏循环的分工
   - 不写产品事实正文
 - `workflow/prompt-template.md`
   - 只写固定 prompt 结构、输出结构、验收清单要求
@@ -116,6 +117,7 @@
 - handoff 和摘要是加速入口，不是最高事实源
 - 归档只用于追溯，不凌驾于当前代码
 - 如果 docs 和代码冲突，后续必须以 current code 再核实
+- 上述顺序用于普通实现事实；显式 `$docs-review` 必须按 claim 类型分流，业务意图、部署、人工验收和法务事实不能从代码存在直接推导
 
 ## 本轮推进目标来源
 

@@ -27,10 +27,15 @@
 
 ## Fact Priority
 
+For current implementation facts:
+
 1. current code
 2. topic docs
 3. `handoff/latest.md`
 4. `handoff/archive/`
+
+This order does not let code silently override explicit business intent, nor prove deployment,
+acceptance, legal, or release state. Route those claims to their direct authority/evidence.
 
 ## Directory Responsibilities
 

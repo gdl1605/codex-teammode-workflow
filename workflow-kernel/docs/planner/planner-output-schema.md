@@ -7,7 +7,7 @@
 
 ## 通用原则
 
-- 输出必须基于 `current code > docs > handoff`。
+- 当前实现事实必须基于 `current code > docs > handoff`；业务意图和部署 / 验收 / 法务 / 发布事实使用各自直接权限或 evidence。
 - 已验证事实、推断、建议实现层必须分开。
 - 每轮开头必须显式声明：当前按 `plan / execute / review` 哪一种 schema 输出。
 - 普通工作流不默认调度 subagent；只有用户明确声明 Team Loop 时，才按 `docs/workflow/team-loop.md` 进入 Leader / subagent 流程。

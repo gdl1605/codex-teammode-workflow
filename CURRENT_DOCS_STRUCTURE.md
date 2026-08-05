@@ -51,6 +51,21 @@ workflow-kernel/VERSION
 workflow-kernel/docs/workflow/update-policy.md
 ```
 
+## Optional Docs Review Skill
+
+```text
+skills/docs-review/
+  SKILL.md
+  agents/openai.yaml
+  scripts/{scan_docs,validate_docs_review,prepare_closure_audit,validate_closure_audit,merge_closure_audits}.py
+  scripts/tests/
+  references/{fact-model,reconciliation-rules,interaction-and-output}.md
+  references/{independent-closure-auditor,independent-closure-synthesizer}.md
+```
+
+This is a package-level fact-reconciliation skill, not a target docs fact. It remains inside
+the copied workflow package unless the user explicitly installs it into a personal skill root.
+
 ## Product / Architecture Template Slots
 
 These are represented as generic placeholders in `docs-structure-template/`.

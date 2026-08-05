@@ -70,6 +70,24 @@ Everything outside the block belongs to the target project and must be preserved
 | `docs-structure-template/docs/plans/active/README.md` | `docs/plans/active/README.md` | `create-if-missing` |
 | `docs-structure-template/docs/plans/completed/README.md` | `docs/plans/completed/README.md` | `create-if-missing` |
 | `docs-structure-template/docs/evidence/README.md` | `docs/evidence/README.md` | `create-if-missing` |
+| `skills/docs-review/**` | Package copy only; optional personal skill target is `<skill-root>/docs-review` | `package-only` |
+
+## Optional Skill Distribution
+
+`skills/docs-review/**` is versioned inside the workflow package, but a normal bootstrap or
+target-project update must not install or overwrite a user's global skill automatically.
+
+- Install it only through `install.sh --install-docs-review`.
+- Choose a non-default parent with `--skill-root <path>` when needed.
+- An identical installed skill is a no-op.
+- A differing installed skill is preserved unless the user also passes `--force-skill`.
+- `--force-skill` backs up and replaces only the exact `docs-review` target; it is independent
+  from the workflow package's `--force` flag.
+- Updating the copied workflow package does not refresh the personal skill. Re-run the
+  explicit skill installation command to adopt a newer bundled copy.
+- A v2 refresh includes the shard/synthesis role files plus `prepare_closure_audit.py` and
+  `merge_closure_audits.py`; partial file copying is unsupported because schema-v1 scanner,
+  plan, or closure artifacts cannot continue apply under v2.
 
 ## Never-overwrite Target Areas
 
@@ -116,4 +134,5 @@ For old installations without `docs/workflow/.codex-teammode-version`:
 4. `managed-block` files may only update content inside existing markers; if markers are missing, report the required managed block insertion instead of rewriting project-owned text.
 5. `create-if-missing` files are created only when missing.
 6. `never-overwrite` paths are skipped.
-7. Always write a new marker file after the update.
+7. `package-only` paths stay inside the copied package and never modify a personal skill directory.
+8. Always write a new marker file after the update.
