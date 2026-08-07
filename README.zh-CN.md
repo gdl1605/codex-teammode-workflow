@@ -122,7 +122,7 @@ skill；需要采用新版时重新显式运行 skill 安装命令。
 
 ## 当前状态
 
-`v0.1.0` 是 public preview。核心内核目前中文优先，第一版明确支持 Codex 和 Claude Code。
+`v0.2.0` 是当前 public preview。核心内核目前中文优先，当前版本明确支持 Codex 和 Claude Code。
 
 ## 贡献
 
