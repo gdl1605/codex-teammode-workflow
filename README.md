@@ -51,6 +51,8 @@ skill 目录。默认目标是 `$CODEX_HOME/skills`，未设置时使用 `~/.cod
 目标不存在时安装，内容完全一致时 no-op；内容不同时默认拒绝覆盖，只有
 显式加 `--force-skill` 才会先创建时间戳备份，再替换精确的 `docs-review` 目录。
 `--dry-run` 会同时显示 workflow package 目标和可选 skill 目标，不写文件。
+默认 bootstrap / update 也不会把这个可选 skill 的介绍写入目标项目的 `AGENTS.md` 或
+`CLAUDE.md`；需要时由用户显式安装并调用 skill。
 
 ### 手动安装
 
@@ -102,7 +104,7 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
 - **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
 - **docs impact / docs-review**：前者是每轮增量微循环；后者是人工触发、Plan/Apply 两阶段的事实校正宏循环。
-- **docs-review v2 plan gate**：scanner schema 4 的每条 finding 都绑定 source fingerprint、结构化 resolution group、精确人工权限和批准文件；机器 Claim ID / 稳定锚点不得写进业务 docs。
+- **docs-review v3 plan gate**：scanner schema 5 的每条 finding 都绑定 source fingerprint、结构化 resolution group、精确人工权限和批准文件；完整 audit scope 与每项 edit contract 同时冻结，机器 Claim ID / 稳定锚点不得写进业务 docs。
 - **docs-review sharded closure**：大型全文审查按预算分片，原始 auditor JSON 无损校验；所有 shard pass 后再由全新 synthesis auditor 做跨分片终审，任一不足先停在人类确认门。
 - **human_acceptance_required**：最终停点，只有人类可以验收。
 
@@ -128,16 +130,17 @@ Default Mode: $docs-review apply
 ```
 
 Plan Mode 只读 docs、current code、schema、tests 和已有 evidence，逐类判断事实权限并向人类
-询问无法由仓库证据唯一决定的业务含义。`apply` 只消费同一任务中已经批准、通过 schema-2
+询问无法由仓库证据唯一决定的业务含义。`apply` 只消费同一任务中已经批准、通过 schema-3
 计划门且 baseline 未漂移的方案，只修改批准列表中的 Markdown docs；它不会顺手修改业务
 代码、migration、测试、部署环境或外部系统。
 
-v2 为每条 scanner-schema-4 finding 记录 source fingerprint、结构化 disposition、目标语义、
-证据和精确人工权限；自然语言业务含义交给独立审计，不把 Claim ID、audit ID 或 validator
-专用锚点写进项目 docs。Apply 后，大型全文范围会按预算拆成多个 fresh shard auditor，原始
-JSON 报告必须无损保存并通过严格校验。全部 shard pass 后，还要由一个全新的 synthesis
-auditor 重新核验 canonical owner、跨分片 consumer 和原始 evidence。任一 deficiency 或协议
-错误都会立即停在人类确认门，不能在同一失败轮自行修复。
+v3 为每条 scanner-schema-5 finding 记录 source fingerprint、结构化 disposition、目标语义、
+证据和精确人工权限，并冻结完整 `audit_scope_manifest` 与结构化 `edit_contracts`，验证
+canonical transfer、path rewrite 和 lifecycle move 的后置条件；自然语言业务含义交给独立
+审计，不把 Claim ID、audit ID 或 validator 专用锚点写进项目 docs。Apply 后，大型全文范围
+会按预算拆成多个 fresh shard auditor，原始 JSON 报告必须无损保存并通过严格校验。全部 shard
+pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical owner、跨分片 consumer 和
+原始 evidence。任一 deficiency 或协议错误都会立即停在人类确认门，不能在同一失败轮自行修复。
 
 最终 verdict 只有 `consistent`、`partially_consistent` 或 `blocked`；这些结果都不会自动推导
 `human_accepted`、`legal_accepted`、`deployed` 或 `released`。完整协议见
@@ -239,14 +242,17 @@ Without `--install-docs-review`, the installer never changes a personal skill di
 The default parent is `$CODEX_HOME/skills`, or `~/.codex/skills` when `CODEX_HOME` is unset.
 Use `--force-skill` only when you want the exact existing `docs-review` target backed up and
 replaced. Workflow package updates do not silently refresh the personal skill.
+Default bootstrap and update flows also keep the optional skill guide out of target
+`AGENTS.md` and `CLAUDE.md`; users install and invoke the skill explicitly when needed.
 
-Docs Review v2 uses scanner schema 4 and a schema-2 plan gate: each deterministic finding
+Docs Review v3 uses scanner schema 5 and a schema-3 plan gate: each deterministic finding
 binds its source fingerprint to scoped authority, intended semantics, evidence, and approved
-docs. Audit-only IDs and validator phrases stay out of project documentation. After apply,
-large full-read scopes are split into bounded independent shards; raw reports are validated
-losslessly and a fresh synthesis auditor must pass before the final verdict. Any deficiency
-stops at a human approval gate. Unchanged passing shards may be safely reused by hash in a
-correction round, but synthesis is always fresh.
+docs. The plan also freezes the complete audit scope and executable edit contracts. Audit-only
+IDs and validator phrases stay out of project documentation. After apply, large full-read
+scopes are split into bounded independent shards; raw reports are validated losslessly and a
+fresh synthesis auditor must pass before the final verdict. Any deficiency stops at a human
+approval gate. Unchanged passing shards may be safely reused by hash in a correction round,
+but synthesis is always fresh.
 
 Then open Codex or Claude Code in the target project and paste the bootstrap prompt printed by the installer.
 
@@ -261,14 +267,15 @@ state, lifecycle leakage, or conflicting business meaning. It complements the pe
 
 Run `$docs-review [scope=<domain-or-docs-path>]` in Plan Mode for a read-only audit and human
 arbitration, then run `$docs-review apply` in Default Mode only after the same task has an
-approved schema-2 plan and an unchanged baseline. Apply is docs-only: it does not change
+approved schema-3 plan and an unchanged baseline. Apply is docs-only: it does not change
 business code, migrations, tests, deployments, or external systems.
 
-Version 2 binds every scanner-schema-4 finding to an exact source fingerprint, structured
-disposition, evidence, intended semantics, and scoped authority. Post-apply closure uses
-bounded fresh shard auditors, losslessly validated raw JSON reports, and a new synthesis
-auditor for cross-shard consumers and original evidence. Any deficiency or protocol failure
-stops at a human approval gate. See the complete contract in
+Version 3 binds every scanner-schema-5 finding to an exact source fingerprint, structured
+disposition, evidence, intended semantics, and scoped authority. It also closes the complete
+audit scope and validates executable edit contracts for transfers, path rewrites, and moves.
+Post-apply closure uses bounded fresh shard auditors, losslessly validated raw JSON reports,
+and a new synthesis auditor for cross-shard consumers and original evidence. Any deficiency
+or protocol failure stops at a human approval gate. See the complete contract in
 [`skills/docs-review/SKILL.md`](./skills/docs-review/SKILL.md).
 
 ### Team Loop At A Glance

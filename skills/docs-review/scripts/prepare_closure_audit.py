@@ -93,6 +93,81 @@ def load_clauses(path: Path) -> list[dict[str, Any]]:
     return clauses
 
 
+def load_plan_scope(path: Path) -> tuple[set[str], set[str]]:
+    try:
+        plan = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise PrepareError(f"cannot read plan JSON {path}: {exc}") from exc
+    if not isinstance(plan, dict) or plan.get("plan_schema_version") != 3:
+        raise PrepareError("plan file must use plan_schema_version 3")
+    manifest = plan.get("audit_scope_manifest")
+    approved = plan.get("approved_files")
+    if not isinstance(manifest, dict) or not isinstance(approved, list):
+        raise PrepareError("plan file needs audit_scope_manifest and approved_files")
+    expected: set[str] = set()
+    for raw_path, entry in manifest.items():
+        if not isinstance(raw_path, str) or not isinstance(entry, dict):
+            raise PrepareError("invalid audit_scope_manifest entry in plan file")
+        if entry.get("post_state") == "present":
+            expected.add(Path(raw_path).as_posix())
+        elif entry.get("post_state") != "absent":
+            raise PrepareError("audit scope post_state must be present or absent")
+    approved_paths = {
+        Path(path).as_posix() for path in approved if isinstance(path, str)
+    }
+    if len(approved_paths) != len(approved):
+        raise PrepareError("approved_files must contain only path strings")
+    return expected, approved_paths
+
+
+def validate_plan_bound_coverage(
+    clauses: list[dict[str, Any]],
+    targets: dict[str, dict[str, Any]],
+    expected_paths: set[str],
+    approved_paths: set[str],
+    findings: list[dict[str, Any]],
+) -> None:
+    actual_paths = set(targets)
+    if actual_paths != expected_paths:
+        add_finding(
+            findings,
+            "plan_audit_scope_coverage_mismatch",
+            "closure coverage must exactly match post-present audit_scope_manifest paths",
+            missing=sorted(expected_paths - actual_paths),
+            extra=sorted(actual_paths - expected_paths),
+        )
+    global_clauses = [clause for clause in clauses if clause.get("kind") == "global"]
+    if len(global_clauses) != 1:
+        add_finding(
+            findings,
+            "global_clause_count_invalid",
+            "closure input must contain exactly one global clause",
+            actual=len(global_clauses),
+        )
+    else:
+        global_paths = {
+            target.get("path")
+            for target in global_clauses[0].get("coverage_targets", [])
+            if isinstance(target, dict) and isinstance(target.get("path"), str)
+        }
+        if global_paths != expected_paths:
+            add_finding(
+                findings,
+                "global_clause_scope_mismatch",
+                "the global clause must enumerate the complete post-apply audit scope",
+                missing=sorted(expected_paths - global_paths),
+                extra=sorted(global_paths - expected_paths),
+            )
+    for path in sorted((approved_paths & expected_paths) & actual_paths):
+        if targets[path].get("obligation") != "full_read":
+            add_finding(
+                findings,
+                "approved_file_not_full_read",
+                "every post-present approved edit path requires full_read closure coverage",
+                file=path,
+            )
+
+
 def safe_target_path(repo_root: Path, path_value: Any) -> tuple[str, Path]:
     if not isinstance(path_value, str) or not path_value:
         raise PrepareError("coverage target path must be a non-empty repo-relative .md path")
@@ -573,13 +648,18 @@ def unbound_clauses(clauses: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_report(args: argparse.Namespace) -> dict[str, Any]:
     repo_root = existing_directory(args.repo_root, "repo root")
     clauses_path = existing_file(args.clauses_file, "clauses file")
+    plan_path = existing_file(args.plan_file, "plan file")
     shard_role = existing_file(args.shard_role_file, "shard role file")
     synthesis_role = existing_file(args.synthesis_role_file, "synthesis role file")
     clauses = load_clauses(clauses_path)
+    expected_scope, approved_paths = load_plan_scope(plan_path)
     manifest_hash = sha256(canonical_json(clauses))
     audit_id = f"DRA-{manifest_hash[:16].upper()}"
     findings: list[dict[str, Any]] = []
     targets, path_clause_ids = validate_and_aggregate(clauses, repo_root, findings)
+    validate_plan_bound_coverage(
+        clauses, targets, expected_scope, approved_paths, findings
+    )
     batches = make_batches(
         targets,
         path_clause_ids,
@@ -649,6 +729,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = JsonArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", required=True)
     parser.add_argument("--clauses-file", required=True)
+    parser.add_argument("--plan-file", required=True)
     parser.add_argument("--shard-role-file", required=True)
     parser.add_argument("--synthesis-role-file", required=True)
     parser.add_argument("--max-batch-bytes", type=int, default=DEFAULT_MAX_BATCH_BYTES)

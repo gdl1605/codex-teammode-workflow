@@ -84,19 +84,7 @@
 - 若有变化，必须更新对应 docs 主落点；不要把同一事实分散回写到多个文档。
 - 若无变化，输出里也必须明确写“本轮无需更新 docs”及原因。
 - docs impact check 只要求更新被本轮语义真正影响的主落点，不要求每轮全量刷新 docs。
-- docs impact 是增量维护微循环；输出还必须给出 `reconciliation_recommended: yes/no + reason`，但不得自动调用 `$docs-review`。
-
-## `$docs-review` 可选事实校正
-
-- `$docs-review` 是人工触发的跨文档事实校正宏循环，只在用户明确输入 `$docs-review`、要求“运行 docs-review”或明确要求全局项目事实校正时使用；普通 docs 修改不触发。
-- Codex 中优先在 Plan Mode 只读审计并使用原生提问完成业务事实裁决；只有同一任务中已有人工批准、decision-complete 计划时，才在 Default Mode 接受 `$docs-review apply`。
-- 它按 claim 类型选择事实权限：current code / types / tests 决定实现事实，schema / migration 内容决定数据合同但不证明已 apply，人工确认 / canonical contract 决定业务意图，部署 / 验收 / 法务 / 发布必须有各自直接 evidence。
-- apply 只修改批准列表中的 docs；baseline 漂移必须停下重审，不能顺手修改业务代码、schema、migration、测试或外部环境。
-- v2 计划必须通过 schema-2 plan gate：scanner schema 4 的每条 finding 都以 source fingerprint 精确绑定结构化 resolution group、人工权限范围、证据、目标语义和批准文件；Claim ID、审计 ID 与 validator 专用锚点不得写进业务 docs。
-- apply 后按文件体积做分片独立审计，最多并发三个 fresh shard auditor；主 Agent 必须无损保存并校验原始 JSON。全部 shard pass 后还要调用全新的 synthesis auditor 做跨分片终审；任一 deficiency 先停下向人类报告并等待明确修正授权。
-- 修正轮只允许按角色、文件/evidence/consumer hash 与条款语义复用完全未变化且已 pass 的 shard；失败或变化的 shard 必须 fresh 重跑，synthesis 永不复用。
-- 可选 skill 源码位于 workflow package 的 `skills/docs-review/`；个人全局 skill 只通过 `install.sh --install-docs-review` 显式安装，工作流升级不得静默覆盖。
-- 完整宏循环规则见 [`docs/workflow/docs-maintenance.md`](docs/workflow/docs-maintenance.md)。
+- docs impact 是增量维护微循环，不承担跨文档全量事实对账。
 
 ## 其他约束
 

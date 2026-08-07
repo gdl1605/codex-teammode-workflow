@@ -85,9 +85,9 @@ target-project update must not install or overwrite a user's global skill automa
   from the workflow package's `--force` flag.
 - Updating the copied workflow package does not refresh the personal skill. Re-run the
   explicit skill installation command to adopt a newer bundled copy.
-- A v2 refresh includes the shard/synthesis role files plus `prepare_closure_audit.py` and
-  `merge_closure_audits.py`; partial file copying is unsupported because schema-v1 scanner,
-  plan, or closure artifacts cannot continue apply under v2.
+- A v3 refresh includes the scanner-schema-5 and plan-schema-3 validators, shard/synthesis
+  role files, `prepare_closure_audit.py`, and `merge_closure_audits.py`. Partial file copying
+  is unsupported; older scanner or plan artifacts cannot continue apply under v3.
 
 ## Never-overwrite Target Areas
 

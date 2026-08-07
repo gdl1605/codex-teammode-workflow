@@ -79,6 +79,23 @@ class LargeShardedFixtureTests(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
+            plan_path = root / "plan.json"
+            plan_path.write_text(
+                json.dumps(
+                    {
+                        "plan_schema_version": 3,
+                        "approved_files": sorted(full_sizes),
+                        "audit_scope_manifest": {
+                            target["path"]: {
+                                "baseline_state": "present",
+                                "post_state": "present",
+                            }
+                            for target in full_targets
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
             result = subprocess.run(
                 [
                     sys.executable,
@@ -87,6 +104,8 @@ class LargeShardedFixtureTests(unittest.TestCase):
                     str(root),
                     "--clauses-file",
                     str(clauses_path),
+                    "--plan-file",
+                    str(plan_path),
                     "--shard-role-file",
                     str(shard_role),
                     "--synthesis-role-file",

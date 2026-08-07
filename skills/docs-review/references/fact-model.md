@@ -105,6 +105,10 @@ conflicting business intent by itself.
 
 ## Active plan classification
 
+First reconcile the physical `plans/active/*.md` set with `plans/active/README.md`. An
+unlisted file is still active inventory and must be classified; an index statement such as
+“唯一 active” is a claim to verify against the directory, not authority to ignore siblings.
+
 When a release scope is frozen, classify every active plan independently:
 
 ```text

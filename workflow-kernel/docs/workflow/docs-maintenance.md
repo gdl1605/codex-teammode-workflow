@@ -41,7 +41,7 @@
 - 用户批准 decision-complete 计划后，另在 Default Mode 调用 `$docs-review apply`；apply 只改批准列表中的 docs，并先检查 baseline hash 是否漂移。
 - 没有外部证据时，部署、运行态、人工验收、法务验收和发布状态只能写成未核验，不能从“代码已实现”推导。
 - `$docs-review` 的清理原则是替换旧事实、确立单一主落点、去重和迁移失效状态，不是在旧结论后追加一段纠正文。
-- v2 的 Plan Mode 必须先通过结构化事实处置 gate：每条 scanner finding 绑定 source fingerprint、resolution group、精确人工权限、证据、目标语义和批准文件；自然语言语义由独立审计判断，Claim ID / audit ID / validator 专用锚点不能污染业务 docs。
+- v3 的 Plan Mode 使用 scanner schema 5 / plan schema 3：除逐条绑定 source fingerprint、resolution group、精确人工权限、证据、目标语义和批准文件外，还必须冻结完整 `audit_scope_manifest`，并用结构化 `edit_contracts` 声明 canonical transfer、path rewrite 和 lifecycle move 的可执行后置条件；自然语言语义由独立审计判断，Claim ID / audit ID / validator 专用锚点不能污染业务 docs。
 - apply 后先按 120,000 bytes / 2,000 lines 预算拆分 full-read 文件，最多并发三个 fresh shard auditor；完整 raw JSON 不能由主 Agent 摘要或补字段。任一 shard deficiency 立即进入人类确认门，不得同轮自行修复。
 - 全部 shard pass 后仍须由全新的 synthesis auditor 读取经过验证的 shard 报告、canonical docs、跨分片 consumer 和原始 evidence；shard 报告只证明覆盖，不是业务事实权限。修正轮可按 hash 复用完全未变化的 pass shard，但 synthesis 永不复用。
 - skill 可随 workflow package 版本化，但个人 skill 目录只能通过安装器的 `--install-docs-review` 显式安装或更新。

@@ -68,6 +68,11 @@ obligations, full read dominates.
    from `human_accepted`.
 6. Check canonical preservation, duplicate ownership, broken consumers, stale routes,
    provenance loss, unsupported expansion, and new contradictions introduced by cleanup.
+   For every canonical move/transfer, prove that the destination now contains the bounded
+   subject—not merely that the source links to it. Search for residual machine-specific
+   absolute paths and explicit repository globs/index directories whose static prefix is
+   missing. Reconcile every assigned `plans/active/` file with its README inventory and any
+   singleton/count claim.
 7. Perform the mandatory global clause over this shard. A shard pass means only that this
    assigned slice passed; cross-shard closure remains the synthesis auditor's job.
 8. Before returning, account for paths twice: make the coverage arrays exactly equal their

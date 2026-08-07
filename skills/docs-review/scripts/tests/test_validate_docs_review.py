@@ -125,24 +125,67 @@ class ValidateDocsReviewTests(unittest.TestCase):
         coverage: dict[str, dict] | None = None,
         dispositions: list[dict] | None = None,
         scanner_manifest: dict | None = None,
+        audit_scope_manifest: dict[str, dict] | None = None,
+        edit_contracts: list[dict] | None = None,
         verdict: str = "consistent",
-        schema: int = 2,
+        schema: int = 3,
         decision_complete: bool = True,
     ) -> Path:
+        approved_files = approved if approved is not None else ["docs/current.md"]
+        disposition_entries = dispositions if dispositions is not None else []
+        group_ids = sorted(
+            {
+                entry.get("group_id")
+                for entry in disposition_entries
+                if entry.get("disposition") == "resolve_by_edit"
+                and isinstance(entry.get("group_id"), str)
+            }
+        )
+        if audit_scope_manifest is None:
+            inventory_paths = {
+                item["path"] for item in self.run_scan().get("inventory", [])
+            }
+            audit_scope_manifest = {
+                path: {
+                    "baseline_state": "present" if path in inventory_paths else "absent",
+                    "post_state": "present",
+                }
+                for path in sorted(inventory_paths | set(approved_files))
+            }
+        if edit_contracts is None:
+            edit_contracts = [
+                {
+                    "edit_id": "DRE-TEST-001",
+                    "kind": "content_rewrite",
+                    "source_files": approved_files,
+                    "target_files": approved_files,
+                    "group_ids": group_ids,
+                    "postconditions": [
+                        {
+                            "kind": "path_present",
+                            "path": path,
+                            "reason": "The approved test document remains present.",
+                        }
+                        for path in approved_files
+                    ],
+                }
+            ]
         plan = {
             "plan_schema_version": schema,
             "decision_complete": decision_complete,
             "scanner_manifest": scanner_manifest
             if scanner_manifest is not None
-            else {"schema_version": 4, "scanner_sha256": SCANNER_SHA256},
+            else {"schema_version": 5, "scanner_sha256": SCANNER_SHA256},
             "baseline_manifest": baseline_manifest
             if baseline_manifest is not None
             else {"docs/current.md": self.digest(self.doc)},
-            "approved_files": approved if approved is not None else ["docs/current.md"],
+            "approved_files": approved_files,
             "claims": claims if claims is not None else [],
             "resolution_groups": groups if groups is not None else [],
-            "finding_dispositions": dispositions if dispositions is not None else [],
+            "finding_dispositions": disposition_entries,
             "coverage_manifest": coverage if coverage is not None else {},
+            "audit_scope_manifest": audit_scope_manifest,
+            "edit_contracts": edit_contracts,
             "verdict": verdict,
         }
         path = self.repo / "plan.json"
@@ -167,7 +210,7 @@ class ValidateDocsReviewTests(unittest.TestCase):
         plan = self.write_plan()
         code, payload = self.run_validate("--phase", "plan", "--plan-file", str(plan))
         self.assertEqual(code, 0)
-        self.assertEqual(payload["plan_schema_version"], 2)
+        self.assertEqual(payload["plan_schema_version"], 3)
 
     def test_v1_plan_is_rejected(self) -> None:
         plan = self.write_plan(schema=1)
@@ -182,7 +225,7 @@ class ValidateDocsReviewTests(unittest.TestCase):
         self.assertIn("plan_not_decision_complete", self.types(payload))
 
     def test_scanner_drift_exit_one(self) -> None:
-        plan = self.write_plan(scanner_manifest={"schema_version": 4, "scanner_sha256": "0" * 64})
+        plan = self.write_plan(scanner_manifest={"schema_version": 5, "scanner_sha256": "0" * 64})
         code, payload = self.run_validate("--phase", "plan", "--plan-file", str(plan))
         self.assertEqual(code, 1)
         self.assertIn("scanner_drift", self.types(payload))
@@ -211,6 +254,208 @@ class ValidateDocsReviewTests(unittest.TestCase):
         )
         self.assertEqual(code, 0)
         self.assertEqual(payload["changed_files"], ["docs/current.md"])
+
+    def test_audit_scope_manifest_must_cover_every_scanned_markdown_file(self) -> None:
+        (self.repo / "docs" / "neighbor.md").write_text("# Neighbor\n", encoding="utf-8")
+        plan = self.write_plan(
+            audit_scope_manifest={
+                "docs/current.md": {"baseline_state": "present", "post_state": "present"}
+            }
+        )
+        code, payload = self.run_validate("--phase", "plan", "--plan-file", str(plan))
+        self.assertEqual(code, 1)
+        self.assertIn("audit_scope_inventory_omission", self.types(payload))
+
+    def test_literal_absent_postcondition_blocks_unfinished_path_rewrite(self) -> None:
+        self.doc.write_text(
+            "# Current\n\nSource: `/Users/example/Desktop/project/prototype.html`.\n",
+            encoding="utf-8",
+        )
+        source = self.run_scan()["findings"][0]
+        claim = self.claim()
+        group = self.evidence_group(
+            intended_semantics="The machine-specific prototype path is retained only in this negative fixture."
+        )
+        plan = self.write_plan(
+            claims=[claim],
+            groups=[group],
+            dispositions=[self.disposition(source)],
+            edit_contracts=[
+                {
+                    "edit_id": "DRE-PATH-001",
+                    "kind": "path_rewrite",
+                    "source_files": ["docs/current.md"],
+                    "target_files": ["docs/current.md"],
+                    "group_ids": [],
+                    "postconditions": [
+                        {
+                            "kind": "literal_absent",
+                            "path": "docs/current.md",
+                            "value": "/Users/example/Desktop/project/",
+                            "reason": "Portable docs must not retain a developer-machine prefix.",
+                        }
+                    ],
+                }
+            ],
+        )
+        code, payload = self.run_validate(
+            "--phase", "post-apply", "--plan-file", str(plan),
+            "--changed-file", "docs/current.md",
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("edit_postcondition_failed", self.types(payload))
+
+    def test_claim_transfer_postcondition_requires_subject_markers_at_owner(self) -> None:
+        source = self.repo / "docs" / "source.md"
+        target = self.repo / "docs" / "product" / "current-state.md"
+        source.write_text("# Source\n\nUGC hosted status moves to current-state.\n", encoding="utf-8")
+        target.parent.mkdir(parents=True)
+        target.write_text("# Current\n\nNo hosted details yet.\n", encoding="utf-8")
+        scan = self.run_scan()
+        source_item = next(item for item in scan["inventory"] if item["path"] == "docs/source.md")
+        target_item = next(item for item in scan["inventory"] if item["path"] == "docs/product/current-state.md")
+        claim = self.claim(claim_id="DR-UGC-001", subjects=["ugc-content-submit"])
+        group = self.evidence_group(
+            claim_id="DR-UGC-001",
+            group_id="DRG-UGC-001",
+            target="docs/product/current-state.md",
+            intended_semantics="Current-state owns the exact UGC hosted lifecycle boundary.",
+        )
+        group["basis"]["references"] = [
+            {
+                "path": "docs/source.md",
+                "sha256": self.digest(source),
+                "proves": "The source delegates the UGC hosted lifecycle boundary.",
+            }
+        ]
+        coverage = {
+            "docs/source.md": {
+                "baseline": source_item["semantic_metrics"],
+                "required_identifiers": [],
+                "semantic_claims": [],
+                "removed_claims": [
+                    {
+                        "claim_id": "DR-UGC-001",
+                        "disposition": "moved",
+                        "destination": "docs/product/current-state.md",
+                    }
+                ],
+                "allow_major_reduction": False,
+            },
+            "docs/product/current-state.md": {
+                "baseline": target_item["semantic_metrics"],
+                "required_identifiers": [],
+                "semantic_claims": [
+                    {
+                        "claim_id": "DR-UGC-001",
+                        "meaning": "Current-state owns the exact UGC hosted lifecycle boundary.",
+                        "owner": "docs/product/current-state.md",
+                    }
+                ],
+                "removed_claims": [],
+                "allow_major_reduction": False,
+            }
+        }
+        plan = self.write_plan(
+            baseline_manifest={
+                "docs/source.md": self.digest(source),
+                "docs/product/current-state.md": self.digest(target),
+            },
+            approved=["docs/source.md", "docs/product/current-state.md"],
+            claims=[claim],
+            groups=[group],
+            coverage=coverage,
+            edit_contracts=[
+                {
+                    "edit_id": "DRE-TRANSFER-001",
+                    "kind": "claim_transfer",
+                    "source_files": ["docs/source.md"],
+                    "target_files": ["docs/product/current-state.md"],
+                    "group_ids": ["DRG-UGC-001"],
+                    "postconditions": [
+                        {
+                            "kind": "semantic_claim",
+                            "path": "docs/product/current-state.md",
+                            "claim_id": "DR-UGC-001",
+                            "markers": ["ugc-content-submit"],
+                            "reason": "The destination must visibly receive the transferred subject.",
+                        }
+                    ],
+                }
+            ],
+        )
+        code, payload = self.run_validate(
+            "--phase", "post-apply", "--plan-file", str(plan),
+            "--changed-file", "docs/product/current-state.md",
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("semantic_postcondition_failed", self.types(payload))
+
+    def test_moved_claim_cannot_be_disguised_as_content_rewrite(self) -> None:
+        source = self.repo / "docs" / "source.md"
+        target = self.repo / "docs" / "product" / "current-state.md"
+        source.write_text("# Source\n\nUGC ownership moves out.\n", encoding="utf-8")
+        target.parent.mkdir(parents=True)
+        target.write_text("# Current\n\nUGC owner.\n", encoding="utf-8")
+        inventory = {item["path"]: item for item in self.run_scan()["inventory"]}
+        coverage = {
+            "docs/source.md": {
+                "baseline": inventory["docs/source.md"]["semantic_metrics"],
+                "required_identifiers": [],
+                "semantic_claims": [],
+                "removed_claims": [
+                    {
+                        "claim_id": "DR-UGC-001",
+                        "disposition": "moved",
+                        "destination": "docs/product/current-state.md",
+                    }
+                ],
+                "allow_major_reduction": False,
+            },
+            "docs/product/current-state.md": {
+                "baseline": inventory["docs/product/current-state.md"]["semantic_metrics"],
+                "required_identifiers": [],
+                "semantic_claims": [
+                    {
+                        "claim_id": "DR-UGC-001",
+                        "meaning": "Current-state owns UGC runtime status.",
+                        "owner": "docs/product/current-state.md",
+                    }
+                ],
+                "removed_claims": [],
+                "allow_major_reduction": False,
+            },
+        }
+        plan = self.write_plan(
+            baseline_manifest={
+                "docs/source.md": self.digest(source),
+                "docs/product/current-state.md": self.digest(target),
+            },
+            approved=["docs/source.md", "docs/product/current-state.md"],
+            claims=[self.claim(claim_id="DR-UGC-001", subjects=["ugc-content-submit"])],
+            coverage=coverage,
+            edit_contracts=[
+                {
+                    "edit_id": "DRE-WRONG-KIND",
+                    "kind": "content_rewrite",
+                    "source_files": ["docs/source.md"],
+                    "target_files": ["docs/product/current-state.md"],
+                    "group_ids": [],
+                    "postconditions": [
+                        {
+                            "kind": "path_present",
+                            "path": "docs/product/current-state.md",
+                            "reason": "Insufficient existence-only assertion.",
+                        }
+                    ],
+                }
+            ],
+        )
+        code, payload = self.run_validate(
+            "--phase", "plan", "--plan-file", str(plan)
+        )
+        self.assertEqual(code, 1)
+        self.assertIn("moved_claim_without_transfer_contract", self.types(payload))
 
     def test_plan_requires_one_disposition_per_scanner_finding(self) -> None:
         self.doc.write_text("# Current\n\n[Missing](missing.md)\n", encoding="utf-8")

@@ -41,8 +41,66 @@ class PrepareClosureAuditTests(unittest.TestCase):
         }
 
     def run_prepare(self, clauses: object, *extra: str) -> tuple[int, dict]:
+        if isinstance(clauses, dict):
+            clause_list = copy.deepcopy(clauses.get("verification_clauses", []))
+            wrapped = True
+        else:
+            clause_list = copy.deepcopy(clauses)
+            wrapped = False
+        if isinstance(clause_list, list) and not any(
+            isinstance(clause, dict) and clause.get("kind") == "global"
+            for clause in clause_list
+        ):
+            targets_by_path: dict[str, dict] = {}
+            for clause in clause_list:
+                if not isinstance(clause, dict):
+                    continue
+                for target in clause.get("coverage_targets", []):
+                    if not isinstance(target, dict) or not isinstance(target.get("path"), str):
+                        continue
+                    previous = targets_by_path.get(target["path"])
+                    if previous is None or target.get("obligation") == "full_read":
+                        targets_by_path[target["path"]] = copy.deepcopy(target)
+            if targets_by_path:
+                clause_list.append(
+                    {
+                        "clause_id": "__test_global__",
+                        "kind": "global",
+                        "coverage_targets": list(targets_by_path.values()),
+                    }
+                )
+        clauses = {"verification_clauses": clause_list} if wrapped else clause_list
         clauses_path = self.root / "clauses.json"
         clauses_path.write_text(json.dumps(clauses), encoding="utf-8")
+        target_entries = [
+            target
+            for clause in clause_list
+            if isinstance(clause, dict)
+            for target in clause.get("coverage_targets", [])
+            if isinstance(target, dict) and isinstance(target.get("path"), str)
+        ] if isinstance(clause_list, list) else []
+        target_paths = {target["path"] for target in target_entries}
+        approved_paths = sorted(
+            {
+                target["path"]
+                for target in target_entries
+                if target.get("obligation") == "full_read"
+            }
+        )
+        plan_path = self.root / "plan.json"
+        plan_path.write_text(
+            json.dumps(
+                {
+                    "plan_schema_version": 3,
+                    "approved_files": approved_paths,
+                    "audit_scope_manifest": {
+                        path: {"baseline_state": "present", "post_state": "present"}
+                        for path in sorted(target_paths)
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
         result = subprocess.run(
             [
                 sys.executable,
@@ -51,6 +109,8 @@ class PrepareClosureAuditTests(unittest.TestCase):
                 str(self.root),
                 "--clauses-file",
                 str(clauses_path),
+                "--plan-file",
+                str(plan_path),
                 "--shard-role-file",
                 str(self.root / "roles/shard.md"),
                 "--synthesis-role-file",
@@ -200,6 +260,7 @@ class PrepareClosureAuditTests(unittest.TestCase):
             self.write(f"docs/{name}.md", name * 8)
         clause = {
             "clause_id": "global",
+            "kind": "global",
             "changed_files": [f"docs/{name}.md" for name in ("a", "b", "c", "d")],
             "audit_read_scope": ["docs"],
             "coverage_targets": [

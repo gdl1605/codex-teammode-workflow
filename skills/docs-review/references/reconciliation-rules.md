@@ -29,11 +29,15 @@ Classify each issue before proposing an edit:
 | Historical-current leakage | Is a dated or superseded fact presented as current? | Move to history/evidence or remove if it has no continuing value. |
 | Missing evidence | Does a current/deployed/accepted claim rely on an absent or broken source? | Repair the link, remove the claim, or mark evidence unavailable. |
 | Canonical coverage loss | Would cleanup remove stable unique semantics or system mappings from their expected entry point? | Preserve them or name a new canonical owner before deleting. |
+| Incomplete canonical transfer | Does a source delegate/remove a claim without the destination receiving the same bounded subject and ownership? | Bind source and destination in one `claim_transfer` contract and prove destination markers after apply. |
 | Archive overlay conflict | Does a completed header sit above body text that still says active, candidate, or awaiting acceptance? | Reconcile the body; a header-only override is insufficient. |
 | Prospective/current divergence | Does an active candidate differ from current code or current-state without saying whether it remains intended? | Classify it as intended, superseded, reverted, parallel, or unresolved. |
 | Navigation path ghost | Does a Markdown link or inline “next hop” path point to moved/deleted material? | Repair it or mark it as a non-navigable historical identifier. |
 | Release-scope gap | Is work active while release scope is frozen, but inclusion/blocking is unspecified? | Record `release_scope` and `release_blocking` or ask the user. |
 | Lifecycle indirection | Does a lifecycle owner say “read another plan/evidence” instead of recording a concrete scoped value? | Store a value such as `externally_unverified` and link its evidence. |
+| Active-index inventory gap | Does `plans/active/` contain a plan omitted by its README, or does the README's count claim disagree with the directory? | Classify every physical plan; repair the index and archive only with evidence/authority. |
+| Repository path ghost | Does an explicit repo path/glob or docs-index directory have no current static prefix? | Repair/remove it or scope it as a non-live historical identifier. |
+| Unbound edit promise | Does the plan promise a rewrite/move/transfer only in prose, without a checkable postcondition? | Add an `edit_contract`; a free-text `planned_edit` is not executable approval. |
 
 Deterministic scan findings are candidates. They do not settle business truth.
 
@@ -63,6 +67,11 @@ anchors. Give every removed claim exactly one disposition:
 - `historical` in a dated history/evidence location; or
 - `removed_duplicate` with the surviving owner named.
 
+When a claim changes owner, record it in both source `removed_claims` and destination
+`semantic_claims`, then bind them with one `claim_transfer` edit contract. Its destination
+claim ID, owner path, and literal subject markers must agree. A source-side “see
+current-state” sentence does not prove that current-state received the claim.
+
 Do not use “current code contains it” as the destination for business meaning. Code is valid
 evidence for implementation, not a substitute for a domain contract. A large reduction in
 line count, headings, or repository-path anchors is a review gate, not proof of good cleanup.
@@ -83,6 +92,12 @@ Moving a file to `plans/completed/` requires a full-document pass:
   deleted design sources;
 - preserve explicit unknown external axes rather than promoting them to complete; and
 - reconcile linked evidence whose “current status” now contradicts the accepted plan.
+
+Before classifying or moving any active plan, reconcile the physical
+`plans/active/*.md` inventory with `plans/active/README.md`. Every plan file must be linked by
+the index, any “唯一/only active” statement must match the directory count, and every
+physical plan must receive an explicit lifecycle disposition. Absence from the index is
+never evidence that the plan is finished.
 
 Scope retained history locally. Use a dated historical heading for a whole section or an
 explicit historical prefix on the individual sentence/table row. Never use one top-of-file
@@ -140,7 +155,7 @@ Keep this ledger in task context:
 | `code_followup_required` | Whether implementation now conflicts with confirmed intent. |
 | `risk` | `high`, `medium`, or `low`. |
 
-Maintain a schema-v2 Finding Disposition Ledger for deterministic candidates. Record every
+Maintain a schema-v3 Finding Disposition Ledger for deterministic candidates. Record every
 scanner `finding_key` and `source_fingerprint` exactly once with one of:
 
 - `resolve_by_edit`: the finding must disappear after apply;
@@ -171,10 +186,14 @@ manifest. If either differs:
 
 The approved file list is closed. A newly discovered edit target requires a revised plan and
 approval. Apply may modify docs only, even if code/schema/test drift caused the review.
-The Plan Mode validator must first match every schema-4 finding key and source fingerprint to
-the approved ledger. The pre-apply validator repeats this against unchanged baselines. After
-apply, `resolve_by_edit` findings must be absent and every retained/new finding must have an
-exact approved relationship; otherwise stop. Old scanner/plan schemas never continue apply.
+Separately, `audit_scope_manifest` lists every baseline-scanned Markdown path with baseline
+and post-apply presence. It is the closure read universe, not write authorization.
+The Plan Mode validator must first match every schema-5 finding key and source fingerprint to
+the approved ledger and bind every approved path/`resolve_by_edit` group to one structured
+`edit_contract`. The pre-apply validator repeats this against unchanged baselines. After
+apply, `resolve_by_edit` findings must be absent, contract postconditions must pass, and every
+retained/new finding must have an exact approved relationship; otherwise stop. Old
+scanner/plan schemas never continue apply.
 
 ## Cleanup transformations
 
@@ -191,6 +210,10 @@ exact approved relationship; otherwise stop. Old scanner/plan schemas never cont
 - Keep latest handoff as a current entry map, not an accumulated activity log.
 - Repair missing evidence links, remove unsupported low-value claims, or mark evidence as
   unavailable with the affected lifecycle axis.
+- Replace machine-specific absolute paths with repository-relative/path-independent wording,
+  and bind the exact obsolete literal to a `path_rewrite` `literal_absent` postcondition.
+- Repair explicit missing repository glob prefixes and docs-index directories even when they
+  are inline code rather than Markdown links.
 
 If a confirmed contract and current implementation disagree, edit the contract only and
 report the code mismatch. It belongs to a separate execution task.
@@ -217,9 +240,11 @@ The clause set must exercise at least these dimensions when relevant:
   and
 - unsupported facts introduced while resolving a different conflict.
 
-Attach a coverage target manifest to the clauses. Mark every changed file and every moved
-completed plan `full_read`; mark every other Markdown file in the approved read scope at
-least `targeted_search`. Include exact file path, SHA-256, line count, obligation, and reason.
+Attach a coverage target manifest to the clauses. Its union and one mandatory global clause
+must exactly match every `post_state: present` path in `audit_scope_manifest`. Mark every
+changed file and every moved completed plan `full_read`; mark every other Markdown file in
+that audit read scope at least `targeted_search`. Include exact file path, SHA-256, line
+count, obligation, and reason.
 Directory names are search scopes, not proof that a file was examined.
 
 Partition large audits deterministically by full-read file size. One full-read file belongs

@@ -93,6 +93,35 @@ class MergeClosureAuditsTests(unittest.TestCase):
     def prepare(self, clauses: list[dict]) -> dict:
         clause_path = self.root / "clauses.json"
         clause_path.write_text(json.dumps(clauses), encoding="utf-8")
+        target_paths = sorted(
+            {
+                target["path"]
+                for clause in clauses
+                for target in clause.get("coverage_targets", [])
+            }
+        )
+        approved_paths = sorted(
+            {
+                target["path"]
+                for clause in clauses
+                for target in clause.get("coverage_targets", [])
+                if target.get("obligation") == "full_read"
+            }
+        )
+        plan_path = self.root / "plan.json"
+        plan_path.write_text(
+            json.dumps(
+                {
+                    "plan_schema_version": 3,
+                    "approved_files": approved_paths,
+                    "audit_scope_manifest": {
+                        path: {"baseline_state": "present", "post_state": "present"}
+                        for path in target_paths
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
         result = subprocess.run(
             [
                 sys.executable,
@@ -101,6 +130,8 @@ class MergeClosureAuditsTests(unittest.TestCase):
                 str(self.root),
                 "--clauses-file",
                 str(clause_path),
+                "--plan-file",
+                str(plan_path),
                 "--shard-role-file",
                 str(self.root / "roles/shard.md"),
                 "--synthesis-role-file",

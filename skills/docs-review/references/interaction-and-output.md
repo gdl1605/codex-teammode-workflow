@@ -32,13 +32,14 @@ End Plan Mode with one self-contained `<proposed_plan>` that includes:
 ```xml
 <proposed_plan>
 mode: docs-review
-plan_schema_version: 2
+plan_schema_version: 3
 decision_complete: true
 scope: <repo-relative docs scope>
 verdict_if_applied: consistent | partially_consistent | blocked
 
-scanner_manifest: <schema 4 and scanner SHA-256>
+scanner_manifest: <schema 5 and scanner SHA-256>
 baseline_manifest: <every edit/evidence/dependency path and SHA-256>
+audit_scope_manifest: <every scanned Markdown path with baseline/post presence>
 approved_docs: <closed Markdown edit list>
 
 claims: <typed claims with exact authority and scope>
@@ -46,6 +47,7 @@ resolution_groups: <bounded shared semantics/evidence/edit targets>
 finding_dispositions: <one exact disposition for every scanner finding>
 canonical_coverage: <technical identifiers plus semantic claims>
 edits: <file-level replacement/move/deduplication instructions>
+edit_contracts: <structured source/target/group/postcondition bindings>
 code_followups: <contract/implementation mismatches; no code edits>
 unresolved: <business-readable gaps and affected lifecycle axes>
 closure_requirements: <neutral claim and global clauses>
@@ -56,17 +58,17 @@ validation: <plan, pre-apply, post-apply, shard, merge, synthesis gates>
 Do not call a plan decision-complete if required human authority, edit scope, evidence paths,
 or scanner disposition bindings are missing. `approved_docs` is exact, never a glob.
 
-## Temporary plan JSON schema 2
+## Temporary plan JSON schema 3
 
 Materialize the machine-checkable plan outside the target repository. The following is the
 normative shape; values are illustrative:
 
 ```json
 {
-  "plan_schema_version": 2,
+  "plan_schema_version": 3,
   "decision_complete": true,
   "scanner_manifest": {
-    "schema_version": 4,
+    "schema_version": 5,
     "scanner_sha256": "<sha256 of scan_docs.py>"
   },
   "baseline_manifest": {
@@ -74,8 +76,23 @@ normative shape; values are illustrative:
     "supabase/migrations/061_community_sections_and_topics.sql": "<sha256>"
   },
   "approved_files": [
-    "docs/architecture/system-map.md"
+    "docs/architecture/system-map.md",
+    "docs/product/current-state.md"
   ],
+  "audit_scope_manifest": {
+    "docs/README.md": {
+      "baseline_state": "present",
+      "post_state": "present"
+    },
+    "docs/architecture/system-map.md": {
+      "baseline_state": "present",
+      "post_state": "present"
+    },
+    "docs/product/current-state.md": {
+      "baseline_state": "present",
+      "post_state": "present"
+    }
+  },
   "claims": [
     {
       "claim_id": "DR-COMMUNITY-001",
@@ -115,7 +132,10 @@ normative shape; values are illustrative:
           }
         ]
       },
-      "target_docs": ["docs/architecture/system-map.md"]
+      "target_docs": [
+        "docs/architecture/system-map.md",
+        "docs/product/current-state.md"
+      ]
     }
   ],
   "finding_dispositions": [
@@ -141,11 +161,29 @@ normative shape; values are illustrative:
           "reason": "Keeps the exact migration contract discoverable."
         }
       ],
+      "semantic_claims": [],
+      "removed_claims": [
+        {
+          "claim_id": "DR-COMMUNITY-001",
+          "disposition": "moved",
+          "destination": "docs/product/current-state.md"
+        }
+      ],
+      "allow_major_reduction": false,
+      "reduction_reason": null
+    },
+    "docs/product/current-state.md": {
+      "baseline": {
+        "line_count": 120,
+        "heading_count": 8,
+        "path_reference_count": 10
+      },
+      "required_identifiers": [],
       "semantic_claims": [
         {
           "claim_id": "DR-COMMUNITY-001",
-          "meaning": "Apply state is scoped to the two named migrations and production-cn only.",
-          "owner": "docs/architecture/system-map.md"
+          "meaning": "Apply state is scoped to migrations 061 and 062 in production-cn only.",
+          "owner": "docs/product/current-state.md"
         }
       ],
       "removed_claims": [],
@@ -153,6 +191,27 @@ normative shape; values are illustrative:
       "reduction_reason": null
     }
   },
+  "edit_contracts": [
+    {
+      "edit_id": "DRE-001",
+      "kind": "claim_transfer",
+      "source_files": ["docs/architecture/system-map.md"],
+      "target_files": ["docs/product/current-state.md"],
+      "group_ids": ["DRG-001"],
+      "postconditions": [
+        {
+          "kind": "semantic_claim",
+          "path": "docs/product/current-state.md",
+          "claim_id": "DR-COMMUNITY-001",
+          "markers": [
+            "061_community_sections_and_topics.sql",
+            "production-cn"
+          ],
+          "reason": "Proves that the named claim reached its canonical destination."
+        }
+      ]
+    }
+  ],
   "verdict": "partially_consistent"
 }
 ```
@@ -185,9 +244,28 @@ invalid.
 judge it. Never add `claim_id: DR-*`, `稳定锚点`, audit IDs, batch IDs, or validator-only
 phrases to target docs.
 
+`audit_scope_manifest` is the complete Markdown read/closure universe. It must enumerate
+every file emitted by the baseline scanner even when only two files are writable. A move
+declares the source `baseline_state: present, post_state: absent` and destination
+`baseline_state: absent, post_state: present`.
+
+Every approved file must belong to an `edit_contract`, and every `resolve_by_edit` group
+must bind exactly one contract. Supported edit kinds are `content_rewrite`,
+`claim_transfer`, `path_rewrite`, `reference_repair`, and `lifecycle_move`. Every contract
+has postconditions with exact approved paths and bounded reasons:
+
+- `claim_transfer` requires `semantic_claim`; its destination path, claim ID, canonical
+  coverage owner, and non-empty literal subject markers must all agree. Conversely, every
+  source `removed_claims` entry with `disposition: moved` forces a matching transfer
+  contract, so it cannot be disguised as a generic rewrite;
+- `path_rewrite` requires `literal_absent` for the obsolete machine/path spelling;
+- `lifecycle_move` requires `path_present` at the destination and `path_absent` at the
+  source; and
+- `literal_present`/`literal_absent` may bind exact text for other rewrites and repairs.
+
 Run `validate_docs_review.py --phase plan` before presenting the plan as complete,
-`--phase pre-apply` immediately before writes, and `--phase post-apply` after writes. A v1
-plan must be discarded and regenerated.
+`--phase pre-apply` immediately before writes, and `--phase post-apply` after writes. Any
+older plan or scanner schema must be discarded and regenerated.
 
 ## Closure verification clauses
 
@@ -240,7 +318,8 @@ main Agent's suspected mistakes or desired verdict.
       reason: <changed/consumer/evidence/neighbor/global reason>
 ```
 
-The global clause enumerates every in-scope Markdown file. Changed files and moved completed
+The global clause enumerates exactly every `post_state: present` Markdown file in the plan's
+`audit_scope_manifest`. Changed files and moved completed
 plans are `full_read`; all others are at least `targeted_search`. A directory is never a
 coverage target. Use `synthesis_obligation: full_read` for canonical owners and critical
 cross-shard consumers; use targeted search for other global files. Use `none` only when the
@@ -252,9 +331,11 @@ correction round.
 
 ## Minimal dispatches and raw reports
 
-`prepare_closure_audit.py` creates shard dispatches. Send each dispatch verbatim to a fresh
-context-isolated subagent. Both shard and synthesis packages contain exactly two top-level
-fields—a two-key serialization and nothing else:
+`prepare_closure_audit.py` creates shard dispatches and must receive the approved schema-3
+plan through `--plan-file`. It rejects coverage that differs from the plan's post-apply audit
+scope, a missing/duplicate global clause, or approved post-present docs lacking `full_read`.
+Send each dispatch verbatim to a fresh context-isolated subagent. Both shard and synthesis
+packages contain exactly two top-level fields—a two-key serialization and nothing else:
 
 Run batches in waves of at most three concurrent shard auditors. The number three limits
 simultaneous execution, not total batches; continue with later waves while completed waves

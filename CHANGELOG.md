@@ -21,8 +21,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - `$docs-review` now protects canonical semantic coverage during cleanup, reconciles completed-plan bodies instead of adding header-only status overrides, validates navigation-like inline paths, and requires explicit release scope/blocking for active plans when a release scope is frozen.
 - `$docs-review` now assigns every deterministic finding an exact disposition, pins finding keys to a scanner manifest, detects locally unscoped archive language, repeated Markdown tables, bare `.md` references, and missing navigation directories, and machine-validates independent-auditor clause/file coverage before accepting a pass.
 - Human arbitration in `$docs-review` now expands maintenance-omission, manual-removal, superseded/reverted, partial-completion, and lost-evidence hypotheses before presenting choices.
-- `$docs-review` v2 replaces free-text finding closure with schema-2 resolution groups, exact source fingerprints, scoped human authority, real technical identifiers, and protocol-leak detection; v1 plans and reports must restart in Plan Mode.
+- `$docs-review` v3 upgrades to scanner schema 5 and plan schema 3, adds a closed audit-scope manifest plus executable edit contracts, validates active-plan indexes, repository path/glob prefixes, machine-specific absolute paths, canonical transfers, path rewrites, and lifecycle moves; older scanner or plan schemas must restart in Plan Mode.
 - Independent closure now uses size-bounded, scope-pruned shard auditors followed by a fresh synthesis auditor, preserves raw report JSON, separately validates Markdown coverage and authorized support-file reads, distinguishes docs/implementation/evidence/process defects, and supports hash-safe reuse of unchanged passing shards only.
+- Default `AGENTS.md` and `CLAUDE.md` templates no longer embed the optional `docs-review` skill guide; the bundled skill remains package-only and explicitly installable.
 
 ### Added
 

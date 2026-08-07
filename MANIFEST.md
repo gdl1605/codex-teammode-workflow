@@ -56,12 +56,14 @@ skills/docs-review/
 The skill source is part of the versioned workflow package. It is not installed into a
 personal Codex skill directory unless the user explicitly runs `install.sh` with
 `--install-docs-review`. A normal target-project bootstrap or workflow update never silently
-overwrites the personal copy.
+overwrites the personal copy, and the default `AGENTS.md` / `CLAUDE.md` templates do not
+embed the optional skill guide.
 
-The bundled v2 protocol uses scanner schema 4 and plan/report schema 2. It requires
-structured finding dispositions, keeps audit IDs out of project docs, partitions large
-full-read audits into bounded shards, preserves raw auditor reports, and runs a fresh
-cross-shard synthesis auditor before a final verdict.
+The bundled v3 protocol uses scanner schema 5 and plan schema 3; closure audit reports remain
+schema 2. It requires structured finding dispositions, a closed audit-scope manifest,
+executable edit contracts, and keeps audit IDs out of project docs. Large full-read audits
+are partitioned into bounded shards, raw auditor reports are preserved, and a fresh
+cross-shard synthesis auditor runs before a final verdict.
 
 ## Included Docs Structure Template
 

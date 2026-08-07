@@ -40,6 +40,8 @@ cd codex-teammode-workflow
 `~/.codex/skills`。目标不存在时安装、内容相同则 no-op；内容不同时必须显式加
 `--force-skill`，安装器会先备份再只替换精确的 `docs-review` 目录。`--dry-run`
 会显示 workflow 与可选 skill 两个目标，但不写入。
+默认 bootstrap / update 也不会把这个可选 skill 的介绍写入目标项目的 `AGENTS.md` 或
+`CLAUDE.md`；需要时由用户显式安装并调用 skill。
 
 ## 安装后会生成什么
 
@@ -79,15 +81,17 @@ docs/
 
 它与 `docs impact` 的分工是：`docs impact` 负责每轮增量维护，`$docs-review` 负责人工触发的
 跨文档宏观对账。Codex 中先在 Plan Mode 运行 `$docs-review [scope=<domain-or-docs-path>]`
-完成只读审计和人工裁决，再在同一任务存在已批准 schema-2 计划且 baseline 未漂移时，在
+完成只读审计和人工裁决，再在同一任务存在已批准 schema-3 计划且 baseline 未漂移时，在
 Default Mode 运行 `$docs-review apply`。Apply 只修改批准的 Markdown docs，不修改业务代码、
 migration、测试、部署环境或外部系统。
 
-v2 会把每条 scanner-schema-4 finding 精确绑定到 source fingerprint、结构化 disposition、
-目标语义、证据和人工权限。Apply 后按预算运行多个 fresh shard auditor，原始 JSON 必须无损
-保存和严格验证；全部 shard pass 后，还要由全新的 synthesis auditor 核验跨分片 consumer、
-canonical owner 和原始 evidence。任一 deficiency 或协议错误都会停在人类确认门，不能同轮
-自行修复。完整协议见 [`SKILL.md`](./skills/docs-review/SKILL.md)。
+v3 会把每条 scanner-schema-5 finding 精确绑定到 source fingerprint、结构化 disposition、
+目标语义、证据和人工权限，同时冻结完整 `audit_scope_manifest` 与结构化 `edit_contracts`，
+验证 canonical transfer、path rewrite 和 lifecycle move 的后置条件。Apply 后按预算运行多个
+fresh shard auditor，原始 JSON 必须无损保存和严格验证；全部 shard pass 后，还要由全新的
+synthesis auditor 核验跨分片 consumer、canonical owner 和原始 evidence。任一 deficiency
+或协议错误都会停在人类确认门，不能同轮自行修复。完整协议见
+[`SKILL.md`](./skills/docs-review/SKILL.md)。
 
 ## Team Loop 工作流
 
@@ -106,12 +110,13 @@ skill；需要采用新版时重新显式运行 skill 安装命令。
 新版校正会保护 canonical 业务语义覆盖，禁止只在归档页头覆盖矛盾正文，并在首版范围
 冻结时要求每份 active plan 明确是否属于首版、是否阻塞发布。
 
-`docs-review` v2 使用 scanner schema 4 和 plan schema 2：每条 deterministic finding
-必须绑定 source fingerprint、结构化 resolution group、精确人工权限、证据与批准文件；
-Claim ID、审计 ID 和仅供 validator 使用的“稳定锚点”不得写进业务 docs。Apply 后会把
-大型全文范围按预算分成多个独立 shard，无损保存并严格校验原始 auditor JSON；全部 shard
-通过后仍须由全新的 synthesis auditor 做跨分片终审。任一 deficiency 都先停下来向人类
-报告并等待批准；修正轮只可按 hash 复用完全未变化且已 pass 的 shard，synthesis 永不复用。
+`docs-review` v3 使用 scanner schema 5 和 plan schema 3：每条 deterministic finding
+必须绑定 source fingerprint、结构化 resolution group、精确人工权限、证据与批准文件，并由
+完整 `audit_scope_manifest` 和结构化 `edit_contracts` 封闭读写范围及后置条件；Claim ID、
+审计 ID 和仅供 validator 使用的“稳定锚点”不得写进业务 docs。Apply 后会把大型全文范围按
+预算分成多个独立 shard，无损保存并严格校验原始 auditor JSON；全部 shard 通过后仍须由
+全新的 synthesis auditor 做跨分片终审。任一 deficiency 都先停下来向人类报告并等待批准；
+修正轮只可按 hash 复用完全未变化且已 pass 的 shard，synthesis 永不复用。
 
 复杂长规划可选使用独立 skill 包 [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划的方向选择、HTML Selection 和小规划产出。
 
