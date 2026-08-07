@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate docs-review v2 plans, baselines, approved scope, and post-apply state."""
+"""Validate docs-review v3 plans, baselines, scopes, edits, and post-apply state."""
 
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ from scan_docs import (
 )
 
 
-PLAN_SCHEMA_VERSION = 2
+PLAN_SCHEMA_VERSION = 3
 VALID_PHASES = ("plan", "pre-apply", "post-apply")
 READ_ONLY_PHASES = {"plan", "pre-apply"}
 VALID_RESOLUTIONS = {"resolved", "unresolved"}
@@ -100,6 +100,21 @@ VALID_COVERAGE_DISPOSITIONS = {
     "moved",
     "historical",
     "removed_duplicate",
+}
+VALID_AUDIT_SCOPE_STATES = {"present", "absent"}
+VALID_EDIT_KINDS = {
+    "content_rewrite",
+    "claim_transfer",
+    "path_rewrite",
+    "reference_repair",
+    "lifecycle_move",
+}
+VALID_EDIT_POSTCONDITIONS = {
+    "literal_present",
+    "literal_absent",
+    "path_present",
+    "path_absent",
+    "semantic_claim",
 }
 
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -470,6 +485,310 @@ def validate_coverage_manifest(
     return coverage_by_file
 
 
+def validate_audit_scope_manifest(
+    manifest: Any,
+    *,
+    approved: set[str],
+    repo_root: Path,
+    docs_root: Path,
+    scan_payload: dict[str, Any],
+    phase: str,
+    findings: list[dict[str, Any]],
+) -> dict[str, dict[str, str]]:
+    """Keep the global read scope distinct from the closed write scope."""
+    by_file: dict[str, dict[str, str]] = {}
+    if not isinstance(manifest, dict):
+        add_finding(
+            findings,
+            "invalid_audit_scope_manifest",
+            "audit_scope_manifest must map every in-scope Markdown path to baseline/post states",
+        )
+        return by_file
+    current_inventory = {
+        item.get("path")
+        for item in scan_payload.get("inventory", [])
+        if isinstance(item, dict) and is_nonempty_string(item.get("path"))
+    }
+    for raw_path, entry in manifest.items():
+        if not isinstance(raw_path, str):
+            add_finding(findings, "invalid_audit_scope_path", "audit scope paths must be strings")
+            continue
+        normalized, resolved = normalize_repo_path(raw_path, repo_root, "audit scope file")
+        try:
+            resolved.relative_to(docs_root)
+        except ValueError:
+            add_finding(
+                findings,
+                "audit_scope_path_outside_docs",
+                "audit scope may contain Markdown files only under docs root",
+                file=normalized,
+            )
+        if not normalized.lower().endswith(".md"):
+            add_finding(
+                findings,
+                "invalid_audit_scope_path",
+                "audit scope entries must be Markdown paths",
+                file=normalized,
+            )
+        if not isinstance(entry, dict):
+            add_finding(
+                findings,
+                "invalid_audit_scope_entry",
+                "audit scope entries need baseline_state and post_state",
+                file=normalized,
+            )
+            continue
+        baseline_state = entry.get("baseline_state")
+        post_state = entry.get("post_state")
+        if baseline_state not in VALID_AUDIT_SCOPE_STATES or post_state not in VALID_AUDIT_SCOPE_STATES:
+            add_finding(
+                findings,
+                "invalid_audit_scope_state",
+                "audit scope states must be present or absent",
+                file=normalized,
+            )
+            continue
+        by_file[normalized] = {
+            "baseline_state": baseline_state,
+            "post_state": post_state,
+        }
+        expected_state = baseline_state if phase in READ_ONLY_PHASES else post_state
+        actual_state = "present" if normalized in current_inventory else "absent"
+        if expected_state != actual_state:
+            add_finding(
+                findings,
+                "audit_scope_state_mismatch",
+                "audit scope path state does not match the current phase",
+                file=normalized,
+                expected=expected_state,
+                actual=actual_state,
+                phase=phase,
+            )
+
+    for path in sorted(current_inventory - set(by_file)):
+        add_finding(
+            findings,
+            "audit_scope_inventory_omission",
+            "every Markdown file in the scanner scope must be in audit_scope_manifest",
+            file=path,
+        )
+    for path in sorted(approved - set(by_file)):
+        add_finding(
+            findings,
+            "approved_file_missing_audit_scope",
+            "every approved write path must declare baseline and post states",
+            file=path,
+        )
+    return by_file
+
+
+def _semantic_coverage_claim_ids(
+    coverage_by_file: dict[str, dict[str, Any]], path: str
+) -> set[str]:
+    entry = coverage_by_file.get(path, {})
+    return {
+        item.get("claim_id")
+        for item in entry.get("semantic_claims", [])
+        if isinstance(item, dict)
+        and is_nonempty_string(item.get("claim_id"))
+        and item.get("owner") == path
+    }
+
+
+def validate_edit_contracts(
+    contracts: Any,
+    *,
+    approved: set[str],
+    repo_root: Path,
+    groups_by_id: dict[str, dict[str, Any]],
+    claims_by_id: dict[str, dict[str, Any]],
+    coverage_by_file: dict[str, dict[str, Any]],
+    dispositions_by_key: dict[str, dict[str, Any]],
+    phase: str,
+    findings: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Bind every approved edit to machine-checkable and semantic postconditions."""
+    if not isinstance(contracts, list) or not contracts:
+        add_finding(
+            findings,
+            "missing_edit_contracts",
+            "plan schema 3 requires non-empty structured edit_contracts",
+        )
+        return []
+    normalized_contracts: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    covered_files: set[str] = set()
+    covered_groups: set[str] = set()
+    claim_transfer_bindings: set[tuple[str, str, str]] = set()
+    for index, contract in enumerate(contracts):
+        if not isinstance(contract, dict):
+            add_finding(findings, "invalid_edit_contract", "each edit contract must be an object", index=index)
+            continue
+        edit_id = contract.get("edit_id")
+        kind = contract.get("kind")
+        if not is_nonempty_string(edit_id) or edit_id in seen_ids:
+            add_finding(findings, "invalid_edit_contract_id", "edit_id must be unique and non-empty", edit_id=edit_id)
+            continue
+        seen_ids.add(edit_id)
+        if kind not in VALID_EDIT_KINDS:
+            add_finding(findings, "invalid_edit_contract_kind", "edit contract kind is unsupported", edit_id=edit_id, kind=kind)
+        sources = contract.get("source_files")
+        targets = contract.get("target_files")
+        group_ids = contract.get("group_ids", [])
+        if not isinstance(sources, list) or not sources or not isinstance(targets, list) or not targets:
+            add_finding(findings, "edit_contract_scope_missing", "edit contracts need non-empty source_files and target_files", edit_id=edit_id)
+            sources = sources if isinstance(sources, list) else []
+            targets = targets if isinstance(targets, list) else []
+        normalized_sources: list[str] = []
+        normalized_targets: list[str] = []
+        for field, values, destination in (
+            ("source_files", sources, normalized_sources),
+            ("target_files", targets, normalized_targets),
+        ):
+            for raw_path in values:
+                if not isinstance(raw_path, str):
+                    add_finding(findings, "invalid_edit_contract_path", "edit contract paths must be strings", edit_id=edit_id, field=field)
+                    continue
+                normalized, _ = normalize_repo_path(raw_path, repo_root, "edit contract path")
+                destination.append(normalized)
+                covered_files.add(normalized)
+                if normalized not in approved:
+                    add_finding(findings, "edit_contract_path_not_approved", "edit contract paths must be approved", edit_id=edit_id, file=normalized)
+        if not isinstance(group_ids, list):
+            add_finding(findings, "invalid_edit_contract_groups", "group_ids must be a list", edit_id=edit_id)
+            group_ids = []
+        for group_id in group_ids:
+            if group_id not in groups_by_id:
+                add_finding(findings, "edit_contract_unknown_group", "edit contract references an unknown resolution group", edit_id=edit_id, group_id=group_id)
+            elif group_id in covered_groups:
+                add_finding(findings, "edit_contract_group_reused", "one resolution group may bind only one edit contract", edit_id=edit_id, group_id=group_id)
+            covered_groups.add(group_id)
+
+        postconditions = contract.get("postconditions")
+        if not isinstance(postconditions, list) or not postconditions:
+            add_finding(findings, "edit_contract_postconditions_missing", "every edit contract needs postconditions", edit_id=edit_id)
+            postconditions = []
+        kinds_seen: set[str] = set()
+        for post_index, postcondition in enumerate(postconditions):
+            if not isinstance(postcondition, dict):
+                add_finding(findings, "invalid_edit_postcondition", "postconditions must be objects", edit_id=edit_id, index=post_index)
+                continue
+            post_kind = postcondition.get("kind")
+            if post_kind not in VALID_EDIT_POSTCONDITIONS:
+                add_finding(findings, "invalid_edit_postcondition_kind", "unsupported edit postcondition", edit_id=edit_id, kind=post_kind)
+                continue
+            kinds_seen.add(post_kind)
+            raw_path = postcondition.get("path")
+            if not isinstance(raw_path, str):
+                add_finding(findings, "edit_postcondition_path_missing", "postcondition needs an approved path", edit_id=edit_id)
+                continue
+            path, resolved = normalize_repo_path(raw_path, repo_root, "edit postcondition path")
+            if path not in approved:
+                add_finding(findings, "edit_postcondition_path_not_approved", "postcondition path must be approved", edit_id=edit_id, file=path)
+            if not is_nonempty_string(postcondition.get("reason")):
+                add_finding(findings, "edit_postcondition_reason_missing", "postcondition needs a bounded reason", edit_id=edit_id, file=path)
+
+            if post_kind in {"literal_present", "literal_absent"}:
+                value = postcondition.get("value")
+                if not is_nonempty_string(value):
+                    add_finding(findings, "edit_postcondition_literal_missing", "literal postcondition needs value", edit_id=edit_id, file=path)
+                elif phase == "post-apply":
+                    try:
+                        content = resolved.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError):
+                        content = None
+                    expected_present = post_kind == "literal_present"
+                    if content is None or ((value in content) != expected_present):
+                        add_finding(
+                            findings,
+                            "edit_postcondition_failed",
+                            "literal postcondition failed after apply",
+                            edit_id=edit_id,
+                            file=path,
+                            kind=post_kind,
+                            value=value,
+                        )
+            elif post_kind in {"path_present", "path_absent"}:
+                if phase == "post-apply":
+                    expected_present = post_kind == "path_present"
+                    if resolved.exists() != expected_present:
+                        add_finding(
+                            findings,
+                            "edit_postcondition_failed",
+                            "path postcondition failed after apply",
+                            edit_id=edit_id,
+                            file=path,
+                            kind=post_kind,
+                        )
+            else:
+                claim_id = postcondition.get("claim_id")
+                markers = postcondition.get("markers")
+                if claim_id not in claims_by_id:
+                    add_finding(findings, "semantic_postcondition_unknown_claim", "semantic postcondition needs a known claim", edit_id=edit_id, claim_id=claim_id)
+                if path not in normalized_targets:
+                    add_finding(findings, "semantic_postcondition_not_target", "semantic postcondition must bind a target file", edit_id=edit_id, file=path)
+                if claim_id not in _semantic_coverage_claim_ids(coverage_by_file, path):
+                    add_finding(findings, "semantic_postcondition_missing_coverage", "semantic postcondition must bind the same canonical coverage claim", edit_id=edit_id, file=path, claim_id=claim_id)
+                if not isinstance(markers, list) or not markers or not all(is_nonempty_string(marker) for marker in markers):
+                    add_finding(findings, "semantic_postcondition_markers_missing", "semantic postcondition needs non-empty literal markers", edit_id=edit_id, file=path)
+                elif phase == "post-apply":
+                    try:
+                        content = resolved.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError):
+                        content = ""
+                    missing = [marker for marker in markers if marker not in content]
+                    if missing:
+                        add_finding(findings, "semantic_postcondition_failed", "canonical transfer target is missing required subject markers", edit_id=edit_id, file=path, claim_id=claim_id, missing=missing)
+                if (
+                    kind == "claim_transfer"
+                    and is_nonempty_string(claim_id)
+                    and path in normalized_targets
+                ):
+                    claim_transfer_bindings.update(
+                        (source, path, claim_id) for source in normalized_sources
+                    )
+
+        if kind == "claim_transfer" and "semantic_claim" not in kinds_seen:
+            add_finding(findings, "claim_transfer_semantic_postcondition_missing", "claim_transfer requires a destination semantic_claim postcondition", edit_id=edit_id)
+        if kind == "path_rewrite" and "literal_absent" not in kinds_seen:
+            add_finding(findings, "path_rewrite_absence_postcondition_missing", "path_rewrite requires a literal_absent postcondition", edit_id=edit_id)
+        if kind == "lifecycle_move" and not {"path_present", "path_absent"}.issubset(kinds_seen):
+            add_finding(findings, "lifecycle_move_path_postconditions_missing", "lifecycle_move requires path_present and path_absent postconditions", edit_id=edit_id)
+        normalized_contracts.append(contract)
+
+    for path in sorted(approved - covered_files):
+        add_finding(findings, "approved_file_without_edit_contract", "every approved write path must be bound to one edit contract", file=path)
+    resolve_groups = {
+        entry.get("group_id")
+        for entry in dispositions_by_key.values()
+        if entry.get("disposition") == "resolve_by_edit"
+        and is_nonempty_string(entry.get("group_id"))
+    }
+    for group_id in sorted(resolve_groups - covered_groups):
+        add_finding(findings, "resolve_group_without_edit_contract", "every resolve_by_edit group needs an executable edit contract", group_id=group_id)
+    for source, coverage_entry in sorted(coverage_by_file.items()):
+        for removed in coverage_entry.get("removed_claims", []):
+            if not isinstance(removed, dict) or removed.get("disposition") != "moved":
+                continue
+            destination = removed.get("destination")
+            claim_id = removed.get("claim_id")
+            if not isinstance(destination, str) or not is_nonempty_string(claim_id):
+                continue
+            normalized_destination, _ = normalize_repo_path(
+                destination, repo_root, "removed claim destination"
+            )
+            if (source, normalized_destination, claim_id) not in claim_transfer_bindings:
+                add_finding(
+                    findings,
+                    "moved_claim_without_transfer_contract",
+                    "every moved canonical claim needs a matching source/destination semantic transfer contract",
+                    file=source,
+                    destination=normalized_destination,
+                    claim_id=claim_id,
+                )
+    return normalized_contracts
+
+
 def historical_scope_matches(
     disposition: dict[str, Any], source: dict[str, Any], repo_root: Path
 ) -> bool:
@@ -592,7 +911,7 @@ def validate_plan(
 ) -> tuple[list[dict[str, Any]], set[str], dict[str, dict[str, Any]], dict[str, dict[str, Any]], dict[str, dict[str, Any]]]:
     findings: list[dict[str, Any]] = []
     if plan.get("plan_schema_version") != PLAN_SCHEMA_VERSION:
-        add_finding(findings, "unsupported_plan_schema", "docs-review v1 plans cannot be applied; restart from Plan Mode with plan_schema_version 2", expected=PLAN_SCHEMA_VERSION, actual=plan.get("plan_schema_version"))
+        add_finding(findings, "unsupported_plan_schema", "older docs-review plans cannot be applied; restart from Plan Mode with plan_schema_version 3", expected=PLAN_SCHEMA_VERSION, actual=plan.get("plan_schema_version"))
     if plan.get("decision_complete") is not True:
         add_finding(findings, "plan_not_decision_complete", "plan must explicitly be decision_complete before apply")
     scanner_manifest = plan.get("scanner_manifest")
@@ -653,6 +972,26 @@ def validate_plan(
     groups_by_id = validate_resolution_groups(plan.get("resolution_groups"), repo_root=repo_root, baseline=baseline, approved=approved, claims_by_id=claims_by_id, findings=findings, phase=phase)
     coverage_by_file = validate_coverage_manifest(plan.get("coverage_manifest"), approved=approved, repo_root=repo_root, docs_root=docs_root, findings=findings)
     dispositions_by_key = validate_finding_dispositions(plan.get("finding_dispositions"), scan_payload=scan_payload, groups_by_id=groups_by_id, claims_by_id=claims_by_id, approved=approved, repo_root=repo_root, findings=findings, phase=phase)
+    validate_audit_scope_manifest(
+        plan.get("audit_scope_manifest"),
+        approved=approved,
+        repo_root=repo_root,
+        docs_root=docs_root,
+        scan_payload=scan_payload,
+        phase=phase,
+        findings=findings,
+    )
+    validate_edit_contracts(
+        plan.get("edit_contracts"),
+        approved=approved,
+        repo_root=repo_root,
+        groups_by_id=groups_by_id,
+        claims_by_id=claims_by_id,
+        coverage_by_file=coverage_by_file,
+        dispositions_by_key=dispositions_by_key,
+        phase=phase,
+        findings=findings,
+    )
     return findings, approved, claims_by_id, coverage_by_file, dispositions_by_key
 
 
@@ -737,7 +1076,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--docs-root", default="docs", help="Repo-relative docs root")
     parser.add_argument("--scope", help="Optional Markdown file/directory scope")
     parser.add_argument("--phase", choices=VALID_PHASES, default="post-apply")
-    parser.add_argument("--plan-file", help="Temporary approved docs-review v2 plan JSON")
+    parser.add_argument("--plan-file", help="Temporary approved docs-review v3 plan JSON")
     parser.add_argument("--changed-file", action="append", default=[], help="Repo-relative path changed by apply; repeat for each path")
     return parser
 

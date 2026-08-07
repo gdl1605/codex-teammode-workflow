@@ -113,12 +113,14 @@ manifest, active-to-completed moves require a full body/status/navigation closur
 frozen release scopes require every active plan to declare inclusion and blocking status.
 Navigation-like inline paths are validated alongside Markdown links.
 
-Version 2 uses a structured Finding Disposition Ledger. Every scanner-schema-4 occurrence
-binds its source fingerprint to a resolution group with one scoped claim, intended semantics,
-authority/evidence, and approved docs. Literal coverage is limited to real route, field, RPC,
-migration, and doc-path identifiers; natural-language business meaning is independently
-audited instead of being forced into validator-only anchor phrases. Audit IDs never belong in
-project docs.
+Version 3 uses scanner schema 5 and plan schema 3. Every deterministic occurrence binds its
+source fingerprint to a resolution group with one scoped claim, intended semantics,
+authority/evidence, and approved docs. The plan freezes every scanned Markdown path in an
+`audit_scope_manifest` and expresses each approved change as an executable `edit_contract`,
+including canonical transfers, path rewrites, and lifecycle moves. Literal coverage is
+limited to real route, field, RPC, migration, and doc-path identifiers; natural-language
+business meaning is independently audited instead of being forced into validator-only anchor
+phrases. Audit IDs never belong in project docs.
 
 Post-apply semantic closure is a two-level independent gate. Full-read files are packed into
 bounded shards, no more than three shard auditors run concurrently, and every raw schema-2
@@ -153,7 +155,7 @@ acceptance or release.
 | `$docs-review` | Explicit fact-reconciliation macro loop; never triggered by routine docs impact. |
 | Claim Ledger | Temporary per-review list of scoped factual assertions and their evidence. |
 | Resolution Ledger | Temporary per-review list of evidence-backed or human-confirmed dispositions. |
-| Resolution Group | Schema-v2 binding from one scoped claim and authority to intended semantics and approved docs. |
+| Resolution Group | Schema-v3 binding from one scoped claim and authority to intended semantics and approved docs. |
 | Shard auditor | Fresh read-only auditor responsible for one deterministic full-read/search batch. |
 | Synthesis auditor | Fresh final auditor that rechecks cross-shard semantic closure without treating shard reports as fact authority. |
 | `role_session_reuse` | Planner and scout may be reused across dispatches; generator and evaluator are always fresh. |

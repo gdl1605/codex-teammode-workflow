@@ -80,9 +80,10 @@ docs/evidence/**
 `install.sh --install-docs-review ...`。内容不同时仍需用户另加 `--force-skill`，且安装器
 只备份和替换精确的 `docs-review` 目录。
 
-v2 skill 必须整体刷新，包含 schema-4 scanner、schema-2 plan/report validator、shard
-preparer / merger 与 shard / synthesis 两份角色合同。不得把 v1 临时计划或 closure report
-继续用于 apply；发现旧 schema 时应回到 Plan Mode 重新运行 `$docs-review`。
+v3 skill 必须整体刷新，包含 schema-5 scanner、schema-3 plan validator、schema-2 closure
+report validator、shard preparer / merger 与 shard / synthesis 两份角色合同。不得继续使用
+旧 scanner 或 plan schema 进入 apply；发现旧 schema 时应回到 Plan Mode 重新运行
+`$docs-review`。
 
 ## 版本标记
 

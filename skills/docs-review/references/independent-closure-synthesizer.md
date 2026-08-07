@@ -51,6 +51,9 @@ preferred verdict. Every clause must share `audit_binding` values for `audit_id`
 5. Look specifically for contradictions that no single shard could see: current/candidate
    splits, platform or environment overgeneralization, lifecycle-axis inference, duplicate
    canonical ownership, lost provenance, stale routing, and facts removed from every owner.
+   Verify source-to-destination transfers from both sides, reconcile the complete active-plan
+   directory with its index/count claims, and check for residual machine paths or explicit
+   missing repository path/glob/index prefixes across shards.
 6. Re-evaluate severity and artifact layer independently. A shard pass does not compel a
    synthesis pass. A shard deficiency should not reach this stage; if one is present, return
    blocked as an invalid upstream gate.

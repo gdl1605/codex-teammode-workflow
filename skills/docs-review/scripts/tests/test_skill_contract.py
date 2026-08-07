@@ -7,7 +7,7 @@ from pathlib import Path
 SKILL_ROOT = Path(__file__).resolve().parents[2]
 
 
-class DocsReviewV2ContractTests(unittest.TestCase):
+class DocsReviewV3ContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.skill = (SKILL_ROOT / "SKILL.md").read_text(encoding="utf-8")
@@ -21,7 +21,7 @@ class DocsReviewV2ContractTests(unittest.TestCase):
             [cls.skill, cls.interaction, cls.reconciliation, cls.shard_role, cls.synthesis_role]
         )
 
-    def test_v2_roles_and_scripts_are_packaged(self) -> None:
+    def test_roles_and_scripts_are_packaged(self) -> None:
         self.assertTrue(self.shard_role_path.is_file())
         self.assertTrue(self.synthesis_role_path.is_file())
         for name in (
@@ -48,13 +48,29 @@ class DocsReviewV2ContractTests(unittest.TestCase):
         self.assertIn("Never repair a finding", self.shard_role)
         self.assertIn("read-only", self.synthesis_role)
 
-    def test_plan_gate_is_schema_v2_and_scanner_v4(self) -> None:
-        self.assertIn("plan_schema_version: 2", self.skill)
-        self.assertIn('"plan_schema_version": 2', self.interaction)
-        self.assertIn('"schema_version": 4', self.interaction)
+    def test_plan_gate_is_schema_v3_and_scanner_v5(self) -> None:
+        self.assertIn("plan_schema_version: 3", self.skill)
+        self.assertIn('"plan_schema_version": 3', self.interaction)
+        self.assertIn('"schema_version": 5', self.interaction)
         self.assertIn("--phase plan", self.skill)
         self.assertIn("source_fingerprint", self.interaction)
         self.assertIn("resolution_groups", self.interaction)
+        self.assertIn("audit_scope_manifest", self.interaction)
+        self.assertIn("edit_contracts", self.interaction)
+        self.assertIn("--plan-file <temporary-plan-v3.json>", self.skill)
+
+    def test_edit_promises_have_structured_postconditions(self) -> None:
+        for marker in (
+            "claim_transfer",
+            "semantic_claim",
+            "path_rewrite",
+            "literal_absent",
+            "lifecycle_move",
+            "path_present",
+            "path_absent",
+        ):
+            self.assertIn(marker, self.all_text)
+        self.assertIn("active_plan_missing_from_index", (SKILL_ROOT / "scripts" / "scan_docs.py").read_text(encoding="utf-8"))
 
     def test_machine_protocol_is_not_written_to_business_docs(self) -> None:
         self.assertIn("required_identifiers", self.interaction)

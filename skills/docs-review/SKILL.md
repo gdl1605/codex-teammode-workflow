@@ -21,7 +21,7 @@ resolve a domain through the docs index and keep a path scope inside the reposit
 
 Run audit and arbitration in Plan Mode without writes. Outside Plan Mode, a normal review may
 scan read-only, then must ask the user to switch to Plan Mode. Run `apply` only in Default
-Mode, in the same task as a human-approved, decision-complete schema-v2 plan. In Plan Mode,
+Mode, in the same task as a human-approved, decision-complete schema-v3 plan. In Plan Mode,
 `apply` may refine the plan only. Missing approval, old schemas, or drift restart the audit.
 
 ## Required references
@@ -52,9 +52,12 @@ or orally override them in a subagent package.
    python3 scripts/scan_docs.py --repo-root <repo> --docs-root docs [--scope <path>]
    ```
 
-   Scanner schema 4 emits an exact `finding_key`, `source_fingerprint`, file, line, local
+   Scanner schema 5 emits an exact `finding_key`, `source_fingerprint`, file, line, local
    section, and evidence for each deterministic candidate. Exit `1` is expected when it
    finds candidates. Exit `2` stops the review. Pin its complete `scanner_manifest`.
+   A global scan also reconciles every file in `plans/active/` with its README index,
+   validates singleton claims such as “唯一 active”, checks explicit repository path/glob
+   prefixes, and reports machine-specific absolute paths.
 3. Build temporary Claim, Resolution, Canonical Coverage, Active Plan, and Finding
    Disposition Ledgers in task context only. Never write these ledgers or their `DR-*`,
    audit, or batch IDs into project docs.
@@ -82,22 +85,30 @@ or orally override them in a subagent package.
    Never create validator-only prose anchors. Project docs may contain business-readable
    unresolved language such as `legal_accepted=externally_unverified`, but never Claim IDs,
    stable-anchor labels, audit IDs, or batch IDs.
-9. Materialize the temporary plan outside the target repository and run before calling it
+9. Separate the complete audit read set from the closed write set. Put every Markdown file
+   seen by the baseline scanner in `audit_scope_manifest` with explicit `baseline_state` and
+   `post_state`; put only authorized edit/move paths in `approved_files`. For every approved
+   change add a structured `edit_contract` binding source files, target files, resolution
+   groups, and executable postconditions. `claim_transfer` requires a destination
+   `semantic_claim` plus literal subject markers; `path_rewrite` requires the obsolete
+   literal absent; `lifecycle_move` requires the destination present and source absent.
+10. Materialize the temporary plan outside the target repository and run before calling it
    decision-complete:
 
    ```bash
    python3 scripts/validate_docs_review.py \
      --repo-root <repo> --docs-root docs --phase plan \
-     --plan-file <temporary-plan-v2.json>
+     --plan-file <temporary-plan-v3.json>
    ```
 
    Exit `0` is the plan gate. Exit `1` means the plan remains incomplete. Exit `2` means the
-   gate itself failed. A schema-v1 scanner manifest, plan, or closure report is never
-   compatible; rerun from Plan Mode.
-10. Output the self-contained `<proposed_plan>` contract from
-    `interaction-and-output.md`, including plan schema 2, exact edit list, all disposition
-    bindings, resolution groups, authority scope, coverage, baseline SHA-256 values,
-    neutral closure clauses, code follow-ups, unresolved gaps, and verdict.
+   gate itself failed. Any older scanner or plan schema is incompatible; rerun from Plan
+   Mode.
+11. Output the self-contained `<proposed_plan>` contract from
+    `interaction-and-output.md`, including plan schema 3, exact edit list, audit scope
+    manifest, edit contracts, all disposition bindings, resolution groups, authority scope,
+    coverage, baseline SHA-256 values, neutral closure clauses, code follow-ups, unresolved
+    gaps, and verdict.
 
 Keep `planned`, `implemented`, `validated`, `evaluator_passed`, `migration_applied`,
 `deployed`, `runtime_smoked`, `human_accepted`, `legal_accepted`, and `released` independent.
@@ -105,14 +116,14 @@ Agent agreement is not evidence.
 
 ## Apply and deterministic validation
 
-1. Confirm Default Mode, same-task approval, `plan_schema_version: 2`,
+1. Confirm Default Mode, same-task approval, `plan_schema_version: 3`,
    `decision_complete: true`, and an exact approved docs list.
 2. Run the pre-apply gate before the first write:
 
    ```bash
    python3 scripts/validate_docs_review.py \
      --repo-root <repo> --docs-root docs --phase pre-apply \
-     --plan-file <temporary-plan-v2.json>
+     --plan-file <temporary-plan-v3.json>
    ```
 
    Stop on any baseline, scanner, authority, fingerprint, evidence, coverage, or plan
@@ -130,25 +141,27 @@ Agent agreement is not evidence.
    ```bash
    python3 scripts/validate_docs_review.py \
      --repo-root <repo> --docs-root docs --phase post-apply \
-     --plan-file <temporary-plan-v2.json> \
+     --plan-file <temporary-plan-v3.json> \
      --changed-file <doc> [--changed-file <doc> ...]
    ```
 
-   Do not continue on exit `1` or `2`.
+   Do not continue on exit `1` or `2`. This gate must prove every declared edit contract,
+   including canonical-transfer subject markers, obsolete path absence, and move path state.
 
 ## Sharded independent closure audit
 
 1. Build neutral verification clauses from the approved plan. Each clause must carry every
    changed file, baseline snapshot, evidence source, consumer, and semantic neighbor it
-   depends on. Add one `kind: global` clause whose coverage enumerates the entire approved
-   Markdown read scope. Mark changed docs and moved completed plans `full_read`; mark all
-   remaining files at least `targeted_search`. Dependencies omitted from coverage make a
-   shard non-reusable.
+   depends on. Add one `kind: global` clause whose coverage exactly enumerates every
+   `post_state: present` path in `audit_scope_manifest`, not merely approved write paths.
+   Mark changed docs and moved completed plans `full_read`; mark all remaining files at least
+   `targeted_search`. Dependencies omitted from coverage make a shard non-reusable.
 2. Prepare deterministic shards:
 
    ```bash
    python3 scripts/prepare_closure_audit.py \
      --repo-root <repo> --clauses-file <clauses.json> \
+     --plan-file <temporary-plan-v3.json> \
      --shard-role-file <absolute independent-closure-auditor.md> \
      --synthesis-role-file <absolute independent-closure-synthesizer.md> \
      --max-batch-bytes 120000 --max-batch-lines 2000

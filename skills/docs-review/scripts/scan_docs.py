@@ -17,7 +17,7 @@ from typing import Any, Iterable
 from urllib.parse import unquote, urlsplit
 
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 SCANNER_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 DATE_RE = re.compile(r"(?<!\d)(20\d{2}-\d{2}-\d{2})(?!\d)")
 UPDATED_AT_RE = re.compile(
@@ -39,6 +39,19 @@ DOCS_REVIEW_PROTOCOL_LEAK_RE = re.compile(
     r"(?:(?:audit|batch)[_ -]?id\s*[:：=])",
     re.IGNORECASE,
 )
+
+REPOSITORY_PATH_PREFIXES = {
+    ".agents",
+    "docs",
+    "platform-overlays",
+    "scripts",
+    "skills",
+    "src",
+    "supabase",
+    "tests",
+    "workflow",
+}
+WINDOWS_ABSOLUTE_PATH_RE = re.compile(r"^[A-Za-z]:[\\/]")
 
 TERM_GROUPS = {
     "status": (
@@ -136,6 +149,11 @@ RELEASE_SCOPE_RE = re.compile(
 RELEASE_BLOCKING_RE = re.compile(
     r"(?:release_blocking|release\s+blocking|是否阻塞(?:首版|发布|上架))\s*[:：=]\s*"
     r"(true|false|unknown|yes|no|是|否|未知)",
+    re.IGNORECASE,
+)
+ACTIVE_PLAN_SINGLETON_RE = re.compile(
+    r"(?:唯一|仅有|only\s+(?:one|the\s+following)).{0,20}(?:active|活跃)"
+    r"|(?:active|活跃).{0,20}(?:唯一|仅有|only\s+one)",
     re.IGNORECASE,
 )
 VALID_RELEASE_SCOPES = {
@@ -608,6 +626,123 @@ def extract_inline_path_references(
     return references
 
 
+def _path_integrity_value(raw: str) -> str | None:
+    value = raw.strip().strip("\"'")
+    if not value or "\n" in value:
+        return None
+    if value.startswith(("http://", "https://", "mailto:", "data:")):
+        return None
+    return value.split("#", 1)[0].split("?", 1)[0].rstrip(".,;:：，。；")
+
+
+def _is_machine_specific_absolute_path(value: str) -> bool:
+    normalized = value.replace("\\", "/")
+    return normalized.startswith(
+        ("/Users/", "/home/", "/private/", "/tmp/", "/var/", "/opt/")
+    ) or WINDOWS_ABSOLUTE_PATH_RE.match(value) is not None
+
+
+def _repository_pattern_anchor(value: str) -> Path | None:
+    """Return the deterministic repository prefix before a glob, if any."""
+    if re.search(r"<[^>]+>|\{[^}]+\}", value):
+        return None
+    normalized = value.replace("\\", "/")
+    parts = normalized.split("/")
+    if not parts or parts[0] not in REPOSITORY_PATH_PREFIXES:
+        return None
+    static_parts: list[str] = []
+    saw_pattern = False
+    for part in parts:
+        if re.search(r"[*?\[\]]", part):
+            saw_pattern = True
+            break
+        if part:
+            static_parts.append(part)
+    if not saw_pattern or not static_parts:
+        return None
+    return Path(*static_parts)
+
+
+def extract_path_integrity_findings(
+    lines: list[str],
+    source: Path,
+    repo_root: Path,
+    docs_root: Path,
+) -> list[dict[str, Any]]:
+    """Find portability and repository-inventory gaps missed by link-only checks."""
+    findings: list[dict[str, Any]] = []
+    repo_path = _relative(source, repo_root)
+    docs_index = source == docs_root / "README.md"
+    in_fence = False
+    for number, line in enumerate(lines, start=1):
+        if line.lstrip().startswith("```") or line.lstrip().startswith("~~~"):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        for match in INLINE_CODE_RE.finditer(line):
+            value = _path_integrity_value(match.group(1))
+            if value is None:
+                continue
+            if _is_machine_specific_absolute_path(value):
+                findings.append(
+                    {
+                        "type": "machine_specific_absolute_path",
+                        "file": repo_path,
+                        "line": number,
+                        "message": "inline path is tied to one developer machine",
+                        "evidence": {"raw": value},
+                    }
+                )
+                continue
+
+            pattern_anchor = _repository_pattern_anchor(value)
+            if pattern_anchor is not None:
+                resolved = (repo_root / pattern_anchor).resolve(strict=False)
+                if not _is_within(resolved, repo_root) or not resolved.exists():
+                    findings.append(
+                        {
+                            "type": "missing_repository_path_reference",
+                            "file": repo_path,
+                            "line": number,
+                            "message": (
+                                "repository path pattern has no existing static prefix: "
+                                f"{value}"
+                            ),
+                            "evidence": {
+                                "raw": value,
+                                "static_prefix": pattern_anchor.as_posix(),
+                            },
+                        }
+                    )
+                continue
+
+            if (
+                docs_index
+                and value.endswith("/")
+                and not re.search(r"[<>*?{}\[\]]", value)
+                and not value.startswith(("./", "../", "/"))
+            ):
+                relative = Path(value)
+                candidate = (
+                    repo_root / relative
+                    if relative.parts and relative.parts[0] == docs_root.name
+                    else docs_root / relative
+                )
+                resolved = candidate.resolve(strict=False)
+                if not _is_within(resolved, docs_root) or not resolved.is_dir():
+                    findings.append(
+                        {
+                            "type": "missing_docs_index_directory",
+                            "file": repo_path,
+                            "line": number,
+                            "message": f"docs index lists a directory that does not exist: {value}",
+                            "evidence": {"raw": value},
+                        }
+                    )
+    return findings
+
+
 def extract_lifecycle_tables(lines: list[str], path: str) -> list[dict[str, Any]]:
     tables: list[dict[str, Any]] = []
     for number, line in enumerate(lines, start=1):
@@ -811,6 +946,81 @@ def _is_active_plan(relative_to_docs: Path) -> bool:
     )
 
 
+def _active_plan_index_findings(
+    *,
+    docs_root: Path,
+    repo_root: Path,
+    scope: Path,
+    active_plans: dict[str, dict[str, Any]],
+    links_by_source: dict[str, list[dict[str, Any]]],
+    source_contexts: dict[str, tuple[list[str], list[dict[str, Any]]]],
+) -> list[dict[str, Any]]:
+    """Reconcile the active-plan directory with its canonical index.
+
+    This check is intentionally global: a narrowed scan cannot prove that it has
+    seen every sibling plan.  The index may link to completed/supporting files,
+    but every live plan file must be named by at least one resolved index link.
+    """
+    if scope != docs_root or not active_plans:
+        return []
+
+    index_path = _relative(docs_root / "plans" / "active" / "README.md", repo_root)
+    findings: list[dict[str, Any]] = []
+    if index_path not in source_contexts:
+        first_plan = sorted(active_plans)[0]
+        return [
+            {
+                "type": "active_plan_index_missing",
+                "file": first_plan,
+                "line": 1,
+                "message": "active plans exist but plans/active/README.md is missing",
+                "evidence": {
+                    "expected_index": index_path,
+                    "active_plans": sorted(active_plans),
+                },
+            }
+        ]
+
+    indexed_plans = {
+        link["resolved_path"]
+        for link in links_by_source.get(index_path, [])
+        if link.get("exists") and link.get("resolved_path") in active_plans
+    }
+    for missing_path in sorted(set(active_plans) - indexed_plans):
+        findings.append(
+            {
+                "type": "active_plan_missing_from_index",
+                "file": index_path,
+                "line": 1,
+                "message": "active plan file is not listed by the active-plan index",
+                "evidence": {
+                    "active_plan": missing_path,
+                    "indexed_active_plans": sorted(indexed_plans),
+                },
+            }
+        )
+
+    lines, _ = source_contexts[index_path]
+    for number, line in enumerate(lines, start=1):
+        if ACTIVE_PLAN_SINGLETON_RE.search(line) and len(active_plans) != 1:
+            findings.append(
+                {
+                    "type": "active_plan_count_contradiction",
+                    "file": index_path,
+                    "line": number,
+                    "message": (
+                        "active-plan index claims a single active plan but the directory "
+                        f"contains {len(active_plans)}"
+                    ),
+                    "evidence": {
+                        "active_plans": sorted(active_plans),
+                        "source_text": line.strip(),
+                    },
+                }
+            )
+    return findings
+
+
 def _is_completed_plan(relative_to_docs: Path) -> bool:
     lowered = [part.lower() for part in relative_to_docs.parts[:-1]]
     return (
@@ -987,6 +1197,7 @@ def scan_docs(repo_root_raw: str, docs_root_raw: str = "docs", scope_raw: str | 
         "duplicate_blocks": [],
         "claim_ids": [],
         "inline_path_references": [],
+        "path_integrity_findings": [],
         "lifecycle_tables": [],
         "frozen_scope": [],
         "active_plan_release_scope": [],
@@ -994,6 +1205,7 @@ def scan_docs(repo_root_raw: str, docs_root_raw: str = "docs", scope_raw: str | 
     all_blocks: list[dict[str, Any]] = []
     active_plans: dict[str, dict[str, Any]] = {}
     source_contexts: dict[str, tuple[list[str], list[dict[str, Any]]]] = {}
+    links_by_source: dict[str, list[dict[str, Any]]] = {}
 
     for path in files:
         text, lines, raw = read_markdown(path)
@@ -1003,7 +1215,11 @@ def scan_docs(repo_root_raw: str, docs_root_raw: str = "docs", scope_raw: str | 
         headings = extract_headings(lines)
         source_contexts[repo_path] = (lines, headings)
         links, broken_links = extract_links(lines, path, repo_root)
+        links_by_source[repo_path] = links
         inline_paths = extract_inline_path_references(lines, path, repo_root, docs_root)
+        path_integrity_findings = extract_path_integrity_findings(
+            lines, path, repo_root, docs_root
+        )
         term_signals = extract_term_signals(lines, repo_path)
         blocks, long_bullets = extract_blocks(lines, repo_path)
         claim_ids = extract_claim_ids(lines, repo_path)
@@ -1070,6 +1286,8 @@ def scan_docs(repo_root_raw: str, docs_root_raw: str = "docs", scope_raw: str | 
         signals["inline_path_references"].extend(
             {"file": repo_path, **item} for item in inline_paths
         )
+        signals["path_integrity_findings"].extend(path_integrity_findings)
+        findings.extend(path_integrity_findings)
         signals["lifecycle_tables"].extend(lifecycle_tables)
         signals["frozen_scope"].extend(frozen_occurrences)
         signals["active_plan_release_scope"].extend(release_scopes)
@@ -1198,6 +1416,16 @@ def scan_docs(repo_root_raw: str, docs_root_raw: str = "docs", scope_raw: str | 
                         },
                     }
                 )
+
+    active_index_findings = _active_plan_index_findings(
+        docs_root=docs_root,
+        repo_root=repo_root,
+        scope=scope,
+        active_plans=active_plans,
+        links_by_source=links_by_source,
+        source_contexts=source_contexts,
+    )
+    findings.extend(active_index_findings)
 
     if signals["frozen_scope"]:
         frozen_evidence = signals["frozen_scope"][0]
@@ -1390,6 +1618,20 @@ def scan_docs(repo_root_raw: str, docs_root_raw: str = "docs", scope_raw: str | 
                 if item["type"]
                 in {"broken_navigation_path", "broken_inline_markdown_reference"}
             ),
+            "machine_specific_paths": sum(
+                1
+                for item in findings
+                if item["type"] == "machine_specific_absolute_path"
+            ),
+            "missing_repository_paths": sum(
+                1
+                for item in findings
+                if item["type"]
+                in {
+                    "missing_repository_path_reference",
+                    "missing_docs_index_directory",
+                }
+            ),
             "completed_plan_stale_lifecycle": sum(
                 1 for item in findings if item["type"] == "completed_plan_stale_lifecycle"
             ),
@@ -1398,6 +1640,16 @@ def scan_docs(repo_root_raw: str, docs_root_raw: str = "docs", scope_raw: str | 
                 for item in findings
                 if item["type"]
                 in {"active_plan_release_scope_missing", "active_plan_release_blocking_missing"}
+            ),
+            "active_plan_index_gaps": sum(
+                1
+                for item in findings
+                if item["type"]
+                in {
+                    "active_plan_index_missing",
+                    "active_plan_missing_from_index",
+                    "active_plan_count_contradiction",
+                }
             ),
         },
         "inventory": inventory,

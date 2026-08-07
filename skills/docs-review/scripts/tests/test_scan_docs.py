@@ -52,7 +52,7 @@ class ScanDocsTests(unittest.TestCase):
         code, payload = self.run_scan()
         self.assertEqual(code, 0)
         self.assertEqual(payload["summary"]["findings"], 0)
-        self.assertEqual(payload["scanner_manifest"]["schema_version"], 4)
+        self.assertEqual(payload["scanner_manifest"]["schema_version"], 5)
         self.assertRegex(payload["scanner_manifest"]["scanner_sha256"], r"^[0-9a-f]{64}$")
 
     def test_broken_internal_link_exit_one(self) -> None:
@@ -219,6 +219,59 @@ class ScanDocsTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertNotIn("broken_inline_markdown_reference", self.finding_types(payload))
 
+    def test_machine_specific_absolute_inline_path_is_reported(self) -> None:
+        self.write(
+            "docs/plans/completed/design.md",
+            "# Design\n\nHistorical source: `/Users/example/Desktop/project/prototype.html`.\n",
+        )
+        code, payload = self.run_scan()
+        self.assertEqual(code, 1)
+        self.assertIn("machine_specific_absolute_path", self.finding_types(payload))
+        self.assertEqual(payload["summary"]["machine_specific_paths"], 1)
+
+    def test_missing_explicit_repository_glob_prefix_is_reported(self) -> None:
+        self.write(
+            "docs/architecture/system-map.md",
+            "# Map\n\nPublished contracts came from `docs/legal/*` drafts.\n",
+        )
+        code, payload = self.run_scan()
+        self.assertEqual(code, 1)
+        self.assertIn("missing_repository_path_reference", self.finding_types(payload))
+
+    def test_existing_explicit_repository_glob_prefix_is_accepted(self) -> None:
+        self.write("src/privacy/contracts/privacy.md", "# Privacy\n")
+        self.write(
+            "docs/architecture/system-map.md",
+            "# Map\n\nPublished contracts are in `src/privacy/contracts/*.md`.\n",
+        )
+        code, payload = self.run_scan()
+        self.assertEqual(code, 0)
+        self.assertNotIn("missing_repository_path_reference", self.finding_types(payload))
+
+    def test_docs_index_missing_directory_is_reported(self) -> None:
+        self.write("docs/architecture/current.md", "# Current\n")
+        self.write(
+            "docs/README.md",
+            "# Docs\n\n- `architecture/`\n- `legal/`\n",
+        )
+        code, payload = self.run_scan()
+        self.assertEqual(code, 1)
+        findings = [
+            item for item in payload["findings"]
+            if item["type"] == "missing_docs_index_directory"
+        ]
+        self.assertEqual([item["evidence"]["raw"] for item in findings], ["legal/"])
+
+    def test_docs_index_repo_prefixed_directory_is_resolved_from_repo_root(self) -> None:
+        self.write("docs/workflow/current.md", "# Current\n")
+        self.write(
+            "docs/README.md",
+            "# Docs\n\nScope: `docs/`; maintenance: `docs/workflow/`.\n",
+        )
+        code, payload = self.run_scan()
+        self.assertEqual(code, 0)
+        self.assertNotIn("missing_docs_index_directory", self.finding_types(payload))
+
     def test_explicit_historical_inline_path_is_not_treated_as_navigation(self) -> None:
         self.write(
             "docs/plans/completed/location.md",
@@ -249,9 +302,45 @@ class ScanDocsTests(unittest.TestCase):
             "docs/plans/active/feature.md",
             "# Feature\n\n> release_scope: post_release\n> release_blocking: false\n",
         )
+        self.write(
+            "docs/plans/active/README.md",
+            "# Active\n\n- [Feature](feature.md)\n",
+        )
         code, payload = self.run_scan()
         self.assertEqual(code, 0)
         self.assertNotIn("active_plan_release_scope_missing", self.finding_types(payload))
+
+    def test_active_plan_missing_from_index_is_reported(self) -> None:
+        self.write("docs/plans/active/README.md", "# Active\n\n- [Launch](launch.md)\n")
+        self.write("docs/plans/active/launch.md", "# Launch\n\nIn progress.\n")
+        self.write("docs/plans/active/delivery.md", "# Delivery\n\nIn progress.\n")
+        code, payload = self.run_scan()
+        self.assertEqual(code, 1)
+        findings = [
+            item for item in payload["findings"]
+            if item["type"] == "active_plan_missing_from_index"
+        ]
+        self.assertEqual(
+            [item["evidence"]["active_plan"] for item in findings],
+            ["docs/plans/active/delivery.md"],
+        )
+
+    def test_active_plan_singleton_claim_is_checked_against_directory(self) -> None:
+        self.write(
+            "docs/plans/active/README.md",
+            "# Active\n\n- [Launch](launch.md)：唯一 active 计划。\n",
+        )
+        self.write("docs/plans/active/launch.md", "# Launch\n\nIn progress.\n")
+        self.write("docs/plans/active/delivery.md", "# Delivery\n\nIn progress.\n")
+        code, payload = self.run_scan()
+        self.assertEqual(code, 1)
+        self.assertIn("active_plan_count_contradiction", self.finding_types(payload))
+
+    def test_active_plans_require_an_index(self) -> None:
+        self.write("docs/plans/active/feature.md", "# Feature\n\nIn progress.\n")
+        code, payload = self.run_scan()
+        self.assertEqual(code, 1)
+        self.assertIn("active_plan_index_missing", self.finding_types(payload))
 
     def test_lifecycle_status_indirection_is_reported(self) -> None:
         self.write(

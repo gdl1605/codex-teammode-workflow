@@ -40,7 +40,7 @@
 - 根因未锁、需要“只读审计 -> evidence -> 回流执行 prompt”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实
 - 要整理 docs 维护：先看 `workflow/docs-maintenance.md`
-- 要做跨文档整体事实校正：只有用户显式触发 `$docs-review` 时，先看 `workflow/docs-maintenance.md`，再由已安装的可选 skill 在 Plan Mode 只读核验；v2 使用结构化 plan gate、分片独立审计和全新 synthesis 终审，docs impact 不自动进入该流程
+- 要做跨文档整体事实校正：只有用户显式触发 `$docs-review` 时，先看 `workflow/docs-maintenance.md`，再由已安装的可选 skill 在 Plan Mode 只读核验；v3 使用 scanner schema 5 / plan schema 3、封闭 audit scope、结构化 edit contracts、分片独立审计和全新 synthesis 终审，docs impact 不自动进入该流程
 - 要看当前候选方向或后置项：先看 `product/active-directions.md`
 - 要看跨轮次技术债：先看 `plans/tech-debt.md`
 - 要管理当前计划或结束后的计划工件：先看 `plans/active/` 和 `plans/completed/`
