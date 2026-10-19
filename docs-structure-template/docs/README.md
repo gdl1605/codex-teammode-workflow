@@ -1,6 +1,6 @@
 # docs Index Template
 
-<!-- codex-teammode:managed:start scope=docs-index version=0.1.0 -->
+<!-- codex-teammode:managed:start scope=docs-index version=0.3.0 -->
 
 > Last updated: TBD
 > Scope: target repo docs entry map

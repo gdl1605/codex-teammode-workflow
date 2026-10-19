@@ -1,6 +1,6 @@
 # AGENTS.md
 
-<!-- codex-teammode:managed:start scope=agent-entry version=0.1.0 -->
+<!-- codex-teammode:managed:start scope=agent-entry version=0.3.0 -->
 
 ## 适用范围与触发
 
