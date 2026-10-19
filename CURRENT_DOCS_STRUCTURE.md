@@ -12,7 +12,6 @@ docs/
   architecture/
   product/
   workflow/
-  planner/
   plans/
     active/
     completed/
@@ -21,14 +20,11 @@ docs/
   evidence/
 ```
 
-## Workflow / Planner Files Copied Into Kernel
+## Workflow Files Copied Into Kernel
 
 ```text
 VERSION
-docs/workflow/collaboration.md
 docs/workflow/docs-maintenance.md
-docs/workflow/session-startup.md
-docs/workflow/prompt-template.md
 docs/workflow/team-loop-core.md
 docs/workflow/team-loop.md
 docs/workflow/team-loop-roles/leader.md
@@ -37,9 +33,6 @@ docs/workflow/team-loop-roles/generator.md
 docs/workflow/team-loop-roles/scout.md
 docs/workflow/team-loop-roles/evaluator.md
 docs/workflow/update-policy.md
-docs/planner/planner-output-schema.md
-docs/planner/planner-input-template.md
-docs/planner/planner-system.md
 ```
 
 ## Update Protocol Files

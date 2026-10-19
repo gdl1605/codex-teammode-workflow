@@ -16,7 +16,6 @@ planner subagent 只读。Leader 派生 fresh planner 时，默认只给：
 
 复用 planner 时，Leader 用 `Reuse Bootstrap` 替代完整基线重发，并附带 cache manifest、freshness check、本轮问题和本轮 allowed / forbidden scope。
 
-planner 不默认读取 `docs/workflow/prompt-template.md`、`docs/workflow/collaboration.md` 或 `docs/planner/*`；只有 Leader 明确列入本轮 read scope 时才读取。
 
 ## 职责
 

@@ -9,11 +9,12 @@ You are working in a target project root. A newer folder named `codex-teammode-w
 
 ## Goal
 
-Upgrade the target repo's installed Codex-teammode Workflow without overwriting target project facts or local customizations.
+Upgrade the target repo's installed Codex-teammode Workflow to prompt-triggered Team Loop only, without overwriting target project facts or rules outside managed blocks.
 
 Use ownership-based updates:
 
-- Workflow-owned kernel files: replace old workflow files in place.
+- Workflow-owned kernel files: replace retained files in place and remove exact retired files listed in `UPDATE_MANIFEST.md`.
+- Do not install normal-workflow round types, schemas, startup checks, or `@planner` aliases. This update does not itself trigger Team Loop.
 - Mixed files: update only inside `codex-teammode:managed` blocks.
 - Target project facts / handoff / plans / evidence: never overwrite.
 
@@ -59,6 +60,7 @@ Then inspect the target repo:
 
 2. Classify files by `UPDATE_MANIFEST.md`.
    - `replace-workflow`
+   - `remove-workflow`
    - `managed-block`
    - `create-if-missing`
    - `never-overwrite`
@@ -73,7 +75,12 @@ Then inspect the target repo:
    - Do not preserve old workflow files beside new ones.
    - If `<path>.new` exists from an earlier update attempt for the same workflow-owned file, remove that stale `.new` file after the real target file has been replaced.
 
-4. For `managed-block` files:
+4. For `remove-workflow` files:
+   - Remove only the exact retired targets listed in `UPDATE_MANIFEST.md` and their stale `.new` siblings.
+   - Preserve any other files; do not recursively remove `docs/planner/`.
+   - Drop retired paths from the marker's `managed_files`.
+
+5. For `managed-block` files:
    - Replace only content between:
      `<!-- codex-teammode:managed:start ... -->`
      and
@@ -81,24 +88,24 @@ Then inspect the target repo:
    - Preserve all text outside the block.
    - If markers are missing, do not rewrite the file and do not create `.new`. Report the exact managed block that should be inserted or ask for human review.
 
-5. For `create-if-missing` files:
+6. For `create-if-missing` files:
    - Create only missing placeholders.
    - Preserve existing files unchanged.
 
-6. For `never-overwrite` paths:
+7. For `never-overwrite` paths:
    - Do not change existing target facts, architecture docs, handoff, plans, or evidence.
    - If a new workflow version expects a convention change there, report it as a manual migration note.
 
-7. For `package-only` files:
+8. For `package-only` files:
    - Keep the bundled source inside `codex-teammode-workflow/`.
    - Do not copy it into target root workflow docs or a personal/global skill directory.
    - If a newer optional skill is available, report the explicit installer command as a manual action.
 
-8. Refresh marker file.
+9. Refresh marker file.
    - Write `docs/workflow/.codex-teammode-version`.
    - Include the package version, timestamp, update schema, and `managed_files` entries with fresh sha256 hashes for updated / managed files.
 
-9. Run docs impact check.
+10. Run docs impact check.
 
 ## Required Output
 
@@ -107,6 +114,7 @@ Final response must include:
 - detected previous version
 - new package version
 - files updated
+- retired workflow files removed
 - files created
 - managed blocks updated
 - workflow-owned files replaced in place

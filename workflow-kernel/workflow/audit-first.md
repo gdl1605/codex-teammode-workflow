@@ -1,13 +1,13 @@
 # Audit First Workflow
 
-> 最后更新时间：2026-05-02
-> 适用范围：普通工作流 / Team Loop 中根因未锁、实现层不确定、需要审计回流的轮次
+> 最后更新时间：2026-10-19
+> 适用范围：已由用户 prompt 触发的 Team Loop 中，根因未锁、实现层不确定、需要审计回流的轮次
 > 本文主职责：定义“只读审计 -> evidence -> 回流执行 prompt / generator 指令”的高风险前置闸门
-> 推荐下一跳：`../docs/workflow/collaboration.md`
+> 推荐下一跳：`../docs/workflow/team-loop.md`
 
 ## 什么时候必须先审计
 
-以下情况在普通工作流或 Team Loop 中必须先走只读审计，不应直接写执行 prompt 或派 generator 试修：
+以下情况在已触发的 Team Loop 中必须先走只读审计，不应直接写执行 prompt 或派 generator 试修：
 
 - 根因未锁。
 - 建议实现层不确定。
@@ -68,14 +68,10 @@ docs/evidence/<feature>-audit.md
 
 审计完成后：
 
-1. 普通工作流的 planning phase 或 Team Loop 的 Leader 读取 `docs/evidence/<feature>-audit.md`。
-2. planning phase / Leader 把 evidence 中的事实、推断、缺口分开。
-3. 普通工作流中，planning phase 明确当前采用 `planner-output-schema.md` 中的 `plan / execute / review` 哪一种 schema。
-4. 普通工作流中，planning phase 再产出执行 prompt，或判断还不能进入执行。
-5. Team Loop 中，Leader 必须把 evidence 裁剪为 Evidence Pack 后再派 generator，不把原始 scout / audit 输出直接转交 generator。
-6. Team Loop 中，Leader 派 planner / scout 做只读审计时，必须把下方“最小审计 prompt 骨架”的 `必读` 转换为 `Context Bootstrap`。
-7. Team Loop 中，Leader 派 generator 时，必须把 evidence 裁剪为 Evidence Pack，并同时附带 required read scope。
-8. 执行 prompt 或 Leader 给 generator 的正式指令必须引用 evidence，并要求 generator 启动前重新审计 current code、输出 `Read Scope Ack`。
+1. Leader 读取 `docs/evidence/<feature>-audit.md`，把事实、推断和缺口分开。
+2. Leader 派 planner / scout 做只读审计时，把下方骨架的必读材料转换为 `Context Bootstrap`。
+3. Leader 把 audit / scout evidence 裁剪为 Evidence Pack，再派 generator，并附带 required read scope。
+4. generator 的正式指令必须引用 evidence，要求启动前重新审计 current code 并输出 `Read Scope Ack`。
 
 不允许：
 
@@ -88,23 +84,13 @@ docs/evidence/<feature>-audit.md
 
 - audit-first 默认不使用 computer-use / GUI。
 - 审计轮禁止截图和 GUI 试跑，除非用户明确允许且该动作是极简单只读确认。
-- 复杂运行态验证、视觉强弱判断、状态命中验证，应写入 `HUMAN_CHECK_REQUIRED` 或交给后续执行轮，不作为 planning phase / Leader 自证任务。
+- 复杂运行态验证、视觉强弱判断、状态命中验证，应写入 `HUMAN_CHECK_REQUIRED` 或交给后续执行轮，不作为 Leader 自证任务。
 
-## 与普通工作流文档的关系
+## Team Loop 合同入口
 
-- `../docs/workflow/collaboration.md`：普通工作流主入口，说明 plan-only / read-only audit / execute / review 的关系。
-- `../docs/workflow/team-loop.md`：Team Loop 的 Leader / planner subagent / generator / scout / evaluator 调度规则。
-- `../docs/planner/planner-input-template.md`：普通工作流 plan-only / read-only audit / review 输入模板。
-- `../docs/planner/planner-output-schema.md`：普通工作流 plan / execute / review 输出结构。
-- `../AGENTS.md`：声明普通工作流、Team Loop 与 legacy `@planner` alias。
-
-对应关系：
-
-- 只读审计 prompt 本身通常按 `plan` schema 输出。
-- 审计 evidence 足够后，普通工作流的 planning phase 再按 `execute` schema 产出执行 prompt。
-- Team Loop 中，Leader 基于 evidence 形成 Evidence Pack，再派 generator。
-- 若用户要求独立复核 evidence 或 generator 输出，则按 `review` schema 输出。
-- 每次输出都必须显式声明采用哪一种 schema，不允许只说原则不给结构。
+- `../docs/workflow/team-loop.md`：Leader / planner / generator / scout / evaluator 调度规则。
+- `../docs/workflow/team-loop-core.md`：subagent 核心合同。
+- `../docs/workflow/team-loop-roles/`：当前角色的输入与输出结构。
 
 ## 最小审计 prompt 骨架
 
@@ -113,7 +99,6 @@ docs/evidence/<feature>-audit.md
 
 ## 目标
 - 本轮只读审计目标：
-- 本轮采用 schema：plan / review
 
 ## 必读
 - AGENTS.md
@@ -143,6 +128,6 @@ docs/evidence/<feature>-audit.md
 - 审计结论摘要
 - evidence 写入建议
 - 执行 prompt 前置条件
-- 工作流决策（普通工作流；只有显式 Team Loop 才涉及 subagent）
+- 回报 Leader 的结论与下一步建议
 - GUI / computer-use 是否使用，默认 0
 ```

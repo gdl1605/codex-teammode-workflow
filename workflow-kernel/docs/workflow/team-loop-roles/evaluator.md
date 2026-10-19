@@ -15,7 +15,6 @@ evaluator 是独立核验角色，必须 fresh。Leader 派生 evaluator 时，�
 - Evaluation Bundle。
 - required_evaluator_read_scope 中列出的 diff / code / docs / validation output。
 
-evaluator 不继承 generator 完整对话叙事，不默认读取 `docs/workflow/prompt-template.md` 或 `docs/planner/*`。
 
 ## 职责
 

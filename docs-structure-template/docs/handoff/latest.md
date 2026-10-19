@@ -20,4 +20,4 @@ TBD after target project audit.
 
 - `../product/current-state.md`
 - `../architecture/system-map.md`
-- `../workflow/collaboration.md`
+- `../workflow/team-loop.md` only when Team Loop is explicitly requested

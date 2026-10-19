@@ -2,25 +2,12 @@
 
 Quick glossary of the terms used throughout this kit. Read this once before installing into a target project so the bootstrap prompt makes sense.
 
-## Two top-level workflows
+## Prompt-triggered Team Loop
 
-The kit defines exactly two AI collaboration workflows. Everything else is a sub-mode of one of these.
-
-### 1. Normal workflow
-
-Linear, single-agent. Each turn is one of these "round types":
-
-| Round type | What the agent is allowed to do |
-|---|---|
-| **plan-only** | Read code/docs, output a plan. No code edits. |
-| **read-only audit** | Read code/docs, output findings/evidence. No edits. |
-| **docs-only** | Edit `docs/**` only. No business code. |
-| **execute** | Audit first, then make minimal code changes. |
-| **review** | Read the diff, output a review. No edits. |
-
-Default rule: do not exceed the round type the user asked for. Normal workflow does not default to subagents or independent planner/generator/evaluator roles.
-
-### 2. Team Loop workflow
+Team Loop is the only coding workflow defined by this package. It starts only on an explicit
+user request to use Team Loop. Without that trigger, the package defines no round types,
+output schemas, startup protocol, or subagent scheduling. Discussing or editing the rules
+is not a trigger.
 
 A multi-subagent loop run **inside one Leader thread** (Codex / Claude Code session). Triggered when the user prefixes a message with `@team-loop` or asks for a "leader-driven multi-subagent" closure.
 
@@ -49,17 +36,17 @@ Two execution modes inside Team Loop:
 
 ## audit-first
 
-A fallback flow used when the **root cause of a bug is not yet locked**. Instead of jumping to a fix:
+An evidence flow inside an already triggered Team Loop, used when the **root cause of a bug is not yet locked**. Instead of jumping to a fix:
 
 1. Run a read-only audit.
 2. Sink the findings into `docs/evidence/<feature>-audit.md`.
-3. Feed that evidence file back into a fresh execute prompt.
+3. Leader curates an Evidence Pack and required read scope for generator.
 
 Goal: stop "imagined fixes" — every change must trace back to evidence, not vibes.
 
 ## Fact-priority order
 
-For ordinary implementation work, this is the default descriptive-fact routing order:
+For Team Loop implementation work, this is the default descriptive-fact routing order:
 
 1. **Current code** (highest)
 2. The relevant topic doc under `docs/`
@@ -83,19 +70,9 @@ every kind of claim. It routes authority by fact type:
 This distinction prevents an implementation bug from silently rewriting intended business
 behavior, while also preventing aspirational docs from being reported as implemented.
 
-## Schemas
-
-The kit defines three structured output schemas (see `workflow-kernel/docs/planner/planner-output-schema.md`):
-
-- **plan schema** — for plan-only / audit rounds
-- **execute schema** — for execute rounds
-- **review schema** — for explicit review / evaluator rounds
-
-Every round must declare which schema it is using.
-
 ## docs impact check
 
-End-of-round ritual: ask "did this round change a project fact, contract, plan state, or known debt?" If yes, update the **single owning doc**. If no, say so explicitly. Never write the same fact into two docs.
+At the end of a Team Loop round: ask "did this round change a project fact, contract, plan state, or known debt?" If yes, update the **single owning doc**. If no, say so explicitly. Never write the same fact into two docs.
 
 It is the incremental **micro loop**. Its output also states
 `reconciliation_recommended: yes/no + reason`, but it cannot launch a macro review by itself.

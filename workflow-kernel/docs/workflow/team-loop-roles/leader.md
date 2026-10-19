@@ -14,7 +14,6 @@ Leader 进入 Team Loop 时读取：
 - 本文件。
 - 本轮目标相关 docs / code / handoff / evidence。
 
-`docs/planner/*` 不属于 Team Loop subagent 调度规则；只有普通工作流的 plan-only / prompt-framing / review-framing 轮次才按需读取。
 
 ## 职责
 

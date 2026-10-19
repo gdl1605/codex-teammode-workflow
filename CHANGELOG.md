@@ -8,14 +8,15 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Installation now starts with clone → copy the entire bootstrap prompt → send it in any target project agent conversation; bootstrap can use an external checkout or a temporary clone.
+
 - Renamed "Team Mode" to "Team Loop" across all files.
-- Normal workflow is now the explicit default; no longer defaults to subagent scheduling or independent planner/generator/evaluator roles.
-- `@planner` is now a legacy-compat alias for `plan-only` or `read-only audit`, not an independent planner mode.
+- The coding workflow package now defines only prompt-triggered Team Loop; untriggered tasks receive no round types, output schemas, startup checks, or subagent scheduling.
+- Removed normal-workflow planner schemas, collaboration/startup/prompt templates, and the legacy `@planner` alias; bootstrap, update manifests, and agent entries now agree.
+- Updates remove exact retired workflow-owned files through `remove-workflow`, preserving target project facts and content outside managed blocks.
 - `plan-gated` / `auto-execute` descriptions no longer bind to risk levels; they are Team Loop internal pacing choices.
 - Leader is explicitly forbidden from implementing changes directly.
 - `files_read` replaced by `freshly_read` / `satisfied_from_verified_cache` in Read Scope Ack.
-- Execution prompt structure changed from 7 sections to 8 (removed "建议的并行只读审计", added "建议实现路径").
-- Session startup protocol changed from mandatory to on-demand for low-risk tasks.
 - Removed project-specific examples (Supabase, `author_user_id`, posting contracts) and replaced with generic language.
 - Docs maintenance now distinguishes the per-turn docs impact micro loop from the manually triggered `$docs-review` macro loop and emits `reconciliation_recommended` without automatic invocation.
 - `$docs-review` now protects canonical semantic coverage during cleanup, reconciles completed-plan bodies instead of adding header-only status overrides, validates navigation-like inline paths, and requires explicit release scope/blocking for active plans when a release scope is frozen.

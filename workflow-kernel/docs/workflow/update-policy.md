@@ -18,15 +18,11 @@
 这些文件只承载工作流规则，不应承载目标项目业务事实：
 
 ```text
-docs/workflow/collaboration.md
 docs/workflow/docs-maintenance.md
-docs/workflow/session-startup.md
-docs/workflow/prompt-template.md
 docs/workflow/team-loop-core.md
 docs/workflow/team-loop.md
 docs/workflow/team-loop-roles/**
 docs/workflow/update-policy.md
-docs/planner/**
 workflow/audit-first.md
 ```
 
@@ -35,6 +31,13 @@ workflow/audit-first.md
 不要为这些 workflow-owned 文件生成 `.new`。旧工作流文件就是要被新版工作流替换，不能在同一目录里留下旧版和新版两份规则。
 
 如果旧升级尝试已经留下了同名 `<target>.new`，在原目标文件完成原地替换后，应删除这些 stale `.new` 文件，并在输出中列出。
+
+### 已退役工作流
+
+`UPDATE_MANIFEST.md` 的 `remove-workflow` 清单列出旧普通工作流的精确文件路径。
+升级时删除这些文件和对应 stale `.new`，并移除 marker 中的条目；保留同目录下的其他文件，
+不得递归删除 `docs/planner/`。managed block 内的旧规则替换为仅显式触发的 Team Loop；
+block 外的项目规则保留，残留旧入口只报告人工迁移说明。
 
 ### 只能 managed-block 更新的混合文件
 
@@ -119,7 +122,7 @@ managed_files:
 1. 先按 `UPDATE_MANIFEST.md` 分类文件。
 2. 对 mixed files，只在已有 managed block 时替换；没有 block 就输出建议，不直接改。
 3. 对 workflow kernel 文件，按 `replace-workflow` 原地替换，不生成 `.new`。
-4. 清理 workflow kernel 对应的 stale `<target>.new` 文件。
+4. 清理 workflow kernel 对应的 stale `<target>.new` 文件，并按 `remove-workflow` 移除精确退役项。
 5. 对 `create-if-missing` 文件，只创建缺失项。
 6. 对 `never-overwrite` 路径，完全跳过。
 7. 对 `package-only` skill，只保留包内源码并报告可选手动安装，不修改个人 skill。
@@ -131,6 +134,7 @@ managed_files:
 
 - 旧版本 / 新版本。
 - updated files。
+- retired workflow files removed。
 - created files。
 - managed blocks updated。
 - workflow-owned files replaced in place。

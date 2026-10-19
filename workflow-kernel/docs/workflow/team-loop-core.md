@@ -1,6 +1,6 @@
 # Team Loop Core
 
-> 最后更新时间：2026-06-02
+> 最后更新时间：2026-10-19
 > 适用范围：Team Loop subagent 的默认 slim Context Bootstrap
 > 本文主职责：提供 Team Loop 核心合同；完整规范见 `team-loop.md`
 
@@ -8,7 +8,7 @@
 
 Team Loop 只在用户明确声明 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时启用。
 
-普通工作流是默认路径。任务复杂、根因未锁或风险较高，都不自动升级为 Team Loop。
+未明确触发时，本包不规定执行流程。任务复杂、根因未锁或风险较高都不是触发条件；仅讨论、引用或修改规则也不构成触发。
 
 ## 模式
 
@@ -69,8 +69,6 @@ Leader 自身参考 `team-loop-roles/leader.md`。每个 subagent 只需要自�
   - docs/workflow/team-loop-roles/<role>.md
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
-  - docs/workflow/collaboration.md（仅需对齐普通工作流边界时）
-  - docs/workflow/prompt-template.md（仅需生成可复制 prompt 时）
   - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - code_scope:
@@ -90,7 +88,7 @@ Leader 自身参考 `team-loop-roles/leader.md`。每个 subagent 只需要自�
   - freshness_check:
 ```
 
-`conditional_workflow_docs` 是上限列表，不是每个 subagent 的必读列表。Team Loop subagent 不默认读取 `docs/planner/*`。
+`conditional_workflow_docs` 是上限列表，不是每个 subagent 的必读列表。
 
 ## Read Scope Ack
 

@@ -1,21 +1,26 @@
 # Bootstrap Prompt For Target Agent
 
-Use this prompt in a target project root after placing the `codex-teammode-workflow/` folder there.
+Copy this entire file and send it to an agent conversation in any target project.
 
 ```md
 # Install Codex-teammode Workflow
 
-You are working in a target project root. A folder named `codex-teammode-workflow/` has been placed in this repo.
+You are working in the project where the user wants this workflow installed.
+
+Resolve the workflow package before reading its files:
+
+- Use an accessible local checkout of `https://github.com/gdl1605/codex-teammode-workflow.git` if available; it does not have to be inside the target project.
+- If no checkout is accessible, clone that repository into a temporary directory.
+- Let `<workflow-package>` mean the absolute path to that checkout. All package paths below are relative to it; target paths are relative to the current project.
+- Install into the current project. Do not change the package checkout instead of the target project.
 
 ## Goal
 
 Install and adapt Codex-teammode Workflow so this target project can use the same AI collaboration process:
 
-- normal workflow: plan-only / read-only audit / docs-only / execute / review
-- Team Loop workflow: explicit-only Leader + planner / generator / scout / evaluator
+- Team Loop is the only coding workflow provided: prompt-triggered Leader + planner / generator / scout / evaluator
   - planner / scout may be reused with freshness checks; generator / evaluator are fresh per round
 - audit-first evidence flow
-- planner input and output schemas
 - docs impact check
 - synchronized `AGENTS.md` and `CLAUDE.md` entry files
 
@@ -29,33 +34,27 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
   acceptance, legal, and release claims require their own direct evidence.
 - If the target repo has existing `AGENTS.md`, `CLAUDE.md`, `docs/`, or `workflow/`, inspect and merge.
 - Keep edits limited to workflow/process files and docs scaffolding unless the user explicitly allows business code changes.
-- Ordinary workflow is the default; do not enable Team Loop unless the user explicitly requests it.
-- Normal workflow does not default to subagent scheduling. `@planner` is a legacy alias for `plan-only` or `read-only audit`.
+- Enable Team Loop only on an explicit user prompt trigger. Without that trigger, this package adds no round types, schemas, startup checks, or subagent scheduling.
+- Installing, discussing, quoting, or editing Team Loop rules does not itself start a Team Loop.
 
 ## Required Read Scope
 
 First read:
 
-- `codex-teammode-workflow/README.md`
-- `codex-teammode-workflow/MANIFEST.md`
-- `codex-teammode-workflow/workflow-kernel/AGENTS.md`
-- `codex-teammode-workflow/workflow-kernel/CLAUDE.md`
-- `codex-teammode-workflow/workflow-kernel/docs/README.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-core.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/leader.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/planner.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/generator.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/scout.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/team-loop-roles/evaluator.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/collaboration.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/prompt-template.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/session-startup.md`
-- `codex-teammode-workflow/workflow-kernel/docs/workflow/docs-maintenance.md`
-- `codex-teammode-workflow/workflow-kernel/docs/planner/planner-output-schema.md`
-- `codex-teammode-workflow/workflow-kernel/docs/planner/planner-input-template.md`
-- `codex-teammode-workflow/workflow-kernel/docs/planner/planner-system.md`
-- `codex-teammode-workflow/workflow-kernel/workflow/audit-first.md`
+- `<workflow-package>/README.md`
+- `<workflow-package>/MANIFEST.md`
+- `<workflow-package>/workflow-kernel/AGENTS.md`
+- `<workflow-package>/workflow-kernel/CLAUDE.md`
+- `<workflow-package>/workflow-kernel/docs/README.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/team-loop-core.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/team-loop.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/leader.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/planner.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/generator.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/scout.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/evaluator.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/docs-maintenance.md`
+- `<workflow-package>/workflow-kernel/workflow/audit-first.md`
 
 Then inspect the target repo:
 
@@ -78,8 +77,6 @@ Then inspect the target repo:
    - If Claude-specific rules exist, preserve them and add the shared workflow rules from `workflow-kernel/CLAUDE.md`.
 
 3. Create or merge workflow docs:
-   - `docs/workflow/collaboration.md`
-   - `docs/workflow/prompt-template.md`
    - `docs/workflow/team-loop-core.md`
    - `docs/workflow/team-loop.md`
    - `docs/workflow/team-loop-roles/leader.md`
@@ -87,18 +84,12 @@ Then inspect the target repo:
    - `docs/workflow/team-loop-roles/generator.md`
    - `docs/workflow/team-loop-roles/scout.md`
    - `docs/workflow/team-loop-roles/evaluator.md`
-   - `docs/workflow/session-startup.md`
    - `docs/workflow/docs-maintenance.md`
 
-4. Create or merge planner docs:
-   - `docs/planner/planner-system.md`
-   - `docs/planner/planner-input-template.md`
-   - `docs/planner/planner-output-schema.md`
-
-5. Create or merge:
+4. Create or merge:
    - `workflow/audit-first.md`
 
-6. Create missing docs scaffold from `docs-structure-template/`, but keep placeholders generic:
+5. Create missing docs scaffold from `docs-structure-template/`, but keep placeholders generic:
    - `docs/product/current-state.md`
    - `docs/product/active-directions.md`
    - `docs/architecture/system-map.md`
@@ -111,20 +102,20 @@ Then inspect the target repo:
    - `docs/plans/completed/README.md`
    - `docs/evidence/README.md`
 
-7. Rewrite `docs/README.md` for the target repo.
+6. Rewrite `docs/README.md` for the target repo.
    - Keep the same role as an entry map.
    - Replace generic routes, modules, domains, and validation examples with target repo facts.
    - If target facts are unknown, write `TBD after target code audit` rather than guessing.
 
-8. Adapt validation commands.
+7. Adapt validation commands.
    - Replace generic command placeholders with target project commands.
    - If unknown, write placeholders and mark `HUMAN_CHECK_REQUIRED`.
 
-9. Run a docs impact check for this install.
+8. Run a docs impact check for this install.
 
 ## Required Output
 
-Use `plan` schema for the initial audit, then switch to `execute` schema only if the install is safe.
+Inspect existing files, then perform the authorized install. Do not impose plan / execute / review schemas or start Team Loop during installation.
 
 Final response must include:
 

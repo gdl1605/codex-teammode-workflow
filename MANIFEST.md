@@ -2,7 +2,7 @@
 
 ## Package Intent
 
-Codex-teammode Workflow is a prompt-first workflow package for Codex and Claude Code. It ships workflow rules, bootstrap instructions, and a docs scaffold. It does not ship product facts.
+Codex-teammode Workflow is a prompt-first workflow package for Codex and Claude Code. It defines only prompt-triggered Team Loop for coding collaboration and ships bootstrap instructions and a docs scaffold. It does not ship product facts.
 
 ## Included Workflow Kernel
 
@@ -12,10 +12,7 @@ workflow-kernel/
   AGENTS.md
   CLAUDE.md
   docs/README.md
-  docs/workflow/collaboration.md
   docs/workflow/docs-maintenance.md
-  docs/workflow/session-startup.md
-  docs/workflow/prompt-template.md
   docs/workflow/team-loop-core.md
   docs/workflow/team-loop.md
   docs/workflow/team-loop-roles/leader.md
@@ -24,9 +21,6 @@ workflow-kernel/
   docs/workflow/team-loop-roles/scout.md
   docs/workflow/team-loop-roles/evaluator.md
   docs/workflow/update-policy.md
-  docs/planner/planner-system.md
-  docs/planner/planner-input-template.md
-  docs/planner/planner-output-schema.md
   workflow/audit-first.md
 ```
 
@@ -94,7 +88,6 @@ docs/
   product/
   workflow/
     .codex-teammode-version
-  planner/
   plans/
     active/
     completed/
@@ -108,17 +101,16 @@ docs/
 The target agent must adapt these before treating the workflow as installed:
 
 - Target project fact-priority paths, especially `docs/handoff/latest.md`.
-- Validation commands in `docs/workflow/session-startup.md`.
 - Stack-specific terms such as database schema, authorization policy, migrations, helper functions, RPC/stored procedures, serverless/edge functions, build commands, hosted deploys, or package managers.
 - High-risk domain examples such as state machines, permissions, cross-role writes, external integrations, concurrent resources, or multi-step resource pipelines.
-- Planning / prompt-framing defaults in `docs/planner/planner-system.md`, especially schema use, audit-first thresholds, and review-framing expectations.
 - `docs/README.md` task routing and file responsibilities.
 
 ## Update Ownership
 
 Workflow updates use `UPDATE_MANIFEST.md` and `UPDATE_PROMPT.md`.
 
-- `replace-workflow`: workflow kernel files such as `docs/workflow/*`, `docs/planner/*`, and `workflow/audit-first.md` are replaced in place.
+- `replace-workflow`: workflow kernel files listed in the update manifest and `workflow/audit-first.md` are replaced in place.
+- `remove-workflow`: exact retired files listed in `UPDATE_MANIFEST.md` are removed; other target files are preserved.
 - `managed-block`: mixed files such as `AGENTS.md`, `CLAUDE.md`, and `docs/README.md`.
 - `create-if-missing`: scaffold placeholders from `docs-structure-template/`.
 - `never-overwrite`: target-owned facts under `docs/product/**`, `docs/architecture/**`, `docs/handoff/**`, `docs/plans/**`, and `docs/evidence/**`.

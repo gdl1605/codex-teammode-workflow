@@ -7,11 +7,10 @@
 
 Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold，让个人开发者和小团队在 AI 编码会话中稳定执行：
 
-- plan / audit / execute / review 轮次
 - audit-first 根因锁定
 - docs impact check
 - 可选 `$docs-review`：人工触发的跨文档事实对账与清理
-- 可选的 Team Loop：Leader + planner / generator / scout / evaluator
+- prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
 - 永远停在 `human_acceptance_required`，不让 agent 自己宣布验收
 
 ## 非官方说明
@@ -26,39 +25,14 @@ Codex-teammode Workflow 是社区项目，不是 OpenAI 官方项目，也未获
 
 ## 安装
 
-### 脚本安装
+1. Clone 本仓库到本地：
 
-```bash
-git clone https://github.com/gdl1605/codex-teammode-workflow.git
-cd codex-teammode-workflow
-./install.sh /path/to/your-target-project
-```
+   ```bash
+   git clone https://github.com/gdl1605/codex-teammode-workflow.git
+   ```
 
-脚本会把本项目复制到目标仓库的 `codex-teammode-workflow/` 目录，并尽量把 bootstrap prompt 复制到剪贴板。然后在目标仓库中打开 Codex 或 Claude Code，粘贴 prompt。
-
-常用参数：
-
-```bash
-./install.sh --dry-run /path/to/project
-./install.sh --force /path/to/project
-./install.sh --no-clipboard /path/to/project
-./install.sh --install-docs-review /path/to/project
-./install.sh --install-docs-review --skill-root /path/to/skills /path/to/project
-```
-
-`docs-review` 是可选个人 skill。没有 `--install-docs-review` 时，安装器绝不修改个人
-skill 目录。默认目标是 `$CODEX_HOME/skills`，未设置时使用 `~/.codex/skills`。
-目标不存在时安装，内容完全一致时 no-op；内容不同时默认拒绝覆盖，只有
-显式加 `--force-skill` 才会先创建时间戳备份，再替换精确的 `docs-review` 目录。
-`--dry-run` 会同时显示 workflow package 目标和可选 skill 目标，不写文件。
-默认 bootstrap / update 也不会把这个可选 skill 的介绍写入目标项目的 `AGENTS.md` 或
-`CLAUDE.md`；需要时由用户显式安装并调用 skill。
-
-### 手动安装
-
-1. 把 `codex-teammode-workflow/` 文件夹复制到目标仓库根目录。
-2. 在目标仓库中打开 Codex 或 Claude Code。
-3. 粘贴 [`BOOTSTRAP_PROMPT.md`](./BOOTSTRAP_PROMPT.md) 的内容。
+2. 打开 clone 得到的目录，复制 [`BOOTSTRAP_PROMPT.md`](./BOOTSTRAP_PROMPT.md) 的全部内容。
+3. 在任意一个你想安装工作流的项目中打开 agent 对话（如 Codex 或 Claude Code），粘贴并发送即可。Agent 会读取工作流，并将它安装到当前项目。
 
 目标 agent 会读取工作流内核，审计目标仓库，并创建或合并：
 
@@ -68,8 +42,7 @@ CLAUDE.md                          # Claude Code 入口，与 AGENTS.md 同步
 workflow/audit-first.md            # 根因审计优先流程
 docs/
   README.md                        # docs 入口地图
-  workflow/                        # 协作、prompt、Team Loop、docs maintenance
-  planner/                         # plan / execute / review schema
+  workflow/                        # Team Loop、角色合同、docs maintenance
   product/                         # 项目事实占位，需按目标仓库填写
   architecture/                    # 架构占位，需按目标仓库填写
   handoff/                         # 跨会话 handoff
@@ -83,7 +56,7 @@ docs/
 
 升级流程按 [`UPDATE_MANIFEST.md`](./UPDATE_MANIFEST.md) 的 ownership 策略执行：
 
-- **workflow kernel**：`docs/workflow/*`、`docs/planner/*`、`workflow/audit-first.md` 等原地替换旧版工作流文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
+- **workflow kernel**：清单内的 Team Loop 内核及 `workflow/audit-first.md` 原地替换旧版文件；按 `remove-workflow` 清单删除旧普通流程的精确文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
 - **mixed files**：`AGENTS.md`、`CLAUDE.md`、`docs/README.md` 只替换 `codex-teammode:managed` block，保留 block 外的目标项目规则。
 - **target facts**：`docs/product/*`、`docs/architecture/*`、`docs/handoff/*`、`docs/plans/*`、`docs/evidence/*` 永不自动覆盖。
 
@@ -95,11 +68,8 @@ docs/
 
 Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、计划、证据、架构结论或领域示例。普通实现事实仍以目标仓库的 current code 为首要证据；显式运行 `$docs-review` 时则按 claim 类型路由权限，业务意图、部署、人工验收和法务状态不能被“代码已实现”替代。
 
-复杂长规划可选使用独立 skill 包 [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills)，其中 `longterm-planning` 用于长线程规划 / 长规划 / 系统级规划的方向选择、HTML Selection 和小规划产出。
-
 ## 核心概念
 
-- **Normal workflow**：单 agent 轮次，包括 `plan-only`、`read-only audit`、`docs-only`、`execute`、`review`。
 - **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
 - **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
@@ -149,7 +119,7 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 
 ## Team Loop 工作流
 
-Team Loop 是普通工作流的可选增强形态，适合需要一个 Leader 主线程调度多个独立 subagent 的任务。它不会替代普通的 `plan / audit / execute / review` 轮次；只有当用户明确使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时才进入。普通工作流不因任务复杂度自动升级为 Team Loop。
+Team Loop 是本包唯一提供的编码工作流。只有用户在 prompt 中明确使用 `@team-loop`、要求使用 `Team Loop` / `teamloop`，或明确要求 Leader 调度 subagent 时才启用。未触发时，本包不规定轮次、输出 schema、启动检查或 subagent 调度；仅讨论、引用或修改这些规则不构成触发。
 
 Team Loop 的核心通信结构是：
 
@@ -173,7 +143,7 @@ User
 ### 角色规范
 
 - **Leader** 是唯一调度者。Leader 负责确认目标、判断 `plan-gated / auto-execute`、派生 subagent、附带 `Context Bootstrap`、核验每个 subagent 的 `Read Scope Ack`、整理 Evidence Pack、运行验证、组装 Evaluation Bundle，并决定返工、阻塞或停在 `human_acceptance_required`。Leader 不能直接实现或改文件，不能让 subagent 彼此直接通信，也不能替 evaluator 自评通过。
-- **Planner subagent** 是 Team Loop 内部只读角色，不等于旧的独立 planner mode。它负责读取入口文档、目标相关 docs / code / handoff / evidence，收口目标和非目标，判断风险模式，定义 allowed scope / forbidden scope、minimum progress unit、generator 启动前核对清单、可能的 scout 问题和 evaluator focus。planner 不改代码，也不能把建议实现层写成已验证事实。
+- **Planner subagent** 是 Team Loop 内部只读角色。它负责读取入口文档、目标相关 docs / code / handoff / evidence，收口目标和非目标，判断风险模式，定义 allowed scope / forbidden scope、minimum progress unit、generator 启动前核对清单、可能的 scout 问题和 evaluator focus。planner 不改代码，也不能把建议实现层写成已验证事实。
 - **Generator** 是默认唯一写代码角色。它必须消费 Leader 提供的 planner handoff 和 Evidence Pack，但仍要重新审计 current code，并在输出里给出 `Read Scope Ack`、touched files、修改摘要、验证建议、evaluator notes 和 docs impact。若审计范围过大，generator 只能向 Leader 提交 Scout Request，不能直接联系 scout 或自行派生 subagent。
 - **Scout** 是只读线索收集角色。它只回答 Leader 指定的问题，只读必要的 current code、docs、handoff 或 evidence，并输出 verified facts、inferences、unresolved 和 citations。Scout Evidence 只能回 Leader，不能直接传给 generator，也不能设计完整实现方案或评价结果是否通过。
 - **Evaluator** 是独立核验角色。它只消费 Leader 提供的 Evaluation Bundle 作为叙事入口，并读取必要 diff、code 和 docs 做复核。evaluator 要核验 generator 的 read scope、actual diff、allowed scope、docs impact 和验证输出，优先找 P0 / P1 阻塞问题；P2 / P3 默认进入 residual risk、backlog 或人工验收。
@@ -217,33 +187,23 @@ User
 
 Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
 
-It installs a normal plan / audit / execute / review workflow, an audit-first evidence flow, a docs impact check, an optional explicit-only `$docs-review` fact-reconciliation skill, and an optional Team Loop where a Leader coordinates planner, generator, scout, and evaluator roles.
+It installs only a prompt-triggered Team Loop coding workflow, with an audit-first evidence flow and docs impact check. A Leader coordinates planner, generator, scout, and evaluator roles. The optional explicit-only `$docs-review` skill remains separately installable.
 
 This is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by OpenAI.
 
-For complex long-horizon planning, use the optional standalone [`gdl1605-Skills`](https://github.com/gdl1605/gdl1605-Skills) skill package; its `longterm-planning` skill handles direction selection, local HTML Selection, and scoped mini-plan output.
-
 Install:
 
-```bash
-git clone https://github.com/gdl1605/codex-teammode-workflow.git
-cd codex-teammode-workflow
-./install.sh /path/to/your-target-project
-```
+1. Clone this repository locally:
 
-Optionally install the bundled personal skill with:
+   ```bash
+   git clone https://github.com/gdl1605/codex-teammode-workflow.git
+   ```
 
-```bash
-./install.sh --install-docs-review /path/to/your-target-project
-./install.sh --install-docs-review --skill-root /path/to/skills /path/to/your-target-project
-```
+2. Open the cloned directory and copy the entire contents of [`BOOTSTRAP_PROMPT.md`](./BOOTSTRAP_PROMPT.md).
+3. Open an agent conversation in any project where you want the workflow installed, paste the contents, and send. The agent will read the workflow and install it into that project.
 
-Without `--install-docs-review`, the installer never changes a personal skill directory.
-The default parent is `$CODEX_HOME/skills`, or `~/.codex/skills` when `CODEX_HOME` is unset.
-Use `--force-skill` only when you want the exact existing `docs-review` target backed up and
-replaced. Workflow package updates do not silently refresh the personal skill.
-Default bootstrap and update flows also keep the optional skill guide out of target
-`AGENTS.md` and `CLAUDE.md`; users install and invoke the skill explicitly when needed.
+The bundled `docs-review` skill is optional and installed separately through
+`install.sh --install-docs-review`; bootstrap does not modify personal skill directories.
 
 Docs Review v3 uses scanner schema 5 and a schema-3 plan gate: each deterministic finding
 binds its source fingerprint to scoped authority, intended semantics, evidence, and approved
@@ -253,8 +213,6 @@ scopes are split into bounded independent shards; raw reports are validated loss
 fresh synthesis auditor must pass before the final verdict. Any deficiency stops at a human
 approval gate. Unchanged passing shards may be safely reused by hash in a correction round,
 but synthesis is always fresh.
-
-Then open Codex or Claude Code in the target project and paste the bootstrap prompt printed by the installer.
 
 Upgrade an existing target project by copying in the newer package and pasting [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md). Updates are ownership-based: workflow kernel files replace old workflow files in place, mixed files use managed blocks, and target project facts are never overwritten.
 
@@ -280,7 +238,7 @@ or protocol failure stops at a human approval gate. See the complete contract in
 
 ### Team Loop At A Glance
 
-Team Loop is an optional workflow for tasks that benefit from one Leader coordinating multiple isolated subagents. It is only triggered when the user explicitly asks for `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven subagent coordination. The normal workflow never auto-upgrades to Team Loop based on task complexity.
+Team Loop is the only coding workflow provided by this package. It starts only when the user explicitly asks for `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven subagent coordination. Without that trigger, the package prescribes no round types, output schemas, startup checks, or subagent scheduling. Discussing, quoting, or editing its rules does not start the loop.
 
 - **Leader** is the only scheduler. It chooses `plan-gated` or `auto-execute`, sends each subagent a Context Bootstrap, checks Read Scope Ack, prepares Evidence Packs and Evaluation Bundles, runs validation, and stops at `human_acceptance_required`. Leader does not implement changes directly.
 - **Planner subagent** is read-only. It narrows the problem, risk mode, allowed scope, forbidden scope, minimum progress unit, generator startup checks, possible scout questions, and evaluator focus.

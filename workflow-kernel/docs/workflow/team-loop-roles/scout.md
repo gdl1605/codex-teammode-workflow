@@ -15,7 +15,7 @@ scout 是只读线索收集角色。Leader 派生 fresh scout 时，默认只给
 - Leader 指定的问题。
 - Leader 指定的 suggested read scope / must not read。
 
-复用 scout 时，只接收本轮问题、cache manifest、freshness check 和必要 task hints。scout 不默认读取 `docs/planner/*` 或无关 workflow docs。
+复用 scout 时，只接收本轮问题、cache manifest、freshness check 和必要 task hints。scout 不读取无关 workflow docs。
 
 ## 职责
 

@@ -1,13 +1,13 @@
 # Team Loop Workflow
 
-> 最后更新时间：2026-08-04
+> 最后更新时间：2026-10-19
 > 适用范围：需要由 Leader 主线程调度多个独立 subagent 的类 team-mode 闭环
 > 本文主职责：定义 plan-gated / auto-execute 两种模式、角色边界、通信规则、Context Bootstrap、Read Scope Ack、scout 支援机制和人工验收停点
 > 推荐下一跳：`team-loop-core.md`、`team-loop-roles/`
 
 ## 1. 定位
 
-Team Loop 是当前人工工作流的可选增强形态，只在用户明确声明使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时启用。
+Team Loop 是本包唯一提供的编码协作工作流，只在用户明确声明使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时启用。
 
 它用于让一个 Leader 主线程调度多个独立 subagent，形成：
 
@@ -23,9 +23,9 @@ User
 
 Team Loop 运行在 Codex 或 Claude Code 等单个编码 agent 会话内，由 Leader 主线程负责派生、等待、汇总和再派发 subagent。
 
-Team Loop 中的 `planner subagent` 是 Leader 调度的内部只读角色，不等于旧独立 planner mode，也不等于普通工作流里的 planning phase。
+Team Loop 中的 `planner subagent` 是 Leader 调度的内部只读角色，职责见 `team-loop-roles/planner.md`。
 
-普通工作流是默认路径。即使任务复杂、根因未锁或风险较高，也不自动升级为 Team Loop；Leader 只能提示用户可另开 Team Loop，不能替用户默认启用。
+未明确触发时，本包不规定执行流程。任务复杂、根因未锁或风险较高都不是 Team Loop 的触发条件；仅讨论、引用或修改 Team Loop 规则也不构成触发。
 
 ## 2. 非目标
 
@@ -36,7 +36,6 @@ Team Loop 不做：
 - 不自动进入 `accepted`。
 - 不替代“current code 优先证明当前实现事实、其他 claim 按权限/evidence 分流”的事实规则。
 - 不把 scout 结论直接当作 generator 的正式输入。
-- 不作为普通工作流的默认执行方式。
 - 不复用 generator / evaluator role session。
 
 ## 3. 两种模式
@@ -316,8 +315,6 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
   - docs/workflow/team-loop-roles/<leader|planner|generator|scout|evaluator>.md
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
-  - docs/workflow/collaboration.md（仅需对齐普通工作流边界时）
-  - docs/workflow/prompt-template.md（仅需生成可复制 prompt 时）
   - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
@@ -343,7 +340,7 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
 - `workflow_contract` 是本轮 subagent 的必须合同；Leader 应只给 Team Loop core 和当前角色对应的 role capsule。
 - `conditional_workflow_docs` 是上限列表，不是每个 subagent 的必读列表。
 - `task_docs` 由 Leader 按 `docs/README.md` 的入口地图裁剪，不能要求 subagent 盲读全量 `docs/`。
-- Team Loop subagent 不默认读取 `docs/planner/*`；Team Loop 的 planner subagent 规则来自 `team-loop-core.md`、`team-loop.md` 的完整规范和 `team-loop-roles/planner.md`，不是普通工作流的 planner docs。
+- Team Loop 的 planner subagent 规则来自 `team-loop-core.md`、本完整规范和 `team-loop-roles/planner.md`。
 - 允许 Leader 缩小专题 docs 范围，但必须说明裁剪理由，并要求 subagent 在 `Read Scope Ack` 中列出未读但可能相关的材料。
 - `handoff_or_evidence` 按阶段选择；根因未锁、高风险或审计回流时优先引用 `docs/evidence/<feature>-audit.md` 或 root `workflow/audit-first.md` 的审计产物。
 - `workflow/audit-first.md` 只有在根因未锁、高风险或审计回流时才进入 Context Bootstrap；普通 Team Loop 不默认读取。
@@ -519,15 +516,7 @@ max_rounds = 3
 
 `accepted` 永远只能由用户人工表达，不由 Team Loop 自动写入。
 
-## 14. 与现有工作流的关系
-
-Team Loop 是可选增强流程，不替代普通执行轮。
-
-默认执行轮按 `collaboration.md` 的普通工作流推进：先审计 current code，按需读 docs，最小实现，做 docs impact check，再收口验证或人工验收清单。只有当用户明确使用 `@team-loop` / `Team Loop` / `teamloop`，或明确要求 Leader 调度 subagent 时，才进入 Team Loop。
-
-docs-only、plan-only、read-only audit 轮不应被强制升级为 Team Loop。
-
-## 15. 触发 prompt 模板
+## 14. 触发 prompt 模板
 
 ```md
 @team-loop
@@ -572,8 +561,6 @@ context_bootstrap:
   - docs/workflow/team-loop-roles/<role>.md（Leader 派生每个 subagent 时替换为具体角色）
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
-  - docs/workflow/collaboration.md（仅需对齐普通工作流边界时）
-  - docs/workflow/prompt-template.md（仅需生成可复制 prompt 时）
   - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
@@ -586,7 +573,6 @@ context_bootstrap:
 - expected_output_schema:
 - read_scope_ack_required: 每个 subagent 输出必须带 freshly_read / satisfied_from_verified_cache / stale_or_rechecked / files_not_read_but_relevant / scope_conflicts / confidence
 - delta_output_required: 复用 planner / scout 只输出本轮额外 read scope 与 delta evidence，不复述初始 docs
-- planner_docs_exclusion: Team Loop subagent 不默认读取 docs/planner/*；只有普通工作流 plan-only / prompt-framing / review-framing 才按需读取
 
 team_loop:
 - Leader 是唯一调度者
@@ -596,7 +582,7 @@ team_loop:
 - planner / generator / evaluator / scout 都必须回报 Read Scope Ack
 - planner / scout 可复用，generator / evaluator 不复用
 - evaluator 使用 gpt-5.4 medium；其他角色默认 gpt-5.5 high
-- planner 是 Team Loop 内部只读 subagent，不代表旧独立 planner mode 或普通工作流 planning phase
+- planner 是 Team Loop 内部只读 subagent，按 planner role capsule 输出 handoff 或 delta
 - subagent 之间禁止直接通信
 - generator 如审计范围过大，只能向 Leader 提交 Scout Request
 - scout 只读收集线索，只回 Leader

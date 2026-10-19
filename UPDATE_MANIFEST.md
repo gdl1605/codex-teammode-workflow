@@ -29,6 +29,7 @@ Everything outside the block belongs to the target project and must be preserved
 | Strategy | Meaning |
 |---|---|
 | `replace-workflow` | Replace the target file in place from the package. Use for workflow-owned files only. Do not create `.new` siblings for this strategy; old workflow files are meant to be replaced by the new workflow. If `<target>.new` exists from a previous update attempt, remove it after replacing the target file. |
+| `remove-workflow` | Remove only an exact retired workflow-owned path listed below and its stale `.new` sibling. Do not delete a directory recursively or any target-owned files. |
 | `managed-block` | Replace only the content between `codex-teammode:managed` markers. If markers are missing, do not overwrite; report the required managed block insertion for human review. |
 | `create-if-missing` | Create from template only when the target path is missing. Existing target files are preserved. |
 | `never-overwrite` | Never update automatically. These paths hold target project facts, plans, handoff, or evidence. |
@@ -43,10 +44,7 @@ Everything outside the block belongs to the target project and must be preserved
 | `workflow-kernel/AGENTS.md` | `AGENTS.md` | `managed-block` |
 | `workflow-kernel/CLAUDE.md` | `CLAUDE.md` | `managed-block` |
 | `workflow-kernel/docs/README.md` | `docs/README.md` | `managed-block` |
-| `workflow-kernel/docs/workflow/collaboration.md` | `docs/workflow/collaboration.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/docs-maintenance.md` | `docs/workflow/docs-maintenance.md` | `replace-workflow` |
-| `workflow-kernel/docs/workflow/session-startup.md` | `docs/workflow/session-startup.md` | `replace-workflow` |
-| `workflow-kernel/docs/workflow/prompt-template.md` | `docs/workflow/prompt-template.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop-core.md` | `docs/workflow/team-loop-core.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop.md` | `docs/workflow/team-loop.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop-roles/leader.md` | `docs/workflow/team-loop-roles/leader.md` | `replace-workflow` |
@@ -55,9 +53,6 @@ Everything outside the block belongs to the target project and must be preserved
 | `workflow-kernel/docs/workflow/team-loop-roles/scout.md` | `docs/workflow/team-loop-roles/scout.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop-roles/evaluator.md` | `docs/workflow/team-loop-roles/evaluator.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/update-policy.md` | `docs/workflow/update-policy.md` | `replace-workflow` |
-| `workflow-kernel/docs/planner/planner-system.md` | `docs/planner/planner-system.md` | `replace-workflow` |
-| `workflow-kernel/docs/planner/planner-input-template.md` | `docs/planner/planner-input-template.md` | `replace-workflow` |
-| `workflow-kernel/docs/planner/planner-output-schema.md` | `docs/planner/planner-output-schema.md` | `replace-workflow` |
 | `workflow-kernel/workflow/audit-first.md` | `workflow/audit-first.md` | `replace-workflow` |
 | `docs-structure-template/docs/product/current-state.md` | `docs/product/current-state.md` | `create-if-missing` |
 | `docs-structure-template/docs/product/active-directions.md` | `docs/product/active-directions.md` | `create-if-missing` |
@@ -71,6 +66,24 @@ Everything outside the block belongs to the target project and must be preserved
 | `docs-structure-template/docs/plans/completed/README.md` | `docs/plans/completed/README.md` | `create-if-missing` |
 | `docs-structure-template/docs/evidence/README.md` | `docs/evidence/README.md` | `create-if-missing` |
 | `skills/docs-review/**` | Package copy only; optional personal skill target is `<skill-root>/docs-review` | `package-only` |
+
+## Retired Workflow Files
+
+The package no longer defines a normal plan / audit / execute / review workflow. On update,
+remove these exact old package-owned files, remove their stale `.new` siblings, and drop their
+entries from `managed_files`. Preserve any other files in `docs/planner/`.
+
+| Target path | Strategy |
+|---|---|
+| `docs/planner/planner-system.md` | `remove-workflow` |
+| `docs/planner/planner-input-template.md` | `remove-workflow` |
+| `docs/planner/planner-output-schema.md` | `remove-workflow` |
+| `docs/workflow/collaboration.md` | `remove-workflow` |
+| `docs/workflow/prompt-template.md` | `remove-workflow` |
+| `docs/workflow/session-startup.md` | `remove-workflow` |
+
+Replace managed entry/index blocks with the Team Loop-only rules. Outside those blocks,
+preserve project-owned content and report any obsolete workflow routing for manual migration.
 
 ## Optional Skill Distribution
 
@@ -135,4 +148,5 @@ For old installations without `docs/workflow/.codex-teammode-version`:
 5. `create-if-missing` files are created only when missing.
 6. `never-overwrite` paths are skipped.
 7. `package-only` paths stay inside the copied package and never modify a personal skill directory.
-8. Always write a new marker file after the update.
+8. Remove exact retired paths listed under `remove-workflow`, preserving other files.
+9. Always write a new marker file after the update; omit retired entries.

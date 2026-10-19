@@ -16,7 +16,6 @@ generator 是默认唯一写代码角色。Leader 派生 fresh generator 时，�
 - Leader Evidence Pack。
 - 本轮 required current code / task docs / handoff / evidence。
 
-generator 不默认读取 `docs/workflow/prompt-template.md`、`docs/workflow/collaboration.md` 或 `docs/planner/*`；只有 Leader 明确列入本轮 read scope 时才读取。
 
 ## 职责
 

@@ -41,6 +41,6 @@ Bootstrap prompt 明确要求先审查再合并。如果目标仓库已有 `AGEN
 
 可以部分借鉴，但默认事实优先级是 `current code > docs > handoff`，偏软件项目。非软件项目需要把 `current code` 替换成自己的 primary artifact。
 
-### 普通工作流和 Team Loop 的关系是什么？
+### 没有触发 Team Loop 时会怎样？
 
-普通工作流是默认路径，不拆成独立 planner / generator / evaluator，不调度 subagent。Team Loop 是可选增强，只有用户明确声明时才启用。普通工作流不因任务复杂度自动升级为 Team Loop。
+本包只定义由 prompt 显式触发的 Team Loop。未触发时，不规定 plan / audit / execute / review 轮次、输出 schema、启动检查或 subagent 调度，按用户指令与目标项目自身规则处理。仅讨论、引用或修改 Team Loop 规则不会启动它。
