@@ -3,25 +3,7 @@
 > 中文优先 / English below.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Status](https://img.shields.io/badge/status-v0.3.0-blue.svg)](./CHANGELOG.md)
-
-Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold，让个人开发者和小团队在 AI 编码会话中稳定执行：
-
-- audit-first 根因锁定
-- docs impact check
-- 可选 `$docs-review`：人工触发的跨文档事实对账与清理
-- prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
-- 永远停在 `human_acceptance_required`，不让 agent 自己宣布验收
-
-## 非官方说明
-
-Codex-teammode Workflow 是社区项目，不是 OpenAI 官方项目，也未获得 OpenAI 认可、赞助或背书。`Codex` 相关名称仅用于说明本工作流面向的使用场景。
-
-## 适用对象
-
-- 使用 Codex 或 Claude Code 的个人开发者
-- 希望统一 AI 协作规则的小团队
-- 经常被上下文丢失、想象式修复、未审计执行困扰的 AI coding agent 重度用户
+[![Status](https://img.shields.io/badge/status-v0.3.1-blue.svg)](./CHANGELOG.md)
 
 ## 安装
 
@@ -33,6 +15,24 @@ Codex-teammode Workflow 是社区项目，不是 OpenAI 官方项目，也未获
 
 2. 打开 clone 得到的目录，复制 [`BOOTSTRAP_PROMPT.md`](./BOOTSTRAP_PROMPT.md) 的全部内容。
 3. 在任意一个你想安装工作流的项目中打开 agent 对话（如 Codex 或 Claude Code），粘贴并发送即可。Agent 会读取工作流，并将它安装到当前项目。
+
+## 这是什么
+
+Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold，让个人开发者和小团队在 AI 编码会话中稳定执行：
+
+- audit-first 根因锁定
+- docs impact check
+- 可选 `$docs-review`：人工触发的跨文档事实对账与清理
+- prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
+- 永远停在 `human_acceptance_required`，不让 agent 自己宣布验收
+
+## 适用对象
+
+- 使用 Codex 或 Claude Code 的个人开发者
+- 希望统一 AI 协作规则的小团队
+- 经常被上下文丢失、想象式修复、未审计执行困扰的 AI coding agent 重度用户
+
+## 安装后会生成什么
 
 目标 agent 会读取工作流内核，审计目标仓库，并创建或合并：
 
@@ -161,7 +161,7 @@ User
 
 ## 当前状态
 
-`v0.3.0` 是当前 public preview。核心内核目前中文优先，README 提供中英双语入口。当前版本明确支持 Codex 和 Claude Code；其他工具可参考 AGENTS.md/CLAUDE.md 约定自行适配。
+`v0.3.1` 是当前 public preview。核心内核目前中文优先，README 提供中英双语入口。当前版本明确支持 Codex 和 Claude Code；其他工具可参考 AGENTS.md/CLAUDE.md 约定自行适配。
 
 ## 贡献
 
@@ -185,13 +185,7 @@ User
 
 ## English
 
-Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
-
-It installs only a prompt-triggered Team Loop coding workflow, with an audit-first evidence flow and docs impact check. A Leader coordinates planner, generator, scout, and evaluator roles. The optional explicit-only `$docs-review` skill remains separately installable.
-
-This is an unofficial community project. It is not affiliated with, endorsed by, or sponsored by OpenAI.
-
-Install:
+### Installation
 
 1. Clone this repository locally:
 
@@ -201,6 +195,12 @@ Install:
 
 2. Open the cloned directory and copy the entire contents of [`BOOTSTRAP_PROMPT.md`](./BOOTSTRAP_PROMPT.md).
 3. Open an agent conversation in any project where you want the workflow installed, paste the contents, and send. The agent will read the workflow and install it into that project.
+
+### About
+
+Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
+
+It installs only a prompt-triggered Team Loop coding workflow, with an audit-first evidence flow and docs impact check. A Leader coordinates planner, generator, scout, and evaluator roles. The optional explicit-only `$docs-review` skill remains separately installable.
 
 The bundled `docs-review` skill is optional and installed separately through
 `install.sh --install-docs-review`; bootstrap does not modify personal skill directories.

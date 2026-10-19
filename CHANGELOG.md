@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-19
+
+### Changed
+
+- Put installation instructions before the project introduction in both README languages.
+- Remove the unofficial-project disclaimer section and its English equivalent from the README.
+- Update the README status, kernel version, and managed-block versions to 0.3.1.
+
 ## [0.3.0] - 2026-10-19
 
 ### Changed

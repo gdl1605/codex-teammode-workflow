@@ -1,19 +1,5 @@
 # Codex-teammode Workflow
 
-Codex-teammode Workflow 是一个面向 **Codex** 和 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold。
-
-它的目标是帮助个人开发者和小团队在 AI 编码会话中稳定执行：
-
-- audit-first 根因锁定
-- docs impact check
-- 可选 `$docs-review`：人工触发的跨文档事实对账与清理
-- prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
-- 最终停在 `human_acceptance_required`，由人类验收
-
-## 非官方说明
-
-Codex-teammode Workflow 是社区项目，不是 OpenAI 官方项目，也未获得 OpenAI 认可、赞助或背书。`Codex` 相关名称仅用于说明本工作流面向的使用场景。
-
 ## 安装
 
 1. Clone 本仓库到本地：
@@ -24,6 +10,18 @@ Codex-teammode Workflow 是社区项目，不是 OpenAI 官方项目，也未获
 
 2. 打开 clone 得到的目录，复制 [`BOOTSTRAP_PROMPT.md`](./BOOTSTRAP_PROMPT.md) 的全部内容。
 3. 在任意一个你想安装工作流的项目中打开 agent 对话（如 Codex 或 Claude Code），粘贴并发送即可。Agent 会读取工作流，并将它安装到当前项目。
+
+## 这是什么
+
+Codex-teammode Workflow 是一个面向 **Codex** 和 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold。
+
+它的目标是帮助个人开发者和小团队在 AI 编码会话中稳定执行：
+
+- audit-first 根因锁定
+- docs impact check
+- 可选 `$docs-review`：人工触发的跨文档事实对账与清理
+- prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
+- 最终停在 `human_acceptance_required`，由人类验收
 
 ## 安装后会生成什么
 
@@ -101,7 +99,7 @@ skill；需要采用新版时重新显式运行 skill 安装命令。
 
 ## 当前状态
 
-`v0.3.0` 是当前 public preview。核心内核目前中文优先，当前版本明确支持 Codex 和 Claude Code。
+`v0.3.1` 是当前 public preview。核心内核目前中文优先，当前版本明确支持 Codex 和 Claude Code。
 
 ## 贡献
 
