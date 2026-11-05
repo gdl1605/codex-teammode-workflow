@@ -13,16 +13,46 @@
 
 ## 这是什么
 
-Codex-teammode Workflow 是一个面向 **Codex** 和 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold。
+Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项目里的协作规则、启动提示和文档结构。安装后有两条开发路径：
 
-它的目标是帮助个人开发者和小团队在 AI 编码会话中稳定执行：
+| 工作流 | 什么时候用 | 谁实现 | 核验结果交给谁 |
+| --- | --- | --- | --- |
+| 普通开发 | 默认，包括只要求独立核验的任务 | 主 agent | 独立 evaluator 直接回报主 agent |
+| Team Loop | 用户明确要求 `@team-loop` 或 Leader 调度时 | Leader 派出的 Generator | Evaluator 回报 Leader，由 Leader 安排返工或人工验收 |
 
-- audit-first 根因锁定
-- 普通开发：正式计划交付前核对关键取舍来源、Grill-me 澄清未确认选择，主 agent 实现，fresh evaluator 独立核验事实与假设
-- docs impact check
-- 可选 `$docs-review`：人工触发的跨文档事实对账与清理
-- prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
-- 不让 agent 自己宣布人工验收；Team Loop 停在 `human_acceptance_required` 或 `blocked`
+## 普通开发工作流
+
+**主 agent 负责规划、实现和验证，独立 evaluator 负责核验。** 一次任务按下面的顺序走：
+
+1. **形成草案。** 主 agent 核对原要求、已有合同和实际代码，区分当前事实、已确认的决定和自己的建议。
+2. **用 Grill-me 澄清取舍。** 正式计划交付前（包括仅规划），沿用已有决定，按明确委托自行选择，并说明依据。仍会影响行为、范围、成本或验收的未确认取舍，用原生卡片问。Codex 暴露 `request_user_input_async` 时调用它，每题给出选项、影响和推荐；工具不可用或受限时说明限制，再用文本选项。互不依赖的问题同轮问，依赖问题等到实际回答后再问，答案及其来源写回同一份计划。推荐或预选不算确认。
+3. **交付计划，按授权实现。** 仅规划到正式计划为止。已授权实现时，由主 agent 改动并运行直接相关的验证。普通实现细节由 agent 自行决定。
+4. **独立核验并收口。** 主 agent 把原要求、已确认决定、实际 diff、相关调用路径和验证证据交给全新上下文的只读 evaluator。它检查实现是否偏离要求、假设有没有被写成事实或门禁。确定缺口直接回主 agent 修复，并复核受影响部分；事实不明由 agent 补证，业务争议交用户裁决。
+
+例如，代码没有取消入口是**现状**；本次是“等当前请求结束再退出（推荐）”，还是“增加取消、停止确认和部分结果保存”，则是**交付取舍**。用户还没决定时，就把这两个选项发成卡片。
+
+完整流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，核验角色见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
+
+## Team Loop 工作流
+
+用户明确要求 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。**Leader 是同一聊天里的唯一调度者，负责交接和验证，不直接改文件；Generator 负责实现。** 各 subagent 只向 Leader 回报。
+
+### 一轮怎样调度
+
+```text
+Leader 派 Planner → Leader 收到计划并按模式放行 → Generator 实现
+→ Leader 验证并派 Evaluator → Evaluator 回报 Leader → 返工或人工验收
+```
+
+1. **先派 Planner。** 只读核对需求和当前代码，给 Leader 返回目标、允许与禁止的修改范围、实现建议和核验重点。根因未锁时，先按 [audit-first](./workflow-kernel/workflow/audit-first.md) 只读查明，再安排实现。
+2. **按模式派 Generator。** `plan-gated` 先把计划交用户批准，再派 Generator；`auto-execute` 在计划与边界收口后直接派。两种模式都由新会话的 Generator 重读相关代码后实现。
+3. **需要时插入 Scout。** Generator 缺证据时向 Leader 提出 `Scout Request`。Leader 决定是否派只读 Scout；Scout 把证据交回 Leader，由 Leader 整理成 `Evidence Pack` 再交 Generator。Scout 不是每轮固定步骤。
+4. **验证后派 Evaluator。** Leader 运行必要验证，把原要求、计划、实际 diff、读取范围和验证结果整理成 `Evaluation Bundle`，交给新会话的只读 Evaluator。Evaluator 独立核对后，只向 Leader 返回结论。
+5. **Leader 处理返工或交回用户。** 遇到 P0 / P1、验证失败或范围违规时，Leader 按现有规则安排返工或报告阻塞；返工时把具体问题交下一轮 Generator。核验通过后停在 `human_acceptance_required`；无法推进时报告 `blocked`。最终验收由用户决定。
+
+Leader 派发时提供裁剪过的 `Context Bootstrap`，用 `Read Scope Ack` 确认角色实际读了哪些材料。Planner 和 Scout 核对材料仍有效后可以复用；Generator 和 Evaluator 每轮使用新会话。
+
+完整调度、触发示例与返工条件见 [`team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)；最小上下文和角色约定见 [`team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md) 与[角色文件](./workflow-kernel/docs/workflow/team-loop-roles/)。
 
 ## 安装后会生成什么
 
@@ -72,22 +102,6 @@ fresh shard auditor，原始 JSON 必须无损保存和严格验证；全部 sha
 synthesis auditor 核验跨分片 consumer、canonical owner 和原始 evidence。任一 deficiency
 或协议错误都会停在人类确认门，不能同轮自行修复。完整协议见
 [`SKILL.md`](./skills/docs-review/SKILL.md)。
-
-## 普通开发工作流
-
-未显式启用 Team Loop 的开发规划与维护，由主 agent 核对代码和原要求、形成草案，在正式计划交付前核对关键取舍来源并追问未确认选择。仅规划同样适用；已有用户决定、有效合同或明确委托足够时，引用依据直接沿用，不能因自己选了“默认 / 首版暂不支持”就宣称没有未决项。授权实现及必要验证后，派全新上下文的只读 evaluator，对照原要求、有效合同、实际改动、真实消费者和验证证据检查。
-
-核验主轴是已有事实、用户决定与 agent 假设的区别，尤其是假设是否被写成事实或执行条件。确定缺口直接回主 agent 修复，事实缺口先补证，真正的业务争议保留给用户裁决。已有决定不重复问，不要求额外 Spec、固定访谈轮数或新测试工程；用户和目标项目的明确权限 / subagent 限制仍有效。
-
-Grill-me 默认使用原生可选提问卡片，Codex 暴露 `request_user_input_async` 时实际调用它。每轮给出当前可回答的问题、选项、影响和推荐，等用户实际回答后回写同一份计划，再问依赖问题。推荐 / 预选、工具返回和等待时长不算确认；工具不可用或受限时说明限制，再用文本选项保持同样的问答语义。
-
-问答、只读、仅计划及安装升级任务不自动进入实现循环。普通独立核验不触发可选宏循环。流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，只读 subagent 合同见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
-
-## Team Loop 工作流
-
-Team Loop 是显式选择的多角色工作流，只有用户明确要求使用 `@team-loop` / `Team Loop` / `teamloop` 或 Leader 调度时才启用；仅要求独立 evaluator 不触发它，未触发时使用普通开发流程。Leader 调度 planner / generator / scout / evaluator，planner / scout 可复用，generator / evaluator 每轮 fresh。终态只能是 `human_acceptance_required` 或 `blocked`。
-
-完整规范和启动模板见 [`workflow-kernel/docs/workflow/team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)，subagent 默认核心合同见 [`workflow-kernel/docs/workflow/team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md)，轻量角色胶囊见 [`workflow-kernel/docs/workflow/team-loop-roles/`](./workflow-kernel/docs/workflow/team-loop-roles/)。
 
 ## 重要边界
 

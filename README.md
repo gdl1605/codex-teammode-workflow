@@ -18,14 +18,46 @@
 
 ## 这是什么
 
-Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold，让个人开发者和小团队在 AI 编码会话中稳定执行：
+Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项目里的协作规则、启动提示和文档结构。安装后有两条开发路径：
 
-- audit-first 根因锁定
-- 普通开发：正式计划交付前核对关键取舍来源，Grill-me 澄清未确认选择；主 agent 实现，fresh evaluator 独立核验事实与假设
-- docs impact check
-- 可选 `$docs-review`：人工触发的跨文档事实对账与清理
-- prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
-- 不让 agent 自己宣布人工验收；Team Loop 停在 `human_acceptance_required` 或 `blocked`
+| 工作流 | 什么时候用 | 谁实现 | 核验结果交给谁 |
+| --- | --- | --- | --- |
+| 普通开发 | 默认，包括只要求独立核验的任务 | 主 agent | 独立 evaluator 直接回报主 agent |
+| Team Loop | 用户明确要求 `@team-loop` 或 Leader 调度时 | Leader 派出的 Generator | Evaluator 回报 Leader，由 Leader 安排返工或人工验收 |
+
+## 普通开发工作流
+
+**主 agent 负责规划、实现和验证，独立 evaluator 负责核验。** 一次任务按下面的顺序走：
+
+1. **形成草案。** 主 agent 核对原要求、已有合同和实际代码，区分当前事实、已确认的决定和自己的建议。
+2. **用 Grill-me 澄清取舍。** 正式计划交付前（包括仅规划），沿用已有决定，按明确委托自行选择，并说明依据。仍会影响行为、范围、成本或验收的未确认取舍，用原生卡片问。Codex 暴露 `request_user_input_async` 时调用它，每题给出选项、影响和推荐；工具不可用或受限时说明限制，再用文本选项。互不依赖的问题同轮问，依赖问题等到实际回答后再问，答案及其来源写回同一份计划。推荐或预选不算确认。
+3. **交付计划，按授权实现。** 仅规划到正式计划为止。已授权实现时，由主 agent 改动并运行直接相关的验证。普通实现细节由 agent 自行决定。
+4. **独立核验并收口。** 主 agent 把原要求、已确认决定、实际 diff、相关调用路径和验证证据交给全新上下文的只读 evaluator。它检查实现是否偏离要求、假设有没有被写成事实或门禁。确定缺口直接回主 agent 修复，并复核受影响部分；事实不明由 agent 补证，业务争议交用户裁决。
+
+例如，代码没有取消入口是**现状**；本次是“等当前请求结束再退出（推荐）”，还是“增加取消、停止确认和部分结果保存”，则是**交付取舍**。用户还没决定时，就把这两个选项发成卡片。
+
+完整流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，核验角色见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
+
+## Team Loop 工作流
+
+用户明确要求 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。**Leader 是同一聊天里的唯一调度者，负责交接和验证，不直接改文件；Generator 负责实现。** 各 subagent 只向 Leader 回报。
+
+### 一轮怎样调度
+
+```text
+Leader 派 Planner → Leader 收到计划并按模式放行 → Generator 实现
+→ Leader 验证并派 Evaluator → Evaluator 回报 Leader → 返工或人工验收
+```
+
+1. **先派 Planner。** 只读核对需求和当前代码，给 Leader 返回目标、允许与禁止的修改范围、实现建议和核验重点。根因未锁时，先按 [audit-first](./workflow-kernel/workflow/audit-first.md) 只读查明，再安排实现。
+2. **按模式派 Generator。** `plan-gated` 先把计划交用户批准，再派 Generator；`auto-execute` 在计划与边界收口后直接派。两种模式都由新会话的 Generator 重读相关代码后实现。
+3. **需要时插入 Scout。** Generator 缺证据时向 Leader 提出 `Scout Request`。Leader 决定是否派只读 Scout；Scout 把证据交回 Leader，由 Leader 整理成 `Evidence Pack` 再交 Generator。Scout 不是每轮固定步骤。
+4. **验证后派 Evaluator。** Leader 运行必要验证，把原要求、计划、实际 diff、读取范围和验证结果整理成 `Evaluation Bundle`，交给新会话的只读 Evaluator。Evaluator 独立核对后，只向 Leader 返回结论。
+5. **Leader 处理返工或交回用户。** 遇到 P0 / P1、验证失败或范围违规时，Leader 按现有规则安排返工或报告阻塞；返工时把具体问题交下一轮 Generator。核验通过后停在 `human_acceptance_required`；无法推进时报告 `blocked`。最终验收由用户决定。
+
+Leader 派发时提供裁剪过的 `Context Bootstrap`，用 `Read Scope Ack` 确认角色实际读了哪些材料。Planner 和 Scout 核对材料仍有效后可以复用；Generator 和 Evaluator 每轮使用新会话。
+
+完整调度、触发示例与返工条件见 [`team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)；最小上下文和角色约定见 [`team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md) 与[角色文件](./workflow-kernel/docs/workflow/team-loop-roles/)。
 
 ## 适用对象
 
@@ -119,67 +151,6 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 [`SKILL.md`](./skills/docs-review/SKILL.md)，事实模型与独立审计角色见
 [`skills/docs-review/references/`](./skills/docs-review/references/)。
 
-## 普通开发工作流
-
-安装后，未显式启用 Team Loop 的开发维护使用普通工作流，主 agent 可以直接改文件：
-
-```text
-核对原要求与实际代码 → 草案 → 关键取舍来源核对 / Grill-me 澄清 → 正式计划
-→ 仅规划则交付结束；已授权实现则继续实现、必要验证和 fresh evaluator 核验
-```
-
-evaluator 首先审查关键断言来自已有事实、用户决定还是 agent 假设，重点找假设被写成事实、被升级成执行条件，以及计划与实际消费者之间的遗漏。审查依据来自原要求、有效合同、实际 diff、真实调用链和实际验证证据；实现者总结只用于导航。
-
-已有决定不重复追问，不为每次改动新建 Spec、校验脚本或审批。用户和目标项目的明确权限 / subagent 限制仍然有效。问答、只读、仅计划及安装升级按各自任务执行，不自动进入实现循环；普通独立核验也不启动可选宏循环。
-
-仅规划也要在正式计划交付前交代关键取舍的决定及出处。已有用户决定、有效合同或明确委托足够时，引用依据直接沿用；仍是 agent 建议的关键选择先问用户。不能因自己选了“默认 / 首版暂不支持”就宣称没有未决项。普通实现细节不逐项请用户批准。
-
-Grill-me 默认调用原生结构化提问工具发出可选卡片；Codex 暴露 `request_user_input_async` 时使用它。每轮发当前可回答的独立问题，给出选项、影响和推荐，收到实际用户回答后更新同一份计划，再推进依赖问题。推荐、预选和工具返回都不算确认，不按等待时长自行代答；只有工具不可用或受限时才说明限制并改用文本选项。
-
-完整流程与 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，只读 subagent 合同见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
-
-## Team Loop 工作流
-
-Team Loop 是显式选择的多角色工作流。只有用户在 prompt 中明确使用 `@team-loop`、要求使用 `Team Loop` / `teamloop`，或明确要求 Leader 调度 subagent 时才启用。仅要求独立 evaluator、讨论、引用或修改这些规则不构成触发；未触发时使用普通开发工作流。
-
-Team Loop 的核心通信结构是：
-
-```text
-User
-  <-> Leader
-      -> planner subagent
-      -> generator subagent
-      -> scout subagent A / B
-      -> evaluator subagent
-      -> human_acceptance_required
-```
-
-### 两种运行模式
-
-本节只在用户已经明确进入 Team Loop 后使用，用于选择 Team Loop 内部节奏，不作为自动触发 Team Loop 的条件。
-
-- **plan-gated**：先把 planner 收口结果交给用户确认，再派 generator。
-- **auto-execute**：Leader 在 planner 快速收口后直接派 generator，最后仍停在人工验收。
-
-### 角色规范
-
-- **Leader** 是唯一调度者。Leader 负责确认目标、判断 `plan-gated / auto-execute`、派生 subagent、附带 `Context Bootstrap`、核验每个 subagent 的 `Read Scope Ack`、整理 Evidence Pack、运行验证、组装 Evaluation Bundle，并决定返工、阻塞或停在 `human_acceptance_required`。Leader 不能直接实现或改文件，不能让 subagent 彼此直接通信，也不能替 evaluator 自评通过。
-- **Planner subagent** 是 Team Loop 内部只读角色。它负责读取入口文档、目标相关 docs / code / handoff / evidence，收口目标和非目标，判断风险模式，定义 allowed scope / forbidden scope、minimum progress unit、generator 启动前核对清单、可能的 scout 问题和 evaluator focus。planner 不改代码，也不能把建议实现层写成已验证事实。
-- **Generator** 是默认唯一写代码角色。它必须消费 Leader 提供的 planner handoff 和 Evidence Pack，但仍要重新审计 current code，并在输出里给出 `Read Scope Ack`、touched files、修改摘要、验证建议、evaluator notes 和 docs impact。若审计范围过大，generator 只能向 Leader 提交 Scout Request，不能直接联系 scout 或自行派生 subagent。
-- **Scout** 是只读线索收集角色。它只回答 Leader 指定的问题，只读必要的 current code、docs、handoff 或 evidence，并输出 verified facts、inferences、unresolved 和 citations。Scout Evidence 只能回 Leader，不能直接传给 generator，也不能设计完整实现方案或评价结果是否通过。
-- **Evaluator** 是独立核验角色。它只消费 Leader 提供的 Evaluation Bundle 作为叙事入口，并读取必要 diff、code 和 docs 做复核。evaluator 要核验 generator 的 read scope、actual diff、allowed scope、docs impact 和验证输出，优先找 P0 / P1 阻塞问题；P2 / P3 默认进入 residual risk、backlog 或人工验收。
-
-### 硬规则
-
-- subagent 之间禁止直接通信；所有 planner / generator / scout / evaluator 输出都只回 Leader。
-- Leader 每次派生 fresh subagent 必须附带 `Context Bootstrap`；复用 planner / scout 时必须附带 cache manifest 和 freshness check。每个 subagent 输出开头必须有 `Read Scope Ack`。
-- planner / scout 可按 freshness check 有限复用；generator / evaluator 每轮 fresh。
-- Evidence Pack 不能替代 generator 自己读取 current code；对当前实现事实，证据优先级是 current code > topic docs > handoff，业务意图和外部生命周期事实按各自权限/evidence 路由。
-- P0 / P1、验证失败、越过 forbidden scope、缺少关键 read scope 时进入返工或 blocked。
-- Team Loop 的终态只能是 `human_acceptance_required` 或 `blocked`；`accepted` 只能由人类明确表达。
-
-完整规范和启动模板见 [`workflow-kernel/docs/workflow/team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)，subagent 默认核心合同见 [`workflow-kernel/docs/workflow/team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md)，轻量角色胶囊见 [`workflow-kernel/docs/workflow/team-loop-roles/`](./workflow-kernel/docs/workflow/team-loop-roles/)。
-
 ## 当前状态
 
 发布记录为 `v0.3.1`；当前源码内核为尚未发布的 `0.4.0-dev`，普通工作流变更见 `CHANGELOG.md` 的 Unreleased。核心内核中文优先，README 提供中英双语入口，支持 Codex 和 Claude Code；其他工具可参考 AGENTS.md/CLAUDE.md 约定自行适配。
@@ -237,6 +208,33 @@ but synthesis is always fresh.
 
 Upgrade an existing target project by copying in the newer package and pasting [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md). Updates are ownership-based: workflow kernel files replace old workflow files in place, mixed files use managed blocks, and target project facts are never overwritten.
 
+### Default Development At A Glance
+
+**The main agent plans, implements, and runs focused checks. A fresh read-only evaluator independently reviews the result.** Asking for independent review alone uses this workflow.
+
+1. **Draft the plan.** Read the original request, governing contracts, and current code. Separate facts, confirmed decisions, and proposed choices.
+2. **Clarify with Grill-me.** Before delivering the plan, including plan-only work, cite existing decisions or explicit delegation and ask about consequential choices that remain open. Use native question cards (`request_user_input_async` when Codex exposes it), with options, consequences, and a recommendation. Ask independent questions together and wait for actual answers before asking dependent questions. Explain an actual tool restriction before using text choices. Recommendations and preselection are not answers. Record answers and their sources in the same plan.
+3. **Deliver the plan and implement when authorized.** Plan-only work ends with the formal plan. For authorized changes, the main agent implements and runs the directly relevant checks.
+4. **Review and resolve.** Give the independent evaluator the original requirements, confirmed decisions, actual diff, relevant consumers, and validation evidence. It checks for deviations and assumptions promoted to facts or execution conditions. Confirmed gaps return directly to the main agent for repair and focused recheck; missing facts need evidence, and genuine business disputes go to the user.
+
+For example, an interface that lacks cancellation is a fact about the current code. Waiting for the current request or adding cancellation is a scope choice to ask about before finalizing the plan.
+
+See [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md) and [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md).
+
+### Team Loop At A Glance
+
+Start Team Loop only when the user explicitly requests `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven delegation. **Leader coordinates and validates within the chat without editing files; Generator implements.** Subagents report to Leader.
+
+1. **Dispatch Planner first.** The read-only Planner returns the goal, allowed and forbidden scope, a proposed approach, and review focus. Use [audit-first](./workflow-kernel/workflow/audit-first.md) when the cause is still unknown.
+2. **Dispatch Generator when the plan permits it.** In `plan-gated`, Leader waits for the user's plan approval; in `auto-execute`, Leader dispatches once the scope is clear. Both use a fresh Generator that checks current code before editing.
+3. **Add Scout on demand.** Generator sends a Scout Request to Leader. If approved, a read-only Scout returns evidence to Leader, who curates an Evidence Pack and hands it back to Generator.
+4. **Validate and dispatch Evaluator.** Leader runs relevant validation and sends the original request, plan, actual diff, read scope, and results as an Evaluation Bundle to a fresh read-only Evaluator. Its findings return to Leader.
+5. **Route rework or hand off.** For P0/P1 findings, failed validation, or scope violations, Leader schedules rework under the existing rules or reports a block. After review passes, the workflow stops at `human_acceptance_required`; if it cannot proceed, it reports `blocked`. The user makes the acceptance decision.
+
+Leader sends a scoped Context Bootstrap and checks each role's Read Scope Ack. Planner and Scout can be reused after checking freshness. Generator and Evaluator use fresh sessions each round.
+
+See [`team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md) for the dispatch protocol, trigger template, and rework criteria, and [`team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md) for the minimal context.
+
 ### Docs Review At A Glance
 
 [`skills/docs-review/`](./skills/docs-review/) is an explicit-only macro workflow for
@@ -256,29 +254,3 @@ Post-apply closure uses bounded fresh shard auditors, losslessly validated raw J
 and a new synthesis auditor for cross-shard consumers and original evidence. Any deficiency
 or protocol failure stops at a human approval gate. See the complete contract in
 [`skills/docs-review/SKILL.md`](./skills/docs-review/SKILL.md).
-
-### Default Development At A Glance
-
-Read the original request and current code, draft a proportional plan, and trace consequential choices to user decisions, effective contracts, or explicit delegation before formal plan delivery, including plan-only tasks. Use the built-in Grill-me step for still-unconfirmed choices and record answers and authority in the same plan. Choosing a default yourself does not settle a user decision. When no questions are needed, briefly identify the existing basis; routine implementation details need no extra approval. If authorized, implement, run necessary focused checks, and dispatch a fresh read-only evaluator. No external Grill-me skill installation is required.
-
-Drive Grill-me with native structured question cards. Use `request_user_input_async` when exposed, respecting its current schema and mode restrictions. Present independent questions together with options, consequences, and a recommendation; wait for actual user answers, update the same plan, then ask dependent questions. A recommended/preselected option, tool return, closed request, or elapsed time is not an answer. Explain an actual tool limitation before falling back to numbered text choices.
-
-The evaluator checks facts versus decisions versus assumptions, actual behavior and consumers, unsupported execution conditions, and completion claims. Send the original requirements and corrections, canonical contracts, confirmed decisions, labeled assumptions, actual changes, and real validation evidence through a scoped Review Request. Confirmed gaps return directly to the implementing main agent; factual unknowns need evidence; genuine business disputes remain for the user. Requesting only this evaluator does not start Team Loop.
-
-See [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md) and [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md). Respect explicit target restrictions; do not add approval rituals, arbitrary gates, or new test harnesses. Read-only, plan-only, installation, and update tasks do not automatically enter the development loop.
-
-### Team Loop At A Glance
-
-Team Loop is an explicit alternative to default development. It starts only when the user explicitly asks for `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven subagent coordination. Requesting an independent evaluator, discussing, quoting, or editing its rules does not start the loop.
-
-- **Leader** is the only scheduler. It chooses `plan-gated` or `auto-execute`, sends each subagent a Context Bootstrap, checks Read Scope Ack, prepares Evidence Packs and Evaluation Bundles, runs validation, and stops at `human_acceptance_required`. Leader does not implement changes directly.
-- **Planner subagent** is read-only. It narrows the problem, risk mode, allowed scope, forbidden scope, minimum progress unit, generator startup checks, possible scout questions, and evaluator focus.
-- **Generator** is the default writing role. It must re-audit current code before implementation, respect forbidden scope, report touched files and docs impact, and request scout support only through Leader.
-- **Scout** is read-only evidence support. It answers Leader-scoped questions with verified facts, inferences, unresolved items, citations, and confidence.
-- **Evaluator** is independent verification. It reviews the Evaluation Bundle, diff, code, docs, validation output, generator read scope, and docs impact claim before returning pass, request changes, or blocked.
-
-Planner and scout may be reused across dispatches with freshness checks; generator and evaluator are always fresh per round.
-
-Each fresh subagent should receive a slim Context Bootstrap with the current tool's primary entry file, `docs/README.md`, `team-loop-core.md`, and only its matching role capsule.
-
-Subagents never talk directly to each other. The final state is `human_acceptance_required` or `blocked`; only a human can mark the work accepted.
