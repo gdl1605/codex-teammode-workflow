@@ -26,8 +26,9 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 1. **形成草案。** 主 agent 核对原要求、已有合同和实际代码，区分当前事实、已确认的决定和自己的建议。
 2. **用 Grill-me 澄清取舍。** 正式计划交付前（包括仅规划），沿用已有决定，按明确委托自行选择，并说明依据。仍会影响行为、范围、成本或验收的未确认取舍，用原生卡片问。Codex 暴露 `request_user_input_async` 时调用它，每题给出选项、影响和推荐；工具不可用或受限时说明限制，再用文本选项。互不依赖的问题同轮问，依赖问题等到实际回答后再问，答案及其来源写回同一份计划。推荐或预选不算确认。
-3. **交付计划，按授权实现。** 仅规划到正式计划为止。已授权实现时，由主 agent 改动并运行直接相关的验证。普通实现细节由 agent 自行决定。
-4. **独立核验并收口。** 主 agent 把原要求、已确认决定、实际 diff、相关调用路径和验证证据交给全新上下文的只读 evaluator。它检查实现是否偏离要求、假设有没有被写成事实或门禁。确定缺口直接回主 agent 修复，并复核受影响部分；事实不明由 agent 补证，业务争议交用户裁决。
+3. **轻量核验计划。** 正式交付前派 fresh 只读 evaluator，对照原话、后续纠正和计划，找遗漏、约束弱化、无来源取舍及假设混写。明确遗漏直接修正，事实由 agent 补查，真实歧义沿原生卡片交用户；修正只复核发现及直接影响。仅规划在交付后结束，不要求实现结果。
+4. **按授权实现。** 主 agent 仍回查原话、纠正和修订计划，再改动并运行直接相关的验证。规划核验不新增整份计划批准，也不能替代实施授权。
+5. **独立核验并收口。** 把原要求、修订计划、实际 diff、相关调用路径、验证证据及完成声明交给另一个 fresh 只读 evaluator。它检查实际行为是否满足原要求、是否说了没做、假设是否被写成事实或门禁；不能用实现与测试共享同一假设来证明要求已满足。确定缺口回主 agent 修复，事实补证，真实争议交用户。
 
 例如，代码没有取消入口是**现状**；本次是“等当前请求结束再退出（推荐）”，还是“增加取消、停止确认和部分结果保存”，则是**交付取舍**。用户还没决定时，就把这两个选项发成卡片。
 
@@ -40,15 +41,16 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 ### 一轮怎样调度
 
 ```text
-Leader 派 Planner → Leader 收到计划并按模式放行 → Generator 实现
-→ Leader 验证并派 Evaluator → Evaluator 回报 Leader → 返工或人工验收
+Leader 派 Planner → 澄清关键取舍 → fresh Evaluator 轻量审计划 → Leader 安排修正
+→ 仅规划则交付；已授权实施则按模式放行 → Generator 回查原要求并实现
+→ Leader 验证并派 fresh Evaluator → 回报 Leader → 返工或人工验收
 ```
 
 1. **先派 Planner。** 只读核对需求和当前代码，给 Leader 返回目标、允许与禁止的修改范围、实现建议和核验重点。根因未锁时，先按 [audit-first](./workflow-kernel/workflow/audit-first.md) 只读查明，再安排实现。
-2. **按模式派 Generator。** `plan-gated` 先把计划交用户批准，再派 Generator；`auto-execute` 在计划与边界收口后直接派。两种模式都由新会话的 Generator 重读相关代码后实现。
+2. **先核验计划，再按模式放行。** Leader 把相关原话、纠正、决定来源和计划交 fresh Evaluator 轻量核对；明确遗漏回 Planner 修订，事实补证，真实歧义由 Leader 发原生卡片。仅规划交付后结束；已授权实施时，`plan-gated` 等用户批准计划，`auto-execute` 不新增批准。Generator 仍回查原话、修订计划和当前代码。
 3. **需要时插入 Scout。** Generator 缺证据时向 Leader 提出 `Scout Request`。Leader 决定是否派只读 Scout；Scout 把证据交回 Leader，由 Leader 整理成 `Evidence Pack` 再交 Generator。Scout 不是每轮固定步骤。
-4. **验证后派 Evaluator。** Leader 运行必要验证，把原要求、计划、实际 diff、读取范围和验证结果整理成 `Evaluation Bundle`，交给新会话的只读 Evaluator。Evaluator 独立核对后，只向 Leader 返回结论。
-5. **Leader 处理返工或交回用户。** 遇到 P0 / P1、验证失败或范围违规时，Leader 按现有规则安排返工或报告阻塞；返工时把具体问题交下一轮 Generator。核验通过后停在 `human_acceptance_required`；无法推进时报告 `blocked`。最终验收由用户决定。
+4. **验证后再派 Evaluator。** Leader 运行必要验证，提供原话、纠正、修订计划、实际 diff、读取范围、验证结果及完成声明。Evaluator 按共用核验原则追真实行为，检查要求弱化、遗漏、计划与实际偏离、假设混写及声称已做却无证据，只向 Leader 回报。
+5. **Leader 处理返工或交回用户。** 确定缺口交对应角色修正，不能仅因 P2 / P3 标签或列为 residual risk 就忽略明确违反要求的项。授权实施后核验收口停在 `human_acceptance_required`，真实阻塞报 `blocked`；仅规划注明未实施，不能因没有 Generator 结果判阻塞。最终验收由用户决定。
 
 Leader 派发时提供裁剪过的 `Context Bootstrap`，用 `Read Scope Ack` 确认角色实际读了哪些材料。Planner 和 Scout 核对材料仍有效后可以复用；Generator 和 Evaluator 每轮使用新会话。
 
@@ -124,7 +126,7 @@ skill；需要采用新版时重新显式运行 skill 安装命令。
 
 ## 当前状态
 
-当前发布版本为 [v0.4.0](https://github.com/gdl1605/codex-teammode-workflow/releases/tag/v0.4.0)，变更见 [CHANGELOG.md](./CHANGELOG.md)。核心内核中文优先，支持 Codex 和 Claude Code。
+当前发布版本为 [v0.5.0](https://github.com/gdl1605/codex-teammode-workflow/releases/tag/v0.5.0)，变更见 [CHANGELOG.md](./CHANGELOG.md)。核心内核中文优先，支持 Codex 和 Claude Code。
 
 ## 贡献
 

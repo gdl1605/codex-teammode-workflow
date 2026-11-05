@@ -1,12 +1,14 @@
-# v0.4.0
+# v0.5.0
 
-本次新增普通开发工作流，并保留显式触发的 Team Loop。
+本次将 Spec、Grill-with-docs 和轻量规划审查接入普通工作流，并补全 Team Loop evaluator 的职责。
 
-- **普通开发**：主 agent 负责规划、实现和验证，实现后派全新上下文的只读 evaluator 核验。
-- **规划时的 Grill-me**：正式计划交付前（包括仅规划），先核对关键取舍的依据。仍未确认的选择通过原生提问卡片逐轮澄清，收到实际回答再写回同一份计划。
-- **独立核验**：对照原要求、实际改动和验证证据，检查假设是否被写成事实或执行条件。确定缺口回实现 agent 修复，业务争议交用户裁决。
-- **Team Loop**：继续由用户显式启动，Leader 按需调度 Planner、Generator、Scout 和 Evaluator。中英文 README 现分别说明两条流程的启动条件、职责和返工路径。
+- **Spec 与文档归属**：需要跨会话交接时，将「已确认规格」放进现有活动计划；长期术语和接口合同保留在项目主文档，授权实施时同步正式合同、可执行定义和实际生产消费端。
+- **Grill-with-docs**：提问前先对照术语、接口合同、实际消费者和现有校验入口，只把未定的关键取舍交给用户，通过原生卡片接收实际回答并回写同一份计划。
+- **轻量规划审查**：正式计划交付前（包括纯规划），由 fresh 只读 evaluator 对照原话、后续纠正和计划，找要求弱化、遗漏、无来源取舍和假设混写。明确遗漏直接修正，事实由 agent 补证，真实歧义交用户裁决。
+- **Team Loop 两阶段核验**：规划与实现共用核验原则，Evaluator 只回 Leader，由 Leader 将问题交 Planner 或 Generator 修正。实现前仍回查原话和修订计划，实现后再核验真实行为与完成声明；不能用低严重性标签或 residual risk 豁免明确要求。
+- **纯规划边界**：审查后交付即结束，不启动 Generator，不要求尚不存在的实现结果或运行证据；规划通过不授予实施权限，也不代替实现后的独立核验。
+- **接口与唯一校验**：按合同或验证范围复用正式入口与共享定义，区分拟用检查、实际结果和未覆盖范围，保留目标项目自己的规则与业务文件。
 
-已安装项目可按 [UPDATE_PROMPT.md](https://github.com/gdl1605/codex-teammode-workflow/blob/v0.4.0/UPDATE_PROMPT.md) 同步规则，保留项目自己的约束和业务文件。
+已安装项目可按 [UPDATE_PROMPT.md](https://github.com/gdl1605/codex-teammode-workflow/blob/v0.5.0/UPDATE_PROMPT.md) 同步规则。升级继续按文件归属处理，并保留项目原有约束。
 
-**完整变更**：[v0.3.1...v0.4.0](https://github.com/gdl1605/codex-teammode-workflow/compare/v0.3.1...v0.4.0)
+**完整变更**：[v0.4.0...v0.5.0](https://github.com/gdl1605/codex-teammode-workflow/compare/v0.4.0...v0.5.0)

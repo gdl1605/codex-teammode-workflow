@@ -1,6 +1,6 @@
 # docs Index Template
 
-<!-- codex-teammode:managed:start scope=docs-index version=0.4.0 -->
+<!-- codex-teammode:managed:start scope=docs-index version=0.5.0 -->
 
 > Last updated: TBD
 > Scope: target repo docs entry map
@@ -9,8 +9,11 @@
 
 Default development traces consequential choices to their original authority before formal
 plan delivery, including plan-only tasks, and clarifies unconfirmed choices through native
-question cards and actual user answers. The main agent
-implements when authorized and uses a fresh independent evaluator afterward. Team Loop requires an explicit user prompt.
+question cards and actual user answers. A fresh evaluator lightly reviews the original request,
+corrections, and plan before delivery. The main agent rechecks those sources before authorized
+implementation, then uses another fresh evaluator to review actual behavior and completion claims.
+Team Loop requires an explicit user prompt and uses the same two review stages, reporting only to Leader.
+Plan-only work ends on reviewed plan delivery without requiring Generator results or implementation evidence.
 This index is a project reference map; read only what the task needs.
 
 ## Read Order
@@ -21,7 +24,7 @@ This index is a project reference map; read only what the task needs.
 4. `architecture/domain-boundaries.md`
 5. `architecture/ia-and-navigation.md`
 6. `workflow/default-workflow.md` for ordinary development; dispatch its evaluator with `workflow/independent-evaluator.md` and the scoped Review Request
-7. `workflow/team-loop.md` only when Team Loop is explicitly requested; dispatch subagents with `workflow/team-loop-core.md` and only the matching `workflow/team-loop-roles/<role>.md`
+7. `workflow/team-loop.md` only when Team Loop is explicitly requested; dispatch subagents with `workflow/team-loop-core.md` and the matching `workflow/team-loop-roles/<role>.md`; Evaluator also reads the shared criteria in `workflow/independent-evaluator.md`
 8. `workflow/update-policy.md` only when upgrading an older workflow install
 9. `workflow/docs-maintenance.md`
 10. `product/active-directions.md`

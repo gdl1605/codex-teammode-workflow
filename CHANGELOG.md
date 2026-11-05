@@ -6,6 +6,23 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-05
+
+### Added
+
+- Confirmed Spec handoff in the existing active plan when cross-session continuity is needed, while durable terminology and interface contracts stay in the project's canonical documents and executable definitions.
+- Grill-with-docs: trace affected terms and contracts through actual producers, consumers, and existing validation before asking about unresolved choices; write decisions back to the same plan and update formal contracts during authorized implementation.
+- Lightweight independent review before formal plan delivery, including plan-only work, in both default development and Team Loop. Check original requirements and corrections against the plan without requiring future implementation evidence.
+
+### Changed
+
+- Share evaluator criteria across planning and implementation: find omitted or weakened requirements, unauthorized consequential choices, assumptions promoted to facts, plan/implementation differences, unsupported completion claims, and assumptions shared by code and tests.
+- Preserve relevant user quotes, corrections, decision sources, and stage-specific delivery claims in Review Requests and Evaluation Bundles. Implementers still recheck original requirements and the revised plan before editing.
+- Route Team Loop planning gaps through Leader to Planner and implementation gaps to Generator. Agents investigate factual gaps; genuine intent or contract disputes use native question cards. Low-severity or residual-risk labels cannot waive explicit requirements.
+- End plan-only work after reviewed plan delivery without dispatching Generator or demanding its results. Plan review neither grants implementation authorization nor replaces implementation review or existing user approval requirements.
+- Reuse one formal validation entry per contract or verification scope, with shared executable definitions and actual consumers; distinguish planned checks, executed evidence, and uncovered behavior.
+- Align the Chinese README, docs index template, kernel versions, and managed-block markers with the current workflow.
+
 ## [0.4.0] - 2026-11-05
 
 ### Added
