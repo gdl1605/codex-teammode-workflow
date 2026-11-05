@@ -1,18 +1,18 @@
 # docs 维护规则
 
-> 最后更新时间：2026-08-04
-> 适用范围：Team Loop 的 docs impact check 与文档修改，以及显式触发的可选 `$docs-review`
+> 最后更新时间：2026-11-05
+> 适用范围：普通开发与 Team Loop 的 docs impact check 与文档修改，以及显式触发的可选 `$docs-review`
 > 本文主职责：只写 docs 如何维护
-> 推荐下一跳：`team-loop.md`
+> 推荐下一跳：`default-workflow.md` 或已显式启用的 `team-loop.md`
 
-## Team Loop 文档修改范围
+## 文档修改任务的范围
 
 - 不改业务源码目录（如 `src/**`）
 - 不改后端 / 数据层资产目录（如 `supabase/**`、`db/**`、`migrations/**` 等，按本仓库实际目录裁剪）
 - 不执行 build，除非用户明确要求
 - 重点只做旧结论替换、已验收状态写回、协作规范沉淀
 
-本文件不定义独立的 docs-only 工作流；Team Loop 中由 generator 按 allowed scope 修改文档。
+上述范围用于文档修改任务，不把包含业务代码的开发任务改成 docs-only。本文件不定义另一套工作流：普通开发由主 agent 修改，Team Loop 中由 generator 按 allowed scope 修改文档。
 
 ## 刷新节奏
 
@@ -22,7 +22,7 @@
 
 ## docs impact check
 
-- Team Loop 每轮结束前，先判断本轮是否改变了项目事实、合同 / 边界、已成立能力、候选方向、计划状态或长期债务。
+- 普通开发收口前及 Team Loop 每轮结束前，先判断本轮是否改变了项目事实、合同 / 边界、已成立能力、候选方向、计划状态或长期债务。
 - 有变化就更新对应 docs 主落点；没有变化也要在输出里明确写“本轮无需更新 docs”及原因。
 - docs impact check 只判断“要不要更新”和“该更新哪份”，不要求每轮全量刷新 docs。
 - docs impact check 是每轮增量维护的**微循环**；它不负责跨文档整体对账，也不得自动触发 `$docs-review`。
@@ -61,6 +61,7 @@
 ## 更新频率与粒度
 
 - 不是每个小改动都要全量刷新 docs。
+- agent 的推断、建议和待核实事项保持相应标注；写回文档不使其成为事实。事实与完成状态必须有适用于该范围 / 阶段的证据。
 - 只更新被本轮语义真正影响的主落点。
 - 默认不跨多个 docs 重复写同一事实；其他位置只保留短摘要或不写。
 - 阶段切换时，再集中刷新 `product/current-state.md`、`handoff/latest.md` 和相关归档。
@@ -81,7 +82,7 @@
 - `product/`
   - 当前状态、当前方向
 - `workflow/`
-  - Team Loop 合同、角色规则、docs 维护和升级规则
+  - 普通开发、独立核验、Team Loop 合同、角色规则、docs 维护和升级规则
 - `plans/`
   - 当前计划、已完成计划、技术债
 - `handoff/`

@@ -21,10 +21,11 @@
 Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold，让个人开发者和小团队在 AI 编码会话中稳定执行：
 
 - audit-first 根因锁定
+- 普通开发：主 agent 规划和实现，Grill-me 澄清未决取舍，fresh evaluator 独立核验事实与假设
 - docs impact check
 - 可选 `$docs-review`：人工触发的跨文档事实对账与清理
 - prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
-- 永远停在 `human_acceptance_required`，不让 agent 自己宣布验收
+- 不让 agent 自己宣布人工验收；Team Loop 停在 `human_acceptance_required` 或 `blocked`
 
 ## 适用对象
 
@@ -42,7 +43,7 @@ CLAUDE.md                          # Claude Code 入口，与 AGENTS.md 同步
 workflow/audit-first.md            # 根因审计优先流程
 docs/
   README.md                        # docs 入口地图
-  workflow/                        # Team Loop、角色合同、docs maintenance
+  workflow/                        # 普通开发、独立 evaluator、Team Loop、docs maintenance
   product/                         # 项目事实占位，需按目标仓库填写
   architecture/                    # 架构占位，需按目标仓库填写
   handoff/                         # 跨会话 handoff
@@ -56,7 +57,7 @@ docs/
 
 升级流程按 [`UPDATE_MANIFEST.md`](./UPDATE_MANIFEST.md) 的 ownership 策略执行：
 
-- **workflow kernel**：清单内的 Team Loop 内核及 `workflow/audit-first.md` 原地替换旧版文件；按 `remove-workflow` 清单删除旧普通流程的精确文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
+- **workflow kernel**：清单内的普通开发 / Team Loop 内核及 `workflow/audit-first.md` 原地替换旧版文件；按 `remove-workflow` 清单删除退役 planner schema 等精确文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
 - **mixed files**：`AGENTS.md`、`CLAUDE.md`、`docs/README.md` 只替换 `codex-teammode:managed` block，保留 block 外的目标项目规则。
 - **target facts**：`docs/product/*`、`docs/architecture/*`、`docs/handoff/*`、`docs/plans/*`、`docs/evidence/*` 永不自动覆盖。
 
@@ -70,13 +71,14 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 
 ## 核心概念
 
+- **普通工作流**：主 agent 规划和实现，未决取舍按需追问，实现后派 fresh 只读 evaluator；确定缺口直接回主 agent，业务争议交用户裁决。
 - **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
 - **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
 - **docs impact / docs-review**：前者是每轮增量微循环；后者是人工触发、Plan/Apply 两阶段的事实校正宏循环。
 - **docs-review v3 plan gate**：scanner schema 5 的每条 finding 都绑定 source fingerprint、结构化 resolution group、精确人工权限和批准文件；完整 audit scope 与每项 edit contract 同时冻结，机器 Claim ID / 稳定锚点不得写进业务 docs。
 - **docs-review sharded closure**：大型全文审查按预算分片，原始 auditor JSON 无损校验；所有 shard pass 后再由全新 synthesis auditor 做跨分片终审，任一不足先停在人类确认门。
-- **human_acceptance_required**：最终停点，只有人类可以验收。
+- **human_acceptance_required**：Team Loop 的人工验收停点，只有人类可以验收。
 
 更多术语见 [`CONCEPTS.md`](./CONCEPTS.md)。
 
@@ -117,9 +119,24 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 [`SKILL.md`](./skills/docs-review/SKILL.md)，事实模型与独立审计角色见
 [`skills/docs-review/references/`](./skills/docs-review/references/)。
 
+## 普通开发工作流
+
+安装后，未显式启用 Team Loop 的开发维护使用普通工作流，主 agent 可以直接改文件：
+
+```text
+核对原要求与实际代码 → 草案 → Grill-me 澄清未决取舍 → 更新同一份计划
+→ 主 agent 实现和必要验证 → fresh evaluator → 修复确定缺口 / 保留争议给用户
+```
+
+evaluator 首先审查关键断言来自已有事实、用户决定还是 agent 假设，重点找假设被写成事实、被升级成执行条件，以及计划与实际消费者之间的遗漏。审查依据来自原要求、有效合同、实际 diff、真实调用链和实际验证证据；实现者总结只用于导航。
+
+已有决定不重复追问，不为每次改动新建 Spec、校验脚本或审批。用户和目标项目的明确权限 / subagent 限制仍然有效。问答、只读、仅计划及安装升级按各自任务执行，不自动进入实现循环；普通独立核验也不启动可选宏循环。
+
+完整流程与 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，只读 subagent 合同见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
+
 ## Team Loop 工作流
 
-Team Loop 是本包唯一提供的编码工作流。只有用户在 prompt 中明确使用 `@team-loop`、要求使用 `Team Loop` / `teamloop`，或明确要求 Leader 调度 subagent 时才启用。未触发时，本包不规定轮次、输出 schema、启动检查或 subagent 调度；仅讨论、引用或修改这些规则不构成触发。
+Team Loop 是显式选择的多角色工作流。只有用户在 prompt 中明确使用 `@team-loop`、要求使用 `Team Loop` / `teamloop`，或明确要求 Leader 调度 subagent 时才启用。仅要求独立 evaluator、讨论、引用或修改这些规则不构成触发；未触发时使用普通开发工作流。
 
 Team Loop 的核心通信结构是：
 
@@ -161,7 +178,7 @@ User
 
 ## 当前状态
 
-`v0.3.1` 是当前 public preview。核心内核目前中文优先，README 提供中英双语入口。当前版本明确支持 Codex 和 Claude Code；其他工具可参考 AGENTS.md/CLAUDE.md 约定自行适配。
+发布记录为 `v0.3.1`；当前源码内核为尚未发布的 `0.4.0-dev`，普通工作流变更见 `CHANGELOG.md` 的 Unreleased。核心内核中文优先，README 提供中英双语入口，支持 Codex 和 Claude Code；其他工具可参考 AGENTS.md/CLAUDE.md 约定自行适配。
 
 ## 贡献
 
@@ -200,7 +217,7 @@ User
 
 Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
 
-It installs only a prompt-triggered Team Loop coding workflow, with an audit-first evidence flow and docs impact check. A Leader coordinates planner, generator, scout, and evaluator roles. The optional explicit-only `$docs-review` skill remains separately installable.
+Default development keeps planning and implementation in the main agent, clarifies consequential unresolved choices, and dispatches a fresh read-only evaluator after implementation. Explicit Team Loop instead uses a Leader coordinating planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
 
 The bundled `docs-review` skill is optional and installed separately through
 `install.sh --install-docs-review`; bootstrap does not modify personal skill directories.
@@ -236,9 +253,17 @@ and a new synthesis auditor for cross-shard consumers and original evidence. Any
 or protocol failure stops at a human approval gate. See the complete contract in
 [`skills/docs-review/SKILL.md`](./skills/docs-review/SKILL.md).
 
+### Default Development At A Glance
+
+Read the original request and current code, draft a proportional plan, clarify unresolved choices through the built-in Grill-me step, update the same plan, implement, run necessary focused checks, and dispatch a fresh read-only evaluator. No external Grill-me skill installation is required.
+
+The evaluator checks facts versus decisions versus assumptions, actual behavior and consumers, unsupported execution conditions, and completion claims. Send the original requirements and corrections, canonical contracts, confirmed decisions, labeled assumptions, actual changes, and real validation evidence through a scoped Review Request. Confirmed gaps return directly to the implementing main agent; factual unknowns need evidence; genuine business disputes remain for the user. Requesting only this evaluator does not start Team Loop.
+
+See [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md) and [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md). Respect explicit target restrictions; do not add approval rituals, arbitrary gates, or new test harnesses. Read-only, plan-only, installation, and update tasks do not automatically enter the development loop.
+
 ### Team Loop At A Glance
 
-Team Loop is the only coding workflow provided by this package. It starts only when the user explicitly asks for `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven subagent coordination. Without that trigger, the package prescribes no round types, output schemas, startup checks, or subagent scheduling. Discussing, quoting, or editing its rules does not start the loop.
+Team Loop is an explicit alternative to default development. It starts only when the user explicitly asks for `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven subagent coordination. Requesting an independent evaluator, discussing, quoting, or editing its rules does not start the loop.
 
 - **Leader** is the only scheduler. It chooses `plan-gated` or `auto-execute`, sends each subagent a Context Bootstrap, checks Read Scope Ack, prepares Evidence Packs and Evaluation Bundles, runs validation, and stops at `human_acceptance_required`. Leader does not implement changes directly.
 - **Planner subagent** is read-only. It narrows the problem, risk mode, allowed scope, forbidden scope, minimum progress unit, generator startup checks, possible scout questions, and evaluator focus.

@@ -25,6 +25,8 @@ docs/
 ```text
 VERSION
 docs/workflow/docs-maintenance.md
+docs/workflow/default-workflow.md
+docs/workflow/independent-evaluator.md
 docs/workflow/team-loop-core.md
 docs/workflow/team-loop.md
 docs/workflow/team-loop-roles/leader.md

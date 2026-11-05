@@ -18,7 +18,8 @@ Resolve the workflow package before reading its files:
 
 Install and adapt Codex-teammode Workflow so this target project can use the same AI collaboration process:
 
-- Team Loop is the only coding workflow provided: prompt-triggered Leader + planner / generator / scout / evaluator
+- Default development: the main agent plans and implements, clarifies consequential unresolved choices through Grill-me, and dispatches a fresh read-only evaluator after implementation
+- Explicit Team Loop: prompt-triggered Leader + planner / generator / scout / evaluator
   - planner / scout may be reused with freshness checks; generator / evaluator are fresh per round
 - audit-first evidence flow
 - docs impact check
@@ -34,7 +35,8 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
   acceptance, legal, and release claims require their own direct evidence.
 - If the target repo has existing `AGENTS.md`, `CLAUDE.md`, `docs/`, or `workflow/`, inspect and merge.
 - Keep edits limited to workflow/process files and docs scaffolding unless the user explicitly allows business code changes.
-- Enable Team Loop only on an explicit user prompt trigger. Without that trigger, this package adds no round types, schemas, startup checks, or subagent scheduling.
+- Install the lightweight default workflow and its independent evaluator. Preserve explicit target restrictions on permissions, roles, and subagents; installing the package does not override them.
+- Enable Team Loop only on an explicit user prompt trigger. Requesting only an independent evaluator does not trigger Team Loop or prohibit the main agent from implementing.
 - Installing, discussing, quoting, or editing Team Loop rules does not itself start a Team Loop.
 
 ## Required Read Scope
@@ -46,6 +48,8 @@ First read:
 - `<workflow-package>/workflow-kernel/AGENTS.md`
 - `<workflow-package>/workflow-kernel/CLAUDE.md`
 - `<workflow-package>/workflow-kernel/docs/README.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/default-workflow.md`
+- `<workflow-package>/workflow-kernel/docs/workflow/independent-evaluator.md`
 - `<workflow-package>/workflow-kernel/docs/workflow/team-loop-core.md`
 - `<workflow-package>/workflow-kernel/docs/workflow/team-loop.md`
 - `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/leader.md`
@@ -77,6 +81,8 @@ Then inspect the target repo:
    - If Claude-specific rules exist, preserve them and add the shared workflow rules from `workflow-kernel/CLAUDE.md`.
 
 3. Create or merge workflow docs:
+   - `docs/workflow/default-workflow.md`
+   - `docs/workflow/independent-evaluator.md`
    - `docs/workflow/team-loop-core.md`
    - `docs/workflow/team-loop.md`
    - `docs/workflow/team-loop-roles/leader.md`
@@ -115,7 +121,7 @@ Then inspect the target repo:
 
 ## Required Output
 
-Inspect existing files, then perform the authorized install. Do not impose plan / execute / review schemas or start Team Loop during installation.
+Inspect existing files, then perform the authorized install. Installation does not start a development loop or Team Loop; do not restore retired planner schemas or require new project-specific business decisions merely to install the rules.
 
 Final response must include:
 

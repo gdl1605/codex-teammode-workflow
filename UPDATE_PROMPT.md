@@ -9,12 +9,12 @@ You are working in a target project root. A newer folder named `codex-teammode-w
 
 ## Goal
 
-Upgrade the target repo's installed Codex-teammode Workflow to prompt-triggered Team Loop only, without overwriting target project facts or rules outside managed blocks.
+Upgrade the target repo's installed Codex-teammode Workflow to lightweight default development plus explicitly triggered Team Loop, without overwriting target project facts or rules outside managed blocks.
 
 Use ownership-based updates:
 
 - Workflow-owned kernel files: replace retained files in place and remove exact retired files listed in `UPDATE_MANIFEST.md`.
-- Do not install normal-workflow round types, schemas, startup checks, or `@planner` aliases. This update does not itself trigger Team Loop.
+- Install `docs/workflow/default-workflow.md` and `docs/workflow/independent-evaluator.md`: the main agent implements, consequential unresolved choices are clarified before implementation, and a fresh evaluator reviews facts versus assumptions afterward. Do not restore retired planner schemas or `@planner` aliases. This update does not itself start a development loop or Team Loop.
 - Mixed files: update only inside `codex-teammode:managed` blocks.
 - Target project facts / handoff / plans / evidence: never overwrite.
 
@@ -28,6 +28,7 @@ Use ownership-based updates:
   facts, while explicit human/canonical contracts determine business intent; deployment,
   acceptance, legal, and release claims require their own direct evidence.
 - Preserve all target-project content outside managed blocks.
+- Existing explicit target restrictions on permissions, roles, and subagents still apply; an evaluator request alone does not start Team Loop.
 - Do not create `.new` files for workflow-owned files. The goal is to replace old workflow files, not keep old and new copies side by side.
 - If a mixed file cannot be updated safely because managed markers are missing, report the required managed block insertion instead of creating `.new`.
 - Treat `package-only` skills as package content. Do not install or overwrite a personal/global skill directory during target-project update.

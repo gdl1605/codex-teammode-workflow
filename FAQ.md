@@ -23,7 +23,7 @@ Team Loop 是一个显式触发、在单个人类驱动会话里运行的多角�
 
 ### 为什么不自动 accepted？
 
-因为“agent 说完成了”和“改动真的正确”不是同一件事。工作流最终只能停在 `human_acceptance_required`，由人类确认是否验收。
+因为“agent 说完成了”和“改动真的正确”不是同一件事。普通工作流报告实际核验范围和剩余事项，Team Loop 停在 `human_acceptance_required` 或 `blocked`；人工验收都由用户表达，独立核验不代替它。
 
 ### 会覆盖我已有的文件吗？
 
@@ -43,4 +43,12 @@ Bootstrap prompt 明确要求先审查再合并。如果目标仓库已有 `AGEN
 
 ### 没有触发 Team Loop 时会怎样？
 
-本包只定义由 prompt 显式触发的 Team Loop。未触发时，不规定 plan / audit / execute / review 轮次、输出 schema、启动检查或 subagent 调度，按用户指令与目标项目自身规则处理。仅讨论、引用或修改 Team Loop 规则不会启动它。
+开发维护默认使用[普通工作流](./workflow-kernel/docs/workflow/default-workflow.md)：主 agent 规划和实现，有未决行为取舍才追问，实现后派 fresh 只读 evaluator。确定缺口直接回实现 agent 修复，事实未知先补证，业务争议给用户裁决。仅要求独立 evaluator 或讨论、引用、修改 Team Loop 规则不会启动 Team Loop。
+
+### evaluator 怎么知道该审查什么？
+
+Review Request 提供用户原话和纠正、有效合同、确认后的计划、明确标注的假设、实际 diff、消费者和验证证据。evaluator 从原要求确定目标，从实际改动和真实调用关系确定影响范围；主 agent 的总结只用于导航。重点查假设是否被写成事实或升级为执行条件，不只比较两份总结是否一致。角色合同见[独立 evaluator](./workflow-kernel/docs/workflow/independent-evaluator.md)。
+
+### 是否必须安装外部 grill-me skill？
+
+不需要。普通流程内置需求追问：事实由 agent 查，已有决定直接沿用，只有影响结果的未决选择才问用户，答案回写同一份计划。不设必须问满的轮数，也不新增每次实现都要整份计划批准的要求。

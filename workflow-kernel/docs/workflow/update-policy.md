@@ -1,6 +1,6 @@
 # Workflow Update Policy
 
-> 最后更新时间：2026-08-04
+> 最后更新时间：2026-11-05
 > 适用范围：把新版 Codex-teammode Workflow 覆盖到已安装旧工作流的目标项目
 > 本文主职责：定义哪些内容可覆盖、哪些只能合并、哪些永不覆盖
 > 推荐下一跳：目标项目中的 `codex-teammode-workflow/UPDATE_MANIFEST.md`
@@ -19,6 +19,8 @@
 
 ```text
 docs/workflow/docs-maintenance.md
+docs/workflow/default-workflow.md
+docs/workflow/independent-evaluator.md
 docs/workflow/team-loop-core.md
 docs/workflow/team-loop.md
 docs/workflow/team-loop-roles/**
@@ -36,7 +38,9 @@ workflow/audit-first.md
 
 `UPDATE_MANIFEST.md` 的 `remove-workflow` 清单列出旧普通工作流的精确文件路径。
 升级时删除这些文件和对应 stale `.new`，并移除 marker 中的条目；保留同目录下的其他文件，
-不得递归删除 `docs/planner/`。managed block 内的旧规则替换为仅显式触发的 Team Loop；
+不得递归删除 `docs/planner/`。新的轻量普通工作流使用 `default-workflow.md` 和
+`independent-evaluator.md`，不恢复退役的 planner schema。managed block 内的旧规则替换为
+普通开发默认规则与显式触发的 Team Loop；目标项目对角色、权限和 subagent 的明确限制仍保留；
 block 外的项目规则保留，残留旧入口只报告人工迁移说明。
 
 ### 只能 managed-block 更新的混合文件

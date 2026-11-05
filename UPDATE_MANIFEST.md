@@ -45,6 +45,8 @@ Everything outside the block belongs to the target project and must be preserved
 | `workflow-kernel/CLAUDE.md` | `CLAUDE.md` | `managed-block` |
 | `workflow-kernel/docs/README.md` | `docs/README.md` | `managed-block` |
 | `workflow-kernel/docs/workflow/docs-maintenance.md` | `docs/workflow/docs-maintenance.md` | `replace-workflow` |
+| `workflow-kernel/docs/workflow/default-workflow.md` | `docs/workflow/default-workflow.md` | `replace-workflow` |
+| `workflow-kernel/docs/workflow/independent-evaluator.md` | `docs/workflow/independent-evaluator.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop-core.md` | `docs/workflow/team-loop-core.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop.md` | `docs/workflow/team-loop.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop-roles/leader.md` | `docs/workflow/team-loop-roles/leader.md` | `replace-workflow` |
@@ -69,9 +71,11 @@ Everything outside the block belongs to the target project and must be preserved
 
 ## Retired Workflow Files
 
-The package no longer defines a normal plan / audit / execute / review workflow. On update,
-remove these exact old package-owned files, remove their stale `.new` siblings, and drop their
-entries from `managed_files`. Preserve any other files in `docs/planner/`.
+The old normal-workflow planner schemas and round templates remain retired. The new
+lightweight default uses `default-workflow.md` and `independent-evaluator.md`; it does not
+restore these old paths. On update, remove these exact old package-owned files and their
+stale `.new` siblings, and drop their entries from `managed_files`. Preserve any other files
+in `docs/planner/`.
 
 | Target path | Strategy |
 |---|---|
@@ -82,7 +86,7 @@ entries from `managed_files`. Preserve any other files in `docs/planner/`.
 | `docs/workflow/prompt-template.md` | `remove-workflow` |
 | `docs/workflow/session-startup.md` | `remove-workflow` |
 
-Replace managed entry/index blocks with the Team Loop-only rules. Outside those blocks,
+Replace managed entry/index blocks with default-development plus explicit Team Loop rules. Preserve explicit target restrictions on roles, permissions, and subagents. Outside those blocks,
 preserve project-owned content and report any obsolete workflow routing for manual migration.
 
 ## Optional Skill Distribution

@@ -18,10 +18,11 @@ Codex-teammode Workflow 是一个面向 **Codex** 和 **Claude Code** 的 prompt
 它的目标是帮助个人开发者和小团队在 AI 编码会话中稳定执行：
 
 - audit-first 根因锁定
+- 普通开发：主 agent 规划和实现，按需 Grill-me 追问，fresh evaluator 独立核验事实与假设
 - docs impact check
 - 可选 `$docs-review`：人工触发的跨文档事实对账与清理
 - prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
-- 最终停在 `human_acceptance_required`，由人类验收
+- 不让 agent 自己宣布人工验收；Team Loop 停在 `human_acceptance_required` 或 `blocked`
 
 ## 安装后会生成什么
 
@@ -31,7 +32,7 @@ CLAUDE.md                          # Claude Code 入口，与 AGENTS.md 同步
 workflow/audit-first.md            # 根因审计优先流程
 docs/
   README.md                        # docs 入口地图
-  workflow/                        # Team Loop、角色合同、docs maintenance
+  workflow/                        # 普通开发、独立 evaluator、Team Loop、docs maintenance
   product/                         # 项目事实占位，需按目标仓库填写
   architecture/                    # 架构占位，需按目标仓库填写
   handoff/                         # 跨会话 handoff
@@ -45,7 +46,7 @@ docs/
 
 升级按 [`UPDATE_MANIFEST.md`](./UPDATE_MANIFEST.md) 的 ownership 策略执行：
 
-- workflow kernel：清单内的 Team Loop 内核及 `workflow/audit-first.md` 原地替换旧版文件；按 `remove-workflow` 清单删除旧普通流程的精确文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
+- workflow kernel：清单内的普通开发 / Team Loop 内核及 `workflow/audit-first.md` 原地替换旧版文件；按 `remove-workflow` 清单删除退役 planner schema 等精确文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
 - mixed files：`AGENTS.md`、`CLAUDE.md`、`docs/README.md` 只替换 `codex-teammode:managed` block。
 - target facts：`docs/product/*`、`docs/architecture/*`、`docs/handoff/*`、`docs/plans/*`、`docs/evidence/*` 永不自动覆盖。
 
@@ -72,9 +73,17 @@ synthesis auditor 核验跨分片 consumer、canonical owner 和原始 evidence�
 或协议错误都会停在人类确认门，不能同轮自行修复。完整协议见
 [`SKILL.md`](./skills/docs-review/SKILL.md)。
 
+## 普通开发工作流
+
+未显式启用 Team Loop 的开发维护，由主 agent 核对代码和原要求、形成草案、追问未决取舍、更新同一份计划并实现。实现及必要验证后，派全新上下文的只读 evaluator，对照原要求、有效合同、实际改动、真实消费者和验证证据检查。
+
+核验主轴是已有事实、用户决定与 agent 假设的区别，尤其是假设是否被写成事实或执行条件。确定缺口直接回主 agent 修复，事实缺口先补证，真正的业务争议保留给用户裁决。已有决定不重复问，不要求额外 Spec、固定访谈轮数或新测试工程；用户和目标项目的明确权限 / subagent 限制仍有效。
+
+问答、只读、仅计划及安装升级任务不自动进入实现循环。普通独立核验不触发可选宏循环。流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，只读 subagent 合同见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
+
 ## Team Loop 工作流
 
-本包只提供由 prompt 显式触发的 Team Loop，只有用户明确要求使用 `@team-loop` / `Team Loop` / `teamloop` 时才启用；未触发时不规定执行流程。Leader 调度 planner / generator / scout / evaluator，planner / scout 可复用，generator / evaluator 每轮 fresh。终态只能是 `human_acceptance_required` 或 `blocked`。
+Team Loop 是显式选择的多角色工作流，只有用户明确要求使用 `@team-loop` / `Team Loop` / `teamloop` 或 Leader 调度时才启用；仅要求独立 evaluator 不触发它，未触发时使用普通开发流程。Leader 调度 planner / generator / scout / evaluator，planner / scout 可复用，generator / evaluator 每轮 fresh。终态只能是 `human_acceptance_required` 或 `blocked`。
 
 完整规范和启动模板见 [`workflow-kernel/docs/workflow/team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md)，subagent 默认核心合同见 [`workflow-kernel/docs/workflow/team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md)，轻量角色胶囊见 [`workflow-kernel/docs/workflow/team-loop-roles/`](./workflow-kernel/docs/workflow/team-loop-roles/)。
 
@@ -99,7 +108,7 @@ skill；需要采用新版时重新显式运行 skill 安装命令。
 
 ## 当前状态
 
-`v0.3.1` 是当前 public preview。核心内核目前中文优先，当前版本明确支持 Codex 和 Claude Code。
+发布记录为 `v0.3.1`；当前源码内核为尚未发布的 `0.4.0-dev`，普通工作流变更见 `CHANGELOG.md` 的 Unreleased。核心内核中文优先，支持 Codex 和 Claude Code。
 
 ## 贡献
 

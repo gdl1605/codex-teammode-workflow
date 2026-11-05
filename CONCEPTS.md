@@ -2,12 +2,26 @@
 
 Quick glossary of the terms used throughout this kit. Read this once before installing into a target project so the bootstrap prompt makes sense.
 
+## Default development
+
+The main agent plans and implements. It checks current code and original requirements,
+clarifies consequential unresolved choices through the built-in Grill-me step, updates the
+same plan, and dispatches a fresh read-only evaluator after implementation and focused checks.
+Facts, user decisions/contracts, agent assumptions, and unknowns stay distinct. The evaluator
+checks that assumptions have not become facts or unsupported execution conditions, and traces
+requirements through actual changes and consumers. Confirmed gaps go directly to the main
+agent for repair; factual unknowns need evidence; genuine business disputes go to the user.
+
+This does not require an external skill, a new Spec for every change, fixed interview rounds,
+or additional approval where existing authorization is sufficient. Read-only, plan-only,
+installation, and update tasks do not automatically enter the development loop. Explicit
+target restrictions on permissions, roles, and subagents remain effective.
+
 ## Prompt-triggered Team Loop
 
-Team Loop is the only coding workflow defined by this package. It starts only on an explicit
-user request to use Team Loop. Without that trigger, the package defines no round types,
-output schemas, startup protocol, or subagent scheduling. Discussing or editing the rules
-is not a trigger.
+Team Loop is an explicit alternative to default development. It starts only on an explicit
+user request to use Team Loop or Leader-driven multi-subagent coordination. Requesting only
+an independent evaluator, discussing, or editing the rules is not a trigger.
 
 A multi-subagent loop run **inside one Leader thread** (Codex / Claude Code session). Triggered when the user prefixes a message with `@team-loop` or asks for a "leader-driven multi-subagent" closure.
 
@@ -46,7 +60,7 @@ Goal: stop "imagined fixes" — every change must trace back to evidence, not vi
 
 ## Fact-priority order
 
-For Team Loop implementation work, this is the default descriptive-fact routing order:
+For current implementation behavior in either workflow, this is the descriptive-fact routing order:
 
 1. **Current code** (highest)
 2. The relevant topic doc under `docs/`
@@ -55,8 +69,8 @@ For Team Loop implementation work, this is the default descriptive-fact routing 
 
 Handoffs and summaries are *fast entry points*, not the source of truth.
 
-The explicitly invoked `$docs-review` macro does not use “current code always wins” across
-every kind of claim. It routes authority by fact type:
+Neither workflow nor the explicitly invoked `$docs-review` macro treats “current code always
+wins” as a rule for every kind of claim. Authority follows the claim type:
 
 | Claim type | Primary authority |
 |---|---|
@@ -72,7 +86,7 @@ behavior, while also preventing aspirational docs from being reported as impleme
 
 ## docs impact check
 
-At the end of a Team Loop round: ask "did this round change a project fact, contract, plan state, or known debt?" If yes, update the **single owning doc**. If no, say so explicitly. Never write the same fact into two docs.
+Before concluding default development, or at the end of a Team Loop round: ask "did this work change a project fact, contract, plan state, or known debt?" If yes, update the **single owning doc**. If no, say so explicitly. Never write the same fact into two docs. Preserve labels on assumptions and unknowns instead of turning them into facts during writeback.
 
 It is the incremental **micro loop**. Its output also states
 `reconciliation_recommended: yes/no + reason`, but it cannot launch a macro review by itself.
@@ -120,14 +134,14 @@ acceptance or release.
 | Term | Meaning |
 |---|---|
 | Leader | The main thread in Team Loop. The only entity that spawns subagents. |
-| Subagent | A read-only or write-bounded helper spawned by Leader. |
+| Subagent | A helper spawned by the main agent in default development or by Leader in Team Loop; the ordinary evaluator is fresh and read-only. |
 | Context Bootstrap | The minimum context Leader hands a new subagent. |
 | Read Scope Ack | A subagent's confirmation of which files it actually opened. |
 | Scout Request | generator → Leader: "I need more evidence to proceed." |
 | Evidence Pack | Leader-curated evidence handed to generator. |
 | Evaluation Bundle | Leader-curated diff + criteria handed to evaluator. |
 | Residual risk | A P2/P3 issue noted but not blocking acceptance. |
-| `human_acceptance_required` | Terminal state — only a human can move to `accepted`. |
+| `human_acceptance_required` | Team Loop terminal state — only a human can move to `accepted`. |
 | `blocked` | Terminal state — loop cannot proceed without external input. |
 | `$docs-review` | Explicit fact-reconciliation macro loop; never triggered by routine docs impact. |
 | Claim Ledger | Temporary per-review list of scoped factual assertions and their evidence. |

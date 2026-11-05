@@ -6,6 +6,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Lightweight default development in `default-workflow.md`: the main agent plans and implements, clarifies consequential unresolved choices through a built-in Grill-me step, and dispatches a fresh read-only evaluator afterward.
+- `independent-evaluator.md` with a scoped Review Request, original-requirement and consumer tracing, facts-versus-assumptions review, direct repair feedback, factual follow-up, and user arbitration for genuine disputes.
+
+### Changed
+
+- Keep facts, user decisions/contracts, agent assumptions, and unknowns distinct, especially when writing plans, execution conditions, documentation, and completion claims.
+- Install/update the new default alongside explicitly triggered Team Loop; requesting an independent evaluator alone does not start Team Loop. Keep retired planner schemas retired and preserve explicit target restrictions.
+- Synchronize agent entries, docs indexes, bootstrap/update manifests, and bilingual onboarding. Set the local kernel and managed blocks to unreleased `0.4.0-dev`; no release or target-project upgrade is performed by this source change.
+
 ## [0.3.1] - 2026-10-19
 
 ### Changed

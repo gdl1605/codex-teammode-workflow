@@ -1,14 +1,15 @@
 # docs Index Template
 
-<!-- codex-teammode:managed:start scope=docs-index version=0.3.1 -->
+<!-- codex-teammode:managed:start scope=docs-index version=0.4.0-dev -->
 
 > Last updated: TBD
 > Scope: target repo docs entry map
 > Responsibility: tell future agents what to read first and where each kind of project truth belongs
 > Recommended next hop: `handoff/latest.md`
 
-Team Loop rules apply only after an explicit user prompt trigger. This index is a project
-reference map; it does not prescribe an untriggered workflow.
+Default development keeps planning and implementation in the main agent, clarifies unresolved
+choices, and uses a fresh independent evaluator. Team Loop requires an explicit user prompt.
+This index is a project reference map; read only what the task needs.
 
 ## Read Order
 
@@ -17,13 +18,14 @@ reference map; it does not prescribe an untriggered workflow.
 3. `architecture/system-map.md`
 4. `architecture/domain-boundaries.md`
 5. `architecture/ia-and-navigation.md`
-6. `workflow/team-loop.md` only when Team Loop is explicitly requested; dispatch subagents with `workflow/team-loop-core.md` and only the matching `workflow/team-loop-roles/<role>.md`
-7. `workflow/update-policy.md` only when upgrading an older workflow install
-8. `workflow/docs-maintenance.md`
-9. `product/active-directions.md`
-10. `plans/tech-debt.md`
-11. `plans/active/` and `plans/completed/` when a managed plan is in scope
-12. `handoff/archive/` only for history lookup
+6. `workflow/default-workflow.md` for ordinary development; dispatch its evaluator with `workflow/independent-evaluator.md` and the scoped Review Request
+7. `workflow/team-loop.md` only when Team Loop is explicitly requested; dispatch subagents with `workflow/team-loop-core.md` and only the matching `workflow/team-loop-roles/<role>.md`
+8. `workflow/update-policy.md` only when upgrading an older workflow install
+9. `workflow/docs-maintenance.md`
+10. `product/active-directions.md`
+11. `plans/tech-debt.md`
+12. `plans/active/` and `plans/completed/` when a managed plan is in scope
+13. `handoff/archive/` only for history lookup
 
 ## Fact Priority
 
@@ -41,7 +43,7 @@ acceptance, legal, or release state. Route those claims to their direct authorit
 
 - `architecture/`: system map, information architecture, domain boundaries
 - `product/`: current state and active directions
-- `workflow/`: Team Loop, role capsules, update policy, docs maintenance
+- `workflow/`: default development, independent evaluator, explicit Team Loop, role capsules, update policy, docs maintenance
 - `plans/`: active plans, completed plans, long-term debt
 - `handoff/`: latest handoff and archived handoff snapshots
 - `evidence/`: audit evidence and read-only findings

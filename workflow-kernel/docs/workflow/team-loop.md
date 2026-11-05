@@ -1,13 +1,13 @@
 # Team Loop Workflow
 
-> 最后更新时间：2026-10-19
+> 最后更新时间：2026-11-05
 > 适用范围：需要由 Leader 主线程调度多个独立 subagent 的类 team-mode 闭环
 > 本文主职责：定义 plan-gated / auto-execute 两种模式、角色边界、通信规则、Context Bootstrap、Read Scope Ack、scout 支援机制和人工验收停点
 > 推荐下一跳：`team-loop-core.md`、`team-loop-roles/`
 
 ## 1. 定位
 
-Team Loop 是本包唯一提供的编码协作工作流，只在用户明确声明使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时启用。
+Team Loop 是本包显式选择的多角色编码协作工作流，只在用户明确声明使用 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时启用。
 
 它用于让一个 Leader 主线程调度多个独立 subagent，形成：
 
@@ -25,7 +25,7 @@ Team Loop 运行在 Codex 或 Claude Code 等单个编码 agent 会话内，由 
 
 Team Loop 中的 `planner subagent` 是 Leader 调度的内部只读角色，职责见 `team-loop-roles/planner.md`。
 
-未明确触发时，本包不规定执行流程。任务复杂、根因未锁或风险较高都不是 Team Loop 的触发条件；仅讨论、引用或修改 Team Loop 规则也不构成触发。
+未明确触发时，开发维护使用 `default-workflow.md`，由主 agent 直接实现并派独立 evaluator；仅要求独立核验不启动 Team Loop。任务复杂、根因未锁或风险较高都不是 Team Loop 的触发条件；仅讨论、引用或修改 Team Loop 规则也不构成触发。
 
 ## 2. 非目标
 

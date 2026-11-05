@@ -1,28 +1,29 @@
 # docs 索引
 
-<!-- codex-teammode:managed:start scope=docs-index version=0.3.1 -->
+<!-- codex-teammode:managed:start scope=docs-index version=0.4.0-dev -->
 
-> 最后更新时间：2026-10-19
+> 最后更新时间：2026-11-05
 > 适用范围：整个 `docs/` 目录的阅读入口与分工说明
 > 本文主职责：告诉新线程先看什么、每份文档写什么、哪些内容只能去别处找
 > 推荐下一跳：`handoff/latest.md`
 
 ## 先读顺序
 
-本索引是项目资料地图。Team Loop 仅在用户 prompt 明确触发后启用；Leader 按任务裁剪读取范围，不要求全量读取。未触发时，本包不规定工作流程。
+本索引是项目资料地图，按任务读取，不要求全量读取。普通开发由主 agent 规划和实现，按需追问并派独立 evaluator；Team Loop 仅在用户明确触发后启用。
 
 1. `handoff/latest.md`
 2. `product/current-state.md`
 3. `architecture/ia-and-navigation.md`
 4. `architecture/domain-boundaries.md`
 5. `architecture/system-map.md`
-6. `workflow/team-loop.md`，仅在进入 Team Loop 模式时再看；派 subagent 时默认只附带 `workflow/team-loop-core.md` 和对应 `workflow/team-loop-roles/<role>.md`
-7. `workflow/update-policy.md`，仅在升级已安装旧工作流时再看
-8. `workflow/docs-maintenance.md`
-9. `product/active-directions.md`
-10. `plans/tech-debt.md`
-11. `plans/active/` 和 `plans/completed/`，仅在当前轮次已经进入计划管理时再看
-12. `handoff/archive/`，仅在需要追溯历史快照时再看
+6. `workflow/default-workflow.md`，普通开发时按需看；派独立 evaluator 时附带 `workflow/independent-evaluator.md` 和本次 Review Request
+7. `workflow/team-loop.md`，仅在进入 Team Loop 模式时再看；派 subagent 时默认只附带 `workflow/team-loop-core.md` 和对应 `workflow/team-loop-roles/<role>.md`
+8. `workflow/update-policy.md`，仅在升级已安装旧工作流时再看
+9. `workflow/docs-maintenance.md`
+10. `product/active-directions.md`
+11. `plans/tech-debt.md`
+12. `plans/active/` 和 `plans/completed/`，仅在当前轮次已经进入计划管理时再看
+13. `handoff/archive/`，仅在需要追溯历史快照时再看
 
 ## 任务先看什么
 
@@ -30,6 +31,7 @@
 - 要确认顶层 IA 或底栏：先看 `architecture/ia-and-navigation.md`
 - 要确认跨域边界和合同：先看 `architecture/domain-boundaries.md`
 - 要确认目录、服务、后端映射：先看 `architecture/system-map.md`
+- 要做普通开发、计划后的需求追问或实现后的独立核验：看 `workflow/default-workflow.md`；evaluator 使用 `workflow/independent-evaluator.md`，重点检查事实 / 决定 / 假设及其依据，确定缺口直接回实现 agent，业务争议交用户裁决
 - 要发起 `@team-loop` / Leader 调度多个 subagent 的类 team-mode 闭环：只有用户明确声明 Team Loop 时才看 `workflow/team-loop.md`；派生 subagent 时默认只附带 `workflow/team-loop-core.md`、对应 `workflow/team-loop-roles/<role>.md` 和本轮必要 docs / code / evidence
 - Team Loop 中根因未锁、需要“只读审计 -> evidence -> Evidence Pack”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实
@@ -58,8 +60,12 @@
   - 只写当前候选方向、明确后置方向、backlog
   - 不写已解决历史，不重复 current-state
 - `workflow/docs-maintenance.md`
-  - 只写 Team Loop 文档修改、更新节奏、刷新时机、目录职责，以及 docs impact 微循环 / `$docs-review` 宏循环的分工
+  - 只写普通开发与 Team Loop 文档修改、更新节奏、刷新时机、目录职责，以及 docs impact 微循环 / `$docs-review` 宏循环的分工
   - 不写产品事实正文
+- `workflow/default-workflow.md`
+  - 普通开发的需求追问、事实 / 假设区分、主 agent 实现、Review Request 与缺口 / 争议回流；不要求 Team Loop 或新建 schema
+- `workflow/independent-evaluator.md`
+  - 普通工作流的 fresh 只读 subagent 核验合同，直接对照原要求和实际证据，不以计划与实现互相自证
 - `workflow/team-loop.md`
   - 只写 prompt 显式触发的 Team Loop 流程、Leader 调度规则、planner / scout 复用、generator / evaluator fresh-only、model policy、plan-gated / auto-execute、scout request、Evidence Pack 和 Evaluation Bundle
 - `workflow/team-loop-core.md`
@@ -116,6 +122,8 @@
 - `architecture/`
 - `product/`
 - `workflow/`
+  - `default-workflow.md`
+  - `independent-evaluator.md`
   - `team-loop.md`
   - `team-loop-core.md`
   - `team-loop-roles/`
