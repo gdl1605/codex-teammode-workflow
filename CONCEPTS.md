@@ -11,6 +11,12 @@ proposals unless covered by that authority. It asks about unconfirmed choices th
 built-in Grill-me step, records answers and sources in the same plan, and briefly identifies
 the existing basis when no questions are needed. A fresh read-only evaluator follows
 authorized implementation and focused checks.
+
+Grill-me uses native structured question cards: `request_user_input_async` when exposed,
+following the tool's current schema and mode restrictions. Independent questions share a
+round; actual user answers update the same plan before dependent questions are asked.
+Recommendations, preselected options, tool returns, closed requests, and elapsed time are
+not answers. Explain a real tool limitation before using numbered text choices instead.
 Facts, user decisions/contracts, agent assumptions, and unknowns stay distinct. The evaluator
 checks that assumptions have not become facts or unsupported execution conditions, and traces
 requirements through actual changes and consumers. Confirmed gaps go directly to the main

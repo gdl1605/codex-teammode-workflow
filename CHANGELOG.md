@@ -13,6 +13,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Drive planning-time Grill-me with native structured question cards (`request_user_input_async` when exposed), actual user answers, same-plan writeback, and dependent question rounds. Recommendations, preselection, tool returns, request cleanup, and elapsed time do not count as confirmation; explain actual tool restrictions before using text choices.
 - Clarify consequential choices before formal plan delivery, including plan-only tasks: identify the original user decision, contract, or explicit delegation; ask about remaining proposals before treating them as settled. Agent-selected defaults and "first version" scope choices cannot silently bypass Grill-me. Preserve draft-first requests and existing implementation freedom without adding blanket plan approval.
 - Keep facts, user decisions/contracts, agent assumptions, and unknowns distinct, especially when writing plans, execution conditions, documentation, and completion claims.
 - Install/update the new default alongside explicitly triggered Team Loop; requesting an independent evaluator alone does not start Team Loop. Keep retired planner schemas retired and preserve explicit target restrictions.

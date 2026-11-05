@@ -8,7 +8,8 @@
 > Recommended next hop: `handoff/latest.md`
 
 Default development traces consequential choices to their original authority before formal
-plan delivery, including plan-only tasks, and clarifies unconfirmed choices. The main agent
+plan delivery, including plan-only tasks, and clarifies unconfirmed choices through native
+question cards and actual user answers. The main agent
 implements when authorized and uses a fresh independent evaluator afterward. Team Loop requires an explicit user prompt.
 This index is a project reference map; read only what the task needs.
 

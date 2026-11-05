@@ -134,6 +134,8 @@ evaluator 首先审查关键断言来自已有事实、用户决定还是 agent 
 
 仅规划也要在正式计划交付前交代关键取舍的决定及出处。已有用户决定、有效合同或明确委托足够时，引用依据直接沿用；仍是 agent 建议的关键选择先问用户。不能因自己选了“默认 / 首版暂不支持”就宣称没有未决项。普通实现细节不逐项请用户批准。
 
+Grill-me 默认调用原生结构化提问工具发出可选卡片；Codex 暴露 `request_user_input_async` 时使用它。每轮发当前可回答的独立问题，给出选项、影响和推荐，收到实际用户回答后更新同一份计划，再推进依赖问题。推荐、预选和工具返回都不算确认，不按等待时长自行代答；只有工具不可用或受限时才说明限制并改用文本选项。
+
 完整流程与 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，只读 subagent 合同见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
 
 ## Team Loop 工作流
@@ -258,6 +260,8 @@ or protocol failure stops at a human approval gate. See the complete contract in
 ### Default Development At A Glance
 
 Read the original request and current code, draft a proportional plan, and trace consequential choices to user decisions, effective contracts, or explicit delegation before formal plan delivery, including plan-only tasks. Use the built-in Grill-me step for still-unconfirmed choices and record answers and authority in the same plan. Choosing a default yourself does not settle a user decision. When no questions are needed, briefly identify the existing basis; routine implementation details need no extra approval. If authorized, implement, run necessary focused checks, and dispatch a fresh read-only evaluator. No external Grill-me skill installation is required.
+
+Drive Grill-me with native structured question cards. Use `request_user_input_async` when exposed, respecting its current schema and mode restrictions. Present independent questions together with options, consequences, and a recommendation; wait for actual user answers, update the same plan, then ask dependent questions. A recommended/preselected option, tool return, closed request, or elapsed time is not an answer. Explain an actual tool limitation before falling back to numbered text choices.
 
 The evaluator checks facts versus decisions versus assumptions, actual behavior and consumers, unsupported execution conditions, and completion claims. Send the original requirements and corrections, canonical contracts, confirmed decisions, labeled assumptions, actual changes, and real validation evidence through a scoped Review Request. Confirmed gaps return directly to the implementing main agent; factual unknowns need evidence; genuine business disputes remain for the user. Requesting only this evaluator does not start Team Loop.
 

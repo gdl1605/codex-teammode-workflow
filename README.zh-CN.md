@@ -79,6 +79,8 @@ synthesis auditor 核验跨分片 consumer、canonical owner 和原始 evidence�
 
 核验主轴是已有事实、用户决定与 agent 假设的区别，尤其是假设是否被写成事实或执行条件。确定缺口直接回主 agent 修复，事实缺口先补证，真正的业务争议保留给用户裁决。已有决定不重复问，不要求额外 Spec、固定访谈轮数或新测试工程；用户和目标项目的明确权限 / subagent 限制仍有效。
 
+Grill-me 默认使用原生可选提问卡片，Codex 暴露 `request_user_input_async` 时实际调用它。每轮给出当前可回答的问题、选项、影响和推荐，等用户实际回答后回写同一份计划，再问依赖问题。推荐 / 预选、工具返回和等待时长不算确认；工具不可用或受限时说明限制，再用文本选项保持同样的问答语义。
+
 问答、只读、仅计划及安装升级任务不自动进入实现循环。普通独立核验不触发可选宏循环。流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，只读 subagent 合同见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
 
 ## Team Loop 工作流

@@ -36,6 +36,7 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
 - If the target repo has existing `AGENTS.md`, `CLAUDE.md`, `docs/`, or `workflow/`, inspect and merge.
 - Keep edits limited to workflow/process files and docs scaffolding unless the user explicitly allows business code changes.
 - Install the lightweight default workflow and its independent evaluator. Preserve explicit target restrictions on permissions, roles, and subagents; installing the package does not override them.
+- Install Grill-me as a native-question-card interaction: use `request_user_input_async` when exposed, following current schema/mode restrictions; ask independent choices together, consume actual user answers, update the same plan, then ask dependent choices. Recommendations, preselection, tool returns, and elapsed time do not confirm a decision. Explain a real tool limitation before text fallback; do not add a WebSocket service.
 - Enable Team Loop only on an explicit user prompt trigger. Requesting only an independent evaluator does not trigger Team Loop or prohibit the main agent from implementing.
 - Installing, discussing, quoting, or editing Team Loop rules does not itself start a Team Loop.
 

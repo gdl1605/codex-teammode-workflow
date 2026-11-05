@@ -2,7 +2,7 @@
 
 ## Package Intent
 
-Codex-teammode Workflow is a prompt-first workflow package for Codex and Claude Code. Default development keeps planning and implementation in the main agent, requires source-backed review of consequential choices before formal plan delivery (including plan-only tasks), clarifies unconfirmed choices, and dispatches a fresh read-only evaluator after authorized implementation. Team Loop remains an explicit opt-in. The package ships bootstrap instructions and a docs scaffold, not product facts.
+Codex-teammode Workflow is a prompt-first workflow package for Codex and Claude Code. Default development keeps planning and implementation in the main agent, requires source-backed review of consequential choices before formal plan delivery (including plan-only tasks), clarifies unconfirmed choices through native question cards and actual user answers, and dispatches a fresh read-only evaluator after authorized implementation. Team Loop remains an explicit opt-in. The package ships bootstrap instructions and a docs scaffold, not product facts.
 
 ## Included Workflow Kernel
 
