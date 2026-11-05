@@ -30,9 +30,11 @@
 - 只想快速建立上下文：先看 `handoff/latest.md`，再看 `product/current-state.md`
 - 要确认顶层 IA 或底栏：先看 `architecture/ia-and-navigation.md`
 - 要确认跨域边界和合同：先看 `architecture/domain-boundaries.md`
+- 要改接口、状态或职责：沿项目现有规范索引（或领域边界文档）找到正式合同，再核对可执行定义、实际生产者 / 消费者和该范围的正式校验入口；规格及写回规则见 [文档维护](workflow/docs-maintenance.md#已确认规格接口合同与校验入口)
 - 要确认目录、服务、后端映射：先看 `architecture/system-map.md`
 - 要做普通开发、正式计划交付前的需求追问（含仅规划）或实现后的独立核验：看 `workflow/default-workflow.md`；Grill-me 默认用原生提问卡片逐轮收取实际答案、更新同一计划；evaluator 使用 `workflow/independent-evaluator.md`，重点检查事实 / 决定 / 假设及其依据，确定缺口直接回实现 agent，业务争议交用户裁决
 - 要发起 `@team-loop` / Leader 调度多个 subagent 的类 team-mode 闭环：只有用户明确声明 Team Loop 时才看 `workflow/team-loop.md`；派生 subagent 时默认只附带 `workflow/team-loop-core.md`、对应 `workflow/team-loop-roles/<role>.md` 和本轮必要 docs / code / evidence
+- Team Loop 涉及规格或接口变更时，Leader 按 [文档维护](workflow/docs-maintenance.md#已确认规格接口合同与校验入口) 在现有 `Evaluation Bundle` 中引用适用的已确认规格、正式合同和实际验证证据
 - Team Loop 中根因未锁、需要“只读审计 -> evidence -> Evidence Pack”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实
 - 要整理 docs 维护：先看 `workflow/docs-maintenance.md`
@@ -60,7 +62,7 @@
   - 只写当前候选方向、明确后置方向、backlog
   - 不写已解决历史，不重复 current-state
 - `workflow/docs-maintenance.md`
-  - 只写普通开发与 Team Loop 文档修改、更新节奏、刷新时机、目录职责，以及 docs impact 微循环 / `$docs-review` 宏循环的分工
+  - 只写普通开发与 Team Loop 的文档归属、规格 / 接口合同 / 校验的衔接、更新节奏，以及 docs impact 微循环 / `$docs-review` 宏循环的分工
   - 不写产品事实正文
 - `workflow/default-workflow.md`
   - 普通开发的需求追问、事实 / 假设区分、主 agent 实现、Review Request 与缺口 / 争议回流；不要求 Team Loop 或新建 schema
@@ -81,7 +83,7 @@
   - 放 Team Loop 条件使用的“只读审计 -> evidence -> Evidence Pack”机制
   - 根因未锁时要求 evidence 沉淀到 `docs/evidence/<feature>-audit.md` 后再回流执行 prompt
 - `plans/active/`
-  - 放当前还在跑的计划工件
+  - 放当前还在跑的计划工件；跨会话交接且无既有规格惯例时，在同一计划记录「已确认规格」，引用正式合同和适用校验
 - `plans/completed/`
   - 放已经收口的计划工件
 - `plans/tech-debt.md`
