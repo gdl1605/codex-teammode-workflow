@@ -18,9 +18,10 @@ Resolve the workflow package before reading its files:
 
 Install and adapt Codex-teammode Workflow so this target project can use the same AI collaboration process:
 
-- Default development: before delivering a formal plan, including plan-only tasks, the main agent traces consequential choices to user decisions, contracts, or explicit delegation and uses Grill-me for still-unconfirmed choices. It implements when authorized and dispatches a fresh read-only evaluator afterward
+- Default development: trace consequential choices to user decisions, contracts, or explicit delegation and use Grill-me for still-unconfirmed choices. Before formal plan delivery, including plan-only tasks, dispatch a fresh read-only evaluator for a lightweight original-request-to-plan review. Recheck the original request and corrections before authorized implementation, then dispatch another fresh evaluator for actual behavior and completion claims
 - Explicit Team Loop: prompt-triggered Leader + planner / generator / scout / evaluator
   - planner / scout may be reused with freshness checks; generator / evaluator are fresh per round
+  - Leader dispatches lightweight plan review before plan delivery and implementation review after authorized changes, preserving relevant user quotes and corrections. Plan-only delivery does not require Generator results or authorize implementation
 - audit-first evidence flow
 - docs impact check
 - synchronized `AGENTS.md` and `CLAUDE.md` entry files
@@ -36,6 +37,7 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
 - If the target repo has existing `AGENTS.md`, `CLAUDE.md`, `docs/`, or `workflow/`, inspect and merge.
 - Keep edits limited to workflow/process files and docs scaffolding unless the user explicitly allows business code changes.
 - Install the lightweight default workflow and its independent evaluator. Preserve explicit target restrictions on permissions, roles, and subagents; installing the package does not override them.
+- Both workflows use `independent-evaluator.md` for review criteria: check omitted or weakened requirements, unauthorized choices, assumptions promoted to facts, plan/implementation differences, and claims beyond evidence. Confirmed omissions go to the responsible agent for correction; agents investigate factual gaps; genuine intent or contract disputes go to the user through native questions. Keep plan review scoped and do not require future implementation evidence.
 - Install Grill-me as a native-question-card interaction: use `request_user_input_async` when exposed, following current schema/mode restrictions; ask independent choices together, consume actual user answers, update the same plan, then ask dependent choices. Recommendations, preselection, tool returns, and elapsed time do not confirm a decision. Explain a real tool limitation before text fallback; do not add a WebSocket service.
 - Enable Team Loop only on an explicit user prompt trigger. Requesting only an independent evaluator does not trigger Team Loop or prohibit the main agent from implementing.
 - Installing, discussing, quoting, or editing Team Loop rules does not itself start a Team Loop.

@@ -1,6 +1,6 @@
 # Team Loop Role Capsule: Generator
 
-> 最后更新时间：2026-08-04
+> 最后更新时间：2026-11-05
 > 适用范围：Team Loop 的 generator subagent
 > 本文主职责：定义 generator 的轻量启动合同、输出和禁令
 
@@ -12,6 +12,7 @@ generator 是默认唯一写代码角色。Leader 派生 fresh generator 时，�
 - `docs/README.md` 的入口地图。
 - `docs/workflow/team-loop-core.md`。
 - 本文件。
+- 本轮相关用户原话、后续纠正、有效合同和规划审查后的决定及修正。
 - planner handoff。
 - Leader Evidence Pack。
 - 本轮 required current code / task docs / handoff / evidence。
@@ -22,6 +23,7 @@ generator 是默认唯一写代码角色。Leader 派生 fresh generator 时，�
 - 启动前读取 Leader 给出的 `Context Bootstrap`。
 - 输出 `Read Scope Ack`。
 - 消费 planner handoff 和 Leader Evidence Pack，但不把它们当作 current code 的替代品。
+- 实现前回查用户原话、纠正和修订计划；规划已核验不代表原要求可以省略，也不代表计划优先于用户要求。发现计划弱化或遗漏时回 Leader 处理，不能默默照错计划实现。
 - 重新审计 current code，并按当前实现基线和已确认合同做最小实现。
 - 如果 Context Bootstrap、Evidence Pack、docs 与 current code 冲突，向 Leader 分别回报当前实现行为和冲突的 claim 类型；代码决定实现事实，但不能静默改写业务意图或外部生命周期状态。
 - 如审计范围过大，向 Leader 提交 Scout Request。

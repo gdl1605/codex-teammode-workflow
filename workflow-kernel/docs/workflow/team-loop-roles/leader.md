@@ -1,6 +1,6 @@
 # Team Loop Role Capsule: Leader
 
-> 最后更新时间：2026-06-02
+> 最后更新时间：2026-11-05
 > 适用范围：Team Loop 的 Leader 主线程
 > 本文主职责：给 Leader 提供轻量角色合同；完整流程以 `../team-loop.md` 为准
 
@@ -23,9 +23,12 @@ Leader 进入 Team Loop 时读取：
 - 给 fresh subagent 附带裁剪后的 `Context Bootstrap` 和对应 role capsule。
 - 复用 planner / scout 时附带 cache manifest、freshness check、本轮问题和 scope。
 - 核验每个 subagent 的 `Read Scope Ack`。
+- 向 planner、generator 和 evaluator 提供相关用户原话、后续纠正、有效合同和决定来源；裁剪范围不能静默丢掉约束或以自己的摘要取代原话。
+- 关键取舍未定时复用 `../default-workflow.md` 的 Grill-me / 原生提问卡片规则；仅复用问答方式，不启用普通工作流的实现角色。实际答案回写同一份计划。
+- 正式计划交付前派 fresh evaluator 轻量审查；明确缺口回 planner 修订 handoff，事实先补证，真实歧义交用户。修正只复核发现及直接影响。
 - 裁剪 scout / audit 产物，形成 Leader Evidence Pack。
 - 跑验证命令并整理 validation output。
-- 形成 Evaluation Bundle 给 evaluator。
+- 按规划 / 实现阶段形成 Evaluation Bundle 给 evaluator，并附共用核验原则 `../independent-evaluator.md`。
 - 根据 evaluator 输出决定返工、阻塞或停到 `human_acceptance_required`。
 
 ## 禁止
@@ -39,6 +42,8 @@ Leader 进入 Team Loop 时读取：
 ## 输出收口
 
 Leader 最终输出至少包含：
+
+仅规划时交付经轻量核验的计划、实际核验范围、剩余待核实 / 待裁决项，并注明未实施；`implementation_owner`、generator 结果、实现验证和实现验收项不适用。不得为补齐这些字段提前派 generator，也不把规划交付标成实现通过。下列实现字段仅在授权实施后适用。
 
 - 最终状态：`human_acceptance_required` / `blocked`
 - rounds / attempts

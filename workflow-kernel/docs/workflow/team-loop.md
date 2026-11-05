@@ -46,7 +46,7 @@ Team Loop 不做：
 
 特点：
 
-- planner 收口后先交给用户确认。
+- planner 收口并完成轻量独立规划核验后，交给用户确认。
 - 用户批准后再派 generator。
 - 最后仍停在 `human_acceptance_required`。
 
@@ -55,6 +55,8 @@ Team Loop 不做：
 ```text
 Leader 接收任务
 -> 派 planner subagent
+-> Leader 澄清未决关键取舍，派 fresh evaluator 轻量核对原要求与计划
+-> 明确遗漏交 planner 修正；事实补证，真实歧义交用户；只复核受影响部分
 -> Leader 汇总 plan 并交给用户
 -> 用户批准执行
 -> Leader 派 generator subagent
@@ -77,7 +79,7 @@ Leader 接收任务
 
 - 不需要把 planner subagent 的 plan 先交给用户批准。
 - `auto-execute` 只跳过人工 plan approval，不跳过 generator。
-- Leader 仍要核验 planner 输出、generator read scope 和 evaluator verdict。
+- Leader 仍要派轻量规划 evaluator，并核验 planner 输出、generator read scope 和实现 evaluator verdict。
 - 最后仍停在 `human_acceptance_required`。
 
 流程：
@@ -86,6 +88,7 @@ Leader 接收任务
 Leader 接收任务
 -> 派 planner subagent 快速只读收口
 -> Leader 判断 allowed scope / forbidden scope 是否足够清楚
+-> 澄清未决关键取舍，派 fresh evaluator 轻量核对原要求与计划并安排必要修正
 -> 满足条件则直接派 generator subagent
 -> generator 必要时可向 Leader 申请 1 个 scout
 -> scout 只回 Leader
@@ -98,6 +101,14 @@ Leader 接收任务
 ```
 
 auto-execute 不是跳过 Team Loop 的 planner subagent，也不是让 Leader 自己实现；它只是不需要把 planner subagent 的 plan 先交给用户批准，后续实现仍必须由 fresh generator subagent 完成。
+
+### 3.3 正式计划交付前的核验与仅规划
+
+两种模式均在关键取舍已有依据或收到实际回答后、正式计划交付前，派 fresh 只读 evaluator，以 `review_phase: plan` 轻量核对原要求、后续纠正、有效合同与计划。共用判断原则见 `independent-evaluator.md`；只按需查计划依赖的关键事实，不展开实现审计或运行回归。
+
+Leader 提供相关原话及纠正，不能只交 planner 或自己的总结。明确遗漏、弱化约束或错误转译交 planner 修订同一份 handoff；事实先补证；不同解释会改变行为、范围或验收时，Leader 复用 `default-workflow.md` 的 Grill-me / 原生卡片方式提问，实际回答回写计划。这只复用澄清规则，不启动普通工作流或转移实现职责。修正后由 fresh evaluator 只复核发现及直接影响，不因每次草案编辑全量重审。
+
+仅规划时，在上述核验后交付计划并结束，注明未实施及实际核验范围；不派 generator，不要求实现 diff、generator 结果或实现验证，也不把规划通过称为实现通过。Leader、planner 和 evaluator 仍不改工程文件；尚无获授权写入角色时，按 `docs-maintenance.md` 在聊天中交付同一份计划，不为落盘提前启动实现。授权实施时，generator 仍回查原话、纠正和修订计划，实现后再派 fresh evaluator；规划核验不能替代这两步。
 
 ## 4. 通信硬规则
 
@@ -141,6 +152,7 @@ Leader 是唯一调度者。
 - 派 planner subagent / generator / scout / evaluator；复用 planner / scout 时附带 cache manifest 和 freshness check，新建或 fresh 角色时附带 `Context Bootstrap`。
 - 维护 planner / scout role session 复用状态、dispatch count 和失效条件。
 - 核验每个 subagent 输出中的 `Read Scope Ack`，确认其已读材料覆盖本轮合同。
+- 给 planner、generator 和 evaluator 提供相关原话、后续纠正、合同与决定来源；正式计划交付前派 fresh evaluator 轻量核验，按 3.3 节处理修正、补证和歧义。
 - 审批或拒绝 generator 的 Scout Request。
 - 汇总 scout 输出，形成 Leader Evidence Pack。
 - 跑验证命令并整理 validation output。
@@ -164,6 +176,7 @@ planner subagent 默认只读。
 - 输出 `Read Scope Ack`，说明实际读取的入口、docs、code、handoff 或 evidence。
 - 复用时只输出本轮 delta：需要额外读取的 docs / code / evidence、无需读取的 docs 及理由、建议执行路径和 scout 需求。
 - 收口本轮问题、目标和非目标。
+- 保留原要求、纠正及其限定，区分事实、决定、建议和未决选择；按 Leader 回流的规划核验缺口修订同一份 handoff，不能自行降低目标。
 - 判断风险模式。
 - 输出 allowed scope / forbidden scope。
 - 定义 minimum progress unit。
@@ -189,6 +202,7 @@ generator subagent 是默认唯一写代码角色。
 - 启动前读取 Leader 给出的 `Context Bootstrap`。
 - 输出 `Read Scope Ack`，说明已重新审计的 current code、docs、handoff 或 evidence。
 - 消费 Leader 给出的 planner subagent handoff 和 Evidence Pack，但不把它们当作 current code 的替代品。
+- 实现前回查相关用户原话、纠正和修订计划，发现遗漏或弱化时回 Leader；不能因为规划已核验就省略原要求。
 - 按 current code 做最小实现，同时遵守已确认的合同层。
 - 若 `Context Bootstrap`、Evidence Pack、docs 与 current code 冲突，先向 Leader 回报“当前实现行为”和冲突的 claim 类型；实现事实以代码为准，业务意图不得被代码静默覆盖。
 - 如审计范围过大，向 Leader 提交 Scout Request。
@@ -232,13 +246,14 @@ evaluator subagent 是独立核验角色。
 
 职责：
 
-- 只消费 Leader 提供的 Evaluation Bundle。
-- 输出 `Read Scope Ack`，说明核验所读的 Evaluation Bundle、diff、docs 和 code。
-- 核验 generator 的 `Read Scope Ack` 是否覆盖关键文件和合同 docs。
-- 不继承 generator 完整对话叙事。
+- 以 Leader 的 Evaluation Bundle 为叙事入口，按 `review_phase: plan / implementation` 和 `independent-evaluator.md` 核验，摘要不能替代相关用户原话及后续纠正。
+- 输出 `Read Scope Ack`，说明本阶段实际核验的来源、计划或实现证据和未覆盖范围；每阶段都不继承规划者或实现者完整对话。
+- 规划时轻量检查原要求与计划解释，找遗漏、约束弱化、无来源取舍、事实与假设混淆及真实歧义，不要求尚不存在的实现结果。
+- 实现时重新对照原要求、修订计划、真实消费路径、generator 读取范围、验证记录和完成声明，检查说了没做、计划与实现不一致及同源错误互证。
+- 将确定缺口、待补事实、待用户裁决分开，只回 Leader；具体职责和输出见 `team-loop-roles/evaluator.md`。
 - 优先找 P0 / P1 阻塞问题。
-- 若缺少关键 docs / code / diff 导致无法判断，应输出 `request changes` 或 `blocked`，而不是 pass。
-- P2 / P3 默认进入 residual risk、backlog 或后续优化。
+- 若缺少本阶段关键来源导致无法判断，指出缺失及影响，应输出 `request changes` 或按真实阻塞输出 `blocked`，不能写成 pass。
+- P2 / P3 的非阻塞项默认进入 residual risk、backlog 或后续优化；明确违反本次要求的项不能仅因标签或 residual risk 而跳过修复。
 - 输出 pass / request changes / blocked。
 - 使用 fresh role session；默认模型为 `gpt-5.4`，reasoning effort 为 `medium`。
 
@@ -313,6 +328,7 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
 - workflow_contract:
   - docs/workflow/team-loop-core.md
   - docs/workflow/team-loop-roles/<leader|planner|generator|scout|evaluator>.md
+  - docs/workflow/independent-evaluator.md（仅 evaluator，规划 / 实现共用核验原则）
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
   - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
@@ -337,7 +353,7 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
 
 - `context_bootstrap_level` 默认用 `slim`；只有 fresh 首次建立跨领域背景、workflow 规则刚变化或本轮跨到未缓存领域时才用 `full`。
 - `repo_entry.primary_entry` 在 Codex / AGENTS.md-aware 工具中使用 `AGENTS.md`，在 Claude Code 中使用 `CLAUDE.md`；不要默认同时读取两者。只有目标仓库存在工具特有差异时，才把另一个入口列入条件核对。
-- `workflow_contract` 是本轮 subagent 的必须合同；Leader 应只给 Team Loop core 和当前角色对应的 role capsule。
+- `workflow_contract` 是本轮 subagent 的必须合同；Leader 应给 Team Loop core 和当前角色对应的 role capsule，evaluator 另附 `independent-evaluator.md`，其他角色不默认加读。
 - `conditional_workflow_docs` 是上限列表，不是每个 subagent 的必读列表。
 - `task_docs` 由 Leader 按 `docs/README.md` 的入口地图裁剪，不能要求 subagent 盲读全量 `docs/`。
 - Team Loop 的 planner subagent 规则来自 `team-loop-core.md`、本完整规范和 `team-loop-roles/planner.md`。
@@ -455,7 +471,11 @@ Leader 给 evaluator：
 ```md
 ## Evaluation Bundle
 
+- review_phase: plan / implementation
 - original_problem:
+- original_requirements_and_corrections: 相关用户原话、后续纠正及有效合同的准确位置
+- confirmed_decisions_and_assumptions: 决定、实际回答 / 委托及来源；假设和未决项分开
+- expected_behavior_and_boundaries: 本次要求对应的可观察结果及不能改变的限定
 - mode:
 - context_bootstrap_used:
 - planner_handoff:
@@ -466,15 +486,20 @@ Leader 给 evaluator：
 - actual_diff:
 - validation_output:
 - docs_impact_claim:
+- delivery_claims: 本阶段准备向用户声称什么、证据达到哪一层
 - known_residual_risks:
 - human_acceptance_target:
 ```
 
-Evaluation Bundle 应避免包含 generator 完整对话历史，除非 evaluator 明确需要核对某个 claim。Evaluator 要核验 `Context Bootstrap` 是否被执行、generator 的 read scope 是否覆盖关键文件、actual diff 是否符合 allowed scope、docs impact check 是否匹配本轮事实变化。
+Evaluation Bundle 应避免包含规划者或实现者完整对话历史，保留相关原话和纠正及其准确来源。Leader 的摘要仅用于导航，不能替代原始依据或静默省略不利于当前计划的要求。涉及规格或接口时，引用适用 Spec、正式合同、实际生产消费路径与已有唯一校验入口，区分拟用检查和实际结果。
+
+规划阶段以当前 planner handoff / 计划为待审产物，generator_result、generator_read_scope_ack、actual_diff、实现 validation_output 和实现 human_acceptance_target 尚不适用时注明，不因缺少这些项判阻塞。实现阶段必须提供实际变更、结果和准备对外作出的完成声明。Evaluator 按共用核验原则追原要求，再核验本阶段的读取范围、实际行为与 docs impact；规划 pass 不替代实现核验。必要来源缺失时补查或明确未覆盖，不能宣称该部分已通过。
 
 ## 13. 状态与返工
 
 Team Loop 使用轻量状态，不引入 repo 状态机：
+
+下列实现状态及 generator 结果要求只在授权实施后适用。仅规划按 3.3 节交付并注明未实施，不因没有 generator 或实现结果进入 blocked，也不进入实现验收。
 
 ```text
 planning
@@ -496,6 +521,7 @@ max_rounds = 3
 
 返工条件：
 
+- 原要求、有效合同或已确认决定被遗漏、弱化或违反；规划缺口由 Leader 交 planner 修订，实现缺口交 generator 修复。
 - evaluator 发现 P0 / P1。
 - validation failed 且无明确 human waiver。
 - generator 越过 forbidden scope。
@@ -508,6 +534,8 @@ max_rounds = 3
 - 文案偏好。
 - 可由人工验收覆盖的小视觉差异。
 - 已明确标注 residual risk 的非阻塞项。
+
+以上不默认返工的项不包括明确违反本次要求的缺口，不能用低严重性标签或 residual risk 改低要求。规划修正仅 fresh 复核原发现及直接影响，不把实现返工参数变成规划审查的新轮数门槛。
 
 终态：
 
@@ -559,6 +587,7 @@ context_bootstrap:
 - workflow_contract:
   - docs/workflow/team-loop-core.md
   - docs/workflow/team-loop-roles/<role>.md（Leader 派生每个 subagent 时替换为具体角色）
+  - docs/workflow/independent-evaluator.md（仅 evaluator）
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
   - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
@@ -589,8 +618,9 @@ team_loop:
 - Leader 整理 Evidence Pack 后再交给 generator
 - audit-first 场景必须复用 workflow/audit-first.md 的必读与 evidence 回流骨架
 - Leader 跑验证
-- Leader 派 evaluator 独立核验
-- 缺少 generator_result 或 generator_read_scope_ack 时，本轮必须标记为 blocked / protocol_violation
+- Leader 在正式计划交付前派 fresh evaluator 轻量核对原要求、纠正与计划；明确遗漏回 planner，真实歧义沿原生卡片交用户
+- Leader 在实现后再派 fresh evaluator 独立核验实际行为与完成声明
+- 仅在实现核验阶段，缺少 generator_result 或 generator_read_scope_ack 时标记 blocked / protocol_violation；仅规划不要求这些实现字段
 - P0 / P1 不通过则最多返工 3 轮
-- 最后停在 human_acceptance_required
+- 仅规划交付经核验的计划并注明未实施；授权实施后最后停在 human_acceptance_required
 ```

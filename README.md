@@ -31,8 +31,9 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 1. **形成草案。** 主 agent 核对原要求、已有合同和实际代码，区分当前事实、已确认的决定和自己的建议。
 2. **用 Grill-me 澄清取舍。** 正式计划交付前（包括仅规划），沿用已有决定，按明确委托自行选择，并说明依据。仍会影响行为、范围、成本或验收的未确认取舍，用原生卡片问。Codex 暴露 `request_user_input_async` 时调用它，每题给出选项、影响和推荐；工具不可用或受限时说明限制，再用文本选项。互不依赖的问题同轮问，依赖问题等到实际回答后再问，答案及其来源写回同一份计划。推荐或预选不算确认。
-3. **交付计划，按授权实现。** 仅规划到正式计划为止。已授权实现时，由主 agent 改动并运行直接相关的验证。普通实现细节由 agent 自行决定。
-4. **独立核验并收口。** 主 agent 把原要求、已确认决定、实际 diff、相关调用路径和验证证据交给全新上下文的只读 evaluator。它检查实现是否偏离要求、假设有没有被写成事实或门禁。确定缺口直接回主 agent 修复，并复核受影响部分；事实不明由 agent 补证，业务争议交用户裁决。
+3. **轻量核验计划。** 正式交付前派 fresh 只读 evaluator，对照原话、后续纠正和计划，找遗漏、约束弱化、无来源取舍及假设混写。明确遗漏直接修正，事实由 agent 补查，真实歧义沿原生卡片交用户；修正只复核发现及直接影响。仅规划在交付后结束，不要求实现结果。
+4. **按授权实现。** 主 agent 仍回查原话、纠正和修订计划，再改动并运行直接相关的验证。规划核验不新增整份计划批准，也不能替代实施授权。
+5. **独立核验并收口。** 把原要求、修订计划、实际 diff、相关调用路径、验证证据及完成声明交给另一个 fresh 只读 evaluator。它检查实际行为是否满足原要求、是否说了没做、假设是否被写成事实或门禁；不能用实现与测试共享同一假设来证明要求已满足。确定缺口回主 agent 修复，事实补证，真实争议交用户。
 
 例如，代码没有取消入口是**现状**；本次是“等当前请求结束再退出（推荐）”，还是“增加取消、停止确认和部分结果保存”，则是**交付取舍**。用户还没决定时，就把这两个选项发成卡片。
 
@@ -45,15 +46,16 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 ### 一轮怎样调度
 
 ```text
-Leader 派 Planner → Leader 收到计划并按模式放行 → Generator 实现
-→ Leader 验证并派 Evaluator → Evaluator 回报 Leader → 返工或人工验收
+Leader 派 Planner → 澄清关键取舍 → fresh Evaluator 轻量审计划 → Leader 安排修正
+→ 仅规划则交付；已授权实施则按模式放行 → Generator 回查原要求并实现
+→ Leader 验证并派 fresh Evaluator → 回报 Leader → 返工或人工验收
 ```
 
 1. **先派 Planner。** 只读核对需求和当前代码，给 Leader 返回目标、允许与禁止的修改范围、实现建议和核验重点。根因未锁时，先按 [audit-first](./workflow-kernel/workflow/audit-first.md) 只读查明，再安排实现。
-2. **按模式派 Generator。** `plan-gated` 先把计划交用户批准，再派 Generator；`auto-execute` 在计划与边界收口后直接派。两种模式都由新会话的 Generator 重读相关代码后实现。
+2. **先核验计划，再按模式放行。** Leader 把相关原话、纠正、决定来源和计划交 fresh Evaluator 轻量核对；明确遗漏回 Planner 修订，事实补证，真实歧义由 Leader 发原生卡片。仅规划交付后结束；已授权实施时，`plan-gated` 等用户批准计划，`auto-execute` 不新增批准。Generator 仍回查原话、修订计划和当前代码。
 3. **需要时插入 Scout。** Generator 缺证据时向 Leader 提出 `Scout Request`。Leader 决定是否派只读 Scout；Scout 把证据交回 Leader，由 Leader 整理成 `Evidence Pack` 再交 Generator。Scout 不是每轮固定步骤。
-4. **验证后派 Evaluator。** Leader 运行必要验证，把原要求、计划、实际 diff、读取范围和验证结果整理成 `Evaluation Bundle`，交给新会话的只读 Evaluator。Evaluator 独立核对后，只向 Leader 返回结论。
-5. **Leader 处理返工或交回用户。** 遇到 P0 / P1、验证失败或范围违规时，Leader 按现有规则安排返工或报告阻塞；返工时把具体问题交下一轮 Generator。核验通过后停在 `human_acceptance_required`；无法推进时报告 `blocked`。最终验收由用户决定。
+4. **验证后再派 Evaluator。** Leader 运行必要验证，提供原话、纠正、修订计划、实际 diff、读取范围、验证结果及完成声明。Evaluator 按共用核验原则追真实行为，检查要求弱化、遗漏、计划与实际偏离、假设混写及声称已做却无证据，只向 Leader 回报。
+5. **Leader 处理返工或交回用户。** 确定缺口交对应角色修正，不能仅因 P2 / P3 标签或列为 residual risk 就忽略明确违反要求的项。授权实施后核验收口停在 `human_acceptance_required`，真实阻塞报 `blocked`；仅规划注明未实施，不能因没有 Generator 结果判阻塞。最终验收由用户决定。
 
 Leader 派发时提供裁剪过的 `Context Bootstrap`，用 `Read Scope Ack` 确认角色实际读了哪些材料。Planner 和 Scout 核对材料仍有效后可以复用；Generator 和 Evaluator 每轮使用新会话。
 
@@ -103,7 +105,7 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 
 ## 核心概念
 
-- **普通工作流**：主 agent 在正式计划交付前核对关键取舍来源、追问未确认选择（含仅规划），授权实现后派 fresh 只读 evaluator；确定缺口直接回主 agent，业务争议交用户裁决。
+- **普通工作流**：主 agent 澄清关键取舍后，在正式计划交付前派 fresh evaluator 轻量审查（含仅规划）；实现前回查原话，授权实现后再独立核验。明确遗漏直接修，事实补证，真实歧义交用户。
 - **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
 - **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
@@ -192,7 +194,7 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 
 Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
 
-Default development keeps planning and implementation in the main agent, traces consequential choices to their authority and clarifies unconfirmed choices before formal plan delivery (including plan-only tasks), and dispatches a fresh read-only evaluator after authorized implementation. Explicit Team Loop instead uses a Leader coordinating planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
+Default development keeps planning and implementation in the main agent, clarifies consequential choices, and dispatches a fresh read-only evaluator for a lightweight review before formal plan delivery, including plan-only tasks. Implementation still checks the original request and corrections; another fresh evaluator reviews actual behavior and completion claims afterward. Explicit Team Loop uses a Leader coordinating the same two review stages with planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
 
 The bundled `docs-review` skill is optional and installed separately through
 `install.sh --install-docs-review`; bootstrap does not modify personal skill directories.
@@ -214,8 +216,9 @@ Upgrade an existing target project by copying in the newer package and pasting [
 
 1. **Draft the plan.** Read the original request, governing contracts, and current code. Separate facts, confirmed decisions, and proposed choices.
 2. **Clarify with Grill-me.** Before delivering the plan, including plan-only work, cite existing decisions or explicit delegation and ask about consequential choices that remain open. Use native question cards (`request_user_input_async` when Codex exposes it), with options, consequences, and a recommendation. Ask independent questions together and wait for actual answers before asking dependent questions. Explain an actual tool restriction before using text choices. Recommendations and preselection are not answers. Record answers and their sources in the same plan.
-3. **Deliver the plan and implement when authorized.** Plan-only work ends with the formal plan. For authorized changes, the main agent implements and runs the directly relevant checks.
-4. **Review and resolve.** Give the independent evaluator the original requirements, confirmed decisions, actual diff, relevant consumers, and validation evidence. It checks for deviations and assumptions promoted to facts or execution conditions. Confirmed gaps return directly to the main agent for repair and focused recheck; missing facts need evidence, and genuine business disputes go to the user.
+3. **Review the plan lightly.** Before formal delivery, a fresh read-only evaluator checks the original request, corrections, decisions, and plan for omissions, weakened constraints, unsupported choices, and assumptions stated as facts. Correct definite omissions directly, investigate factual gaps, and ask the user about genuine ambiguities through native questions. Recheck only findings and their effects. Plan-only work ends on delivery without implementation evidence.
+4. **Implement when authorized.** Recheck the original request, corrections, and revised plan, then implement and run directly relevant checks. Plan review neither replaces implementation authorization nor adds a whole-plan approval step.
+5. **Review behavior and claims.** Give another fresh evaluator the original requirements, revised plan, actual diff, consumers, validation evidence, and completion claims. Check missing behavior, plan/implementation differences, unsupported claims, and assumptions shared by code and tests. Route confirmed gaps to the main agent, factual gaps to investigation, and genuine business disputes to the user.
 
 For example, an interface that lacks cancellation is a fact about the current code. Waiting for the current request or adding cancellation is a scope choice to ask about before finalizing the plan.
 
@@ -226,10 +229,10 @@ See [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)
 Start Team Loop only when the user explicitly requests `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven delegation. **Leader coordinates and validates within the chat without editing files; Generator implements.** Subagents report to Leader.
 
 1. **Dispatch Planner first.** The read-only Planner returns the goal, allowed and forbidden scope, a proposed approach, and review focus. Use [audit-first](./workflow-kernel/workflow/audit-first.md) when the cause is still unknown.
-2. **Dispatch Generator when the plan permits it.** In `plan-gated`, Leader waits for the user's plan approval; in `auto-execute`, Leader dispatches once the scope is clear. Both use a fresh Generator that checks current code before editing.
+2. **Review the plan before dispatch.** Leader gives a fresh Evaluator the relevant user quotes, corrections, decision sources, and plan. Definite omissions return to Planner; agents investigate factual gaps; Leader asks the user about genuine choices. Plan-only work ends on delivery. For authorized implementation, `plan-gated` waits for plan approval and `auto-execute` adds no approval step. Generator still reads the original request, revised plan, and current code.
 3. **Add Scout on demand.** Generator sends a Scout Request to Leader. If approved, a read-only Scout returns evidence to Leader, who curates an Evidence Pack and hands it back to Generator.
-4. **Validate and dispatch Evaluator.** Leader runs relevant validation and sends the original request, plan, actual diff, read scope, and results as an Evaluation Bundle to a fresh read-only Evaluator. Its findings return to Leader.
-5. **Route rework or hand off.** For P0/P1 findings, failed validation, or scope violations, Leader schedules rework under the existing rules or reports a block. After review passes, the workflow stops at `human_acceptance_required`; if it cannot proceed, it reports `blocked`. The user makes the acceptance decision.
+4. **Validate and review implementation.** Leader sends original quotes and corrections, the revised plan, actual diff, read scope, results, and completion claims to another fresh Evaluator. It checks requirements against real behavior and reports only to Leader, using the shared review criteria.
+5. **Route rework or hand off.** Definite gaps return to the responsible role; low severity or a residual-risk label cannot waive an explicit requirement. Authorized implementation stops at `human_acceptance_required` or a real `blocked` state. Plan-only delivery states that no implementation occurred and does not require Generator results. The user makes the acceptance decision.
 
 Leader sends a scoped Context Bootstrap and checks each role's Read Scope Ack. Planner and Scout can be reused after checking freshness. Generator and Evaluator use fresh sessions each round.
 
