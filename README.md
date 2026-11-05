@@ -21,7 +21,7 @@
 Codex-teammode Workflow 是一个面向 **Codex** 同时兼容 **Claude Code** 的 prompt-first 工作流包。它不是运行时框架，而是一组可复制到任意项目中的 Markdown 规则、bootstrap prompt 和 docs scaffold，让个人开发者和小团队在 AI 编码会话中稳定执行：
 
 - audit-first 根因锁定
-- 普通开发：主 agent 规划和实现，Grill-me 澄清未决取舍，fresh evaluator 独立核验事实与假设
+- 普通开发：正式计划交付前核对关键取舍来源，Grill-me 澄清未确认选择；主 agent 实现，fresh evaluator 独立核验事实与假设
 - docs impact check
 - 可选 `$docs-review`：人工触发的跨文档事实对账与清理
 - prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
@@ -71,7 +71,7 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 
 ## 核心概念
 
-- **普通工作流**：主 agent 规划和实现，未决取舍按需追问，实现后派 fresh 只读 evaluator；确定缺口直接回主 agent，业务争议交用户裁决。
+- **普通工作流**：主 agent 在正式计划交付前核对关键取舍来源、追问未确认选择（含仅规划），授权实现后派 fresh 只读 evaluator；确定缺口直接回主 agent，业务争议交用户裁决。
 - **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
 - **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
@@ -124,13 +124,15 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 安装后，未显式启用 Team Loop 的开发维护使用普通工作流，主 agent 可以直接改文件：
 
 ```text
-核对原要求与实际代码 → 草案 → Grill-me 澄清未决取舍 → 更新同一份计划
-→ 主 agent 实现和必要验证 → fresh evaluator → 修复确定缺口 / 保留争议给用户
+核对原要求与实际代码 → 草案 → 关键取舍来源核对 / Grill-me 澄清 → 正式计划
+→ 仅规划则交付结束；已授权实现则继续实现、必要验证和 fresh evaluator 核验
 ```
 
 evaluator 首先审查关键断言来自已有事实、用户决定还是 agent 假设，重点找假设被写成事实、被升级成执行条件，以及计划与实际消费者之间的遗漏。审查依据来自原要求、有效合同、实际 diff、真实调用链和实际验证证据；实现者总结只用于导航。
 
 已有决定不重复追问，不为每次改动新建 Spec、校验脚本或审批。用户和目标项目的明确权限 / subagent 限制仍然有效。问答、只读、仅计划及安装升级按各自任务执行，不自动进入实现循环；普通独立核验也不启动可选宏循环。
+
+仅规划也要在正式计划交付前交代关键取舍的决定及出处。已有用户决定、有效合同或明确委托足够时，引用依据直接沿用；仍是 agent 建议的关键选择先问用户。不能因自己选了“默认 / 首版暂不支持”就宣称没有未决项。普通实现细节不逐项请用户批准。
 
 完整流程与 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，只读 subagent 合同见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
 
@@ -217,7 +219,7 @@ User
 
 Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
 
-Default development keeps planning and implementation in the main agent, clarifies consequential unresolved choices, and dispatches a fresh read-only evaluator after implementation. Explicit Team Loop instead uses a Leader coordinating planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
+Default development keeps planning and implementation in the main agent, traces consequential choices to their authority and clarifies unconfirmed choices before formal plan delivery (including plan-only tasks), and dispatches a fresh read-only evaluator after authorized implementation. Explicit Team Loop instead uses a Leader coordinating planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
 
 The bundled `docs-review` skill is optional and installed separately through
 `install.sh --install-docs-review`; bootstrap does not modify personal skill directories.
@@ -255,7 +257,7 @@ or protocol failure stops at a human approval gate. See the complete contract in
 
 ### Default Development At A Glance
 
-Read the original request and current code, draft a proportional plan, clarify unresolved choices through the built-in Grill-me step, update the same plan, implement, run necessary focused checks, and dispatch a fresh read-only evaluator. No external Grill-me skill installation is required.
+Read the original request and current code, draft a proportional plan, and trace consequential choices to user decisions, effective contracts, or explicit delegation before formal plan delivery, including plan-only tasks. Use the built-in Grill-me step for still-unconfirmed choices and record answers and authority in the same plan. Choosing a default yourself does not settle a user decision. When no questions are needed, briefly identify the existing basis; routine implementation details need no extra approval. If authorized, implement, run necessary focused checks, and dispatch a fresh read-only evaluator. No external Grill-me skill installation is required.
 
 The evaluator checks facts versus decisions versus assumptions, actual behavior and consumers, unsupported execution conditions, and completion claims. Send the original requirements and corrections, canonical contracts, confirmed decisions, labeled assumptions, actual changes, and real validation evidence through a scoped Review Request. Confirmed gaps return directly to the implementing main agent; factual unknowns need evidence; genuine business disputes remain for the user. Requesting only this evaluator does not start Team Loop.
 

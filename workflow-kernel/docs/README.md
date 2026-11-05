@@ -9,7 +9,7 @@
 
 ## 先读顺序
 
-本索引是项目资料地图，按任务读取，不要求全量读取。普通开发由主 agent 规划和实现，按需追问并派独立 evaluator；Team Loop 仅在用户明确触发后启用。
+本索引是项目资料地图，按任务读取，不要求全量读取。普通开发由主 agent 规划和实现，正式计划交付前核对关键取舍来源、追问未确认选择，授权实现后派独立 evaluator；Team Loop 仅在用户明确触发后启用。
 
 1. `handoff/latest.md`
 2. `product/current-state.md`
@@ -31,7 +31,7 @@
 - 要确认顶层 IA 或底栏：先看 `architecture/ia-and-navigation.md`
 - 要确认跨域边界和合同：先看 `architecture/domain-boundaries.md`
 - 要确认目录、服务、后端映射：先看 `architecture/system-map.md`
-- 要做普通开发、计划后的需求追问或实现后的独立核验：看 `workflow/default-workflow.md`；evaluator 使用 `workflow/independent-evaluator.md`，重点检查事实 / 决定 / 假设及其依据，确定缺口直接回实现 agent，业务争议交用户裁决
+- 要做普通开发、正式计划交付前的需求追问（含仅规划）或实现后的独立核验：看 `workflow/default-workflow.md`；evaluator 使用 `workflow/independent-evaluator.md`，重点检查事实 / 决定 / 假设及其依据，确定缺口直接回实现 agent，业务争议交用户裁决
 - 要发起 `@team-loop` / Leader 调度多个 subagent 的类 team-mode 闭环：只有用户明确声明 Team Loop 时才看 `workflow/team-loop.md`；派生 subagent 时默认只附带 `workflow/team-loop-core.md`、对应 `workflow/team-loop-roles/<role>.md` 和本轮必要 docs / code / evidence
 - Team Loop 中根因未锁、需要“只读审计 -> evidence -> Evidence Pack”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实

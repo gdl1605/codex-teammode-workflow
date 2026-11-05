@@ -18,7 +18,7 @@ Resolve the workflow package before reading its files:
 
 Install and adapt Codex-teammode Workflow so this target project can use the same AI collaboration process:
 
-- Default development: the main agent plans and implements, clarifies consequential unresolved choices through Grill-me, and dispatches a fresh read-only evaluator after implementation
+- Default development: before delivering a formal plan, including plan-only tasks, the main agent traces consequential choices to user decisions, contracts, or explicit delegation and uses Grill-me for still-unconfirmed choices. It implements when authorized and dispatches a fresh read-only evaluator afterward
 - Explicit Team Loop: prompt-triggered Leader + planner / generator / scout / evaluator
   - planner / scout may be reused with freshness checks; generator / evaluator are fresh per round
 - audit-first evidence flow

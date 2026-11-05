@@ -18,7 +18,7 @@ Codex-teammode Workflow 是一个面向 **Codex** 和 **Claude Code** 的 prompt
 它的目标是帮助个人开发者和小团队在 AI 编码会话中稳定执行：
 
 - audit-first 根因锁定
-- 普通开发：主 agent 规划和实现，按需 Grill-me 追问，fresh evaluator 独立核验事实与假设
+- 普通开发：正式计划交付前核对关键取舍来源、Grill-me 澄清未确认选择，主 agent 实现，fresh evaluator 独立核验事实与假设
 - docs impact check
 - 可选 `$docs-review`：人工触发的跨文档事实对账与清理
 - prompt 显式触发的 Team Loop：Leader + planner / generator / scout / evaluator
@@ -75,7 +75,7 @@ synthesis auditor 核验跨分片 consumer、canonical owner 和原始 evidence�
 
 ## 普通开发工作流
 
-未显式启用 Team Loop 的开发维护，由主 agent 核对代码和原要求、形成草案、追问未决取舍、更新同一份计划并实现。实现及必要验证后，派全新上下文的只读 evaluator，对照原要求、有效合同、实际改动、真实消费者和验证证据检查。
+未显式启用 Team Loop 的开发规划与维护，由主 agent 核对代码和原要求、形成草案，在正式计划交付前核对关键取舍来源并追问未确认选择。仅规划同样适用；已有用户决定、有效合同或明确委托足够时，引用依据直接沿用，不能因自己选了“默认 / 首版暂不支持”就宣称没有未决项。授权实现及必要验证后，派全新上下文的只读 evaluator，对照原要求、有效合同、实际改动、真实消费者和验证证据检查。
 
 核验主轴是已有事实、用户决定与 agent 假设的区别，尤其是假设是否被写成事实或执行条件。确定缺口直接回主 agent 修复，事实缺口先补证，真正的业务争议保留给用户裁决。已有决定不重复问，不要求额外 Spec、固定访谈轮数或新测试工程；用户和目标项目的明确权限 / subagent 限制仍有效。
 

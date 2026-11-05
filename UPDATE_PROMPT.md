@@ -14,7 +14,7 @@ Upgrade the target repo's installed Codex-teammode Workflow to lightweight defau
 Use ownership-based updates:
 
 - Workflow-owned kernel files: replace retained files in place and remove exact retired files listed in `UPDATE_MANIFEST.md`.
-- Install `docs/workflow/default-workflow.md` and `docs/workflow/independent-evaluator.md`: the main agent implements, consequential unresolved choices are clarified before implementation, and a fresh evaluator reviews facts versus assumptions afterward. Do not restore retired planner schemas or `@planner` aliases. This update does not itself start a development loop or Team Loop.
+- Install `docs/workflow/default-workflow.md` and `docs/workflow/independent-evaluator.md`: before delivering a formal plan, including plan-only tasks, the main agent traces consequential choices to user decisions, contracts, or explicit delegation and asks about still-unconfirmed choices. Agent-selected defaults are not confirmation. Authorized implementation is followed by a fresh evaluator reviewing facts versus assumptions. Do not restore retired planner schemas or `@planner` aliases. This update does not itself start a development loop or Team Loop.
 - Mixed files: update only inside `codex-teammode:managed` blocks.
 - Target project facts / handoff / plans / evidence: never overwrite.
 

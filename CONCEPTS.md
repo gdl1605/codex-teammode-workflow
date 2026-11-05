@@ -4,9 +4,13 @@ Quick glossary of the terms used throughout this kit. Read this once before inst
 
 ## Default development
 
-The main agent plans and implements. It checks current code and original requirements,
-clarifies consequential unresolved choices through the built-in Grill-me step, updates the
-same plan, and dispatches a fresh read-only evaluator after implementation and focused checks.
+The main agent plans and implements. Before formal plan delivery, including plan-only tasks,
+it checks current code and original requirements and traces consequential choices to user
+decisions, effective contracts, or explicit delegation. Agent-selected defaults are still
+proposals unless covered by that authority. It asks about unconfirmed choices through the
+built-in Grill-me step, records answers and sources in the same plan, and briefly identifies
+the existing basis when no questions are needed. A fresh read-only evaluator follows
+authorized implementation and focused checks.
 Facts, user decisions/contracts, agent assumptions, and unknowns stay distinct. The evaluator
 checks that assumptions have not become facts or unsupported execution conditions, and traces
 requirements through actual changes and consumers. Confirmed gaps go directly to the main

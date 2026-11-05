@@ -7,8 +7,9 @@
 > Responsibility: tell future agents what to read first and where each kind of project truth belongs
 > Recommended next hop: `handoff/latest.md`
 
-Default development keeps planning and implementation in the main agent, clarifies unresolved
-choices, and uses a fresh independent evaluator. Team Loop requires an explicit user prompt.
+Default development traces consequential choices to their original authority before formal
+plan delivery, including plan-only tasks, and clarifies unconfirmed choices. The main agent
+implements when authorized and uses a fresh independent evaluator afterward. Team Loop requires an explicit user prompt.
 This index is a project reference map; read only what the task needs.
 
 ## Read Order
