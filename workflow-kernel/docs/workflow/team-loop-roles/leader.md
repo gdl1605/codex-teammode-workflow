@@ -29,6 +29,7 @@ Leader 进入 Team Loop 时读取：
 - 裁剪 scout / audit 产物，形成 Leader Evidence Pack。
 - 跑验证命令并整理 validation output。
 - 按规划 / 实现阶段形成 Evaluation Bundle 给 evaluator，并附共用核验原则 `../independent-evaluator.md`。
+- 采纳 evaluator 发现前，核对其有效原依据、推导和具体影响；报告和严重性标签不成为新合同。来源缺失先补证，明确错误按原授权交对应角色修复，真正业务取舍才交用户；不得据缺少来源擅自删规则或降低标准。
 - 根据 evaluator 输出决定返工、阻塞或停到 `human_acceptance_required`。
 
 ## 禁止

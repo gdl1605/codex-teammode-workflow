@@ -475,7 +475,7 @@ Leader 给 evaluator：
 - original_problem:
 - original_requirements_and_corrections: 相关用户原话、后续纠正及有效合同的准确位置
 - confirmed_decisions_and_assumptions: 决定、实际回答 / 委托及来源；假设和未决项分开
-- expected_behavior_and_boundaries: 本次要求对应的可观察结果及不能改变的限定
+- expected_behavior_and_boundaries: 本次要求对应的可观察结果及不能改变的限定；关键规则和测试预期的有效原来源、推导与适用范围，假设或来源缺口单列
 - mode:
 - context_bootstrap_used:
 - planner_handoff:
@@ -492,6 +492,8 @@ Leader 给 evaluator：
 ```
 
 Evaluation Bundle 应避免包含规划者或实现者完整对话历史，保留相关原话和纠正及其准确来源。Leader 的摘要仅用于导航，不能替代原始依据或静默省略不利于当前计划的要求。涉及规格或接口时，引用适用 Spec、正式合同、实际生产消费路径与已有唯一校验入口，区分拟用检查和实际结果。
+
+Evaluator 还按 `independent-evaluator.md` 核对关键规则和测试预期本身的依据，不能只检查实现符合既有断言。Leader 核对发现所引的原始依据、推导与具体影响后，再交对应角色处理；来源缺失先补证，不据此擅自删规则、降低标准或宣布业务失败。确认规则和测试共同维护错误假设时，在原授权及测试权限内修正规则、实现和相关测试；真实业务取舍或有效合同冲突才交用户。
 
 规划阶段以当前 planner handoff / 计划为待审产物，generator_result、generator_read_scope_ack、actual_diff、实现 validation_output 和实现 human_acceptance_target 尚不适用时注明，不因缺少这些项判阻塞。实现阶段必须提供实际变更、结果和准备对外作出的完成声明。Evaluator 按共用核验原则追原要求，再核验本阶段的读取范围、实际行为与 docs impact；规划 pass 不替代实现核验。必要来源缺失时补查或明确未覆盖，不能宣称该部分已通过。
 

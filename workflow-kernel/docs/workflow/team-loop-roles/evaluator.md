@@ -22,6 +22,7 @@ evaluator 是独立核验角色，必须 fresh。Leader 派生 evaluator 时，�
 - 只消费 Leader 提供的 Evaluation Bundle 作为叙事入口，摘要仅作导航，断言回到原始来源核对。
 - 输出 `Read Scope Ack`。
 - 按 `review_phase: plan / implementation` 和 `../independent-evaluator.md` 核验。两阶段均从原话、纠正和合同检查要求是否遗漏或弱化、关键取舍是否有来源、假设是否被当成事实；不能只核对计划内部一致性。
+- 核对本次关键规则和测试预期本身的有效来源、推导及适用范围。既有规则、文档自称已确认或测试通过不能单独追认其依据；自己的缺口判断也须附原依据和具体影响，交 Leader 核对后处理。来源暂缺先补证，不直接宣布规则错误或业务失败。
 - 规划阶段轻量核对原要求与计划的具体处理，只按需查关键事实，不要求尚不存在的 generator 结果、actual diff 或运行证据。规划通过不表示已经实现或获得实施批准。
 - 实现阶段回查原要求和修订计划，核验 generator 的 `Read Scope Ack`、真实生产消费路径、actual diff 与实际验证，检查是否说了没做、计划与实际不一致、或实现和测试共同沿用错误假设。
 - 核验 docs impact check 是否匹配本轮事实变化。

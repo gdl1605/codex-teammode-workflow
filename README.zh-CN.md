@@ -32,6 +32,8 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 例如，代码没有取消入口是**现状**；本次是“等当前请求结束再退出（推荐）”，还是“增加取消、停止确认和部分结果保存”，则是**交付取舍**。用户还没决定时，就把这两个选项发成卡片。
 
+规划与实现核验都会检查关键规则和测试预期本身的依据。代码、测试或文档写了什么，不会自动证明这条规则正确；reviewer 的判断也要给出原依据和具体影响。明确错误在授权内修，事实不明由 agent 补证，真实业务取舍沿原生卡片交用户。
+
 完整流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，核验角色见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
 
 ## Team Loop 工作流
