@@ -124,7 +124,7 @@ skill；需要采用新版时重新显式运行 skill 安装命令。
 
 ## 当前状态
 
-发布记录为 `v0.3.1`；当前源码内核为尚未发布的 `0.4.0-dev`，普通工作流变更见 `CHANGELOG.md` 的 Unreleased。核心内核中文优先，支持 Codex 和 Claude Code。
+当前发布版本为 [v0.4.0](https://github.com/gdl1605/codex-teammode-workflow/releases/tag/v0.4.0)，变更见 [CHANGELOG.md](./CHANGELOG.md)。核心内核中文优先，支持 Codex 和 Claude Code。
 
 ## 贡献
 

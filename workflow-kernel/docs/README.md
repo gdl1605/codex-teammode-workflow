@@ -1,6 +1,6 @@
 # docs 索引
 
-<!-- codex-teammode:managed:start scope=docs-index version=0.4.0-dev -->
+<!-- codex-teammode:managed:start scope=docs-index version=0.4.0 -->
 
 > 最后更新时间：2026-11-05
 > 适用范围：整个 `docs/` 目录的阅读入口与分工说明

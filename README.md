@@ -3,7 +3,7 @@
 > 中文优先 / English below.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Status](https://img.shields.io/badge/status-v0.3.1-blue.svg)](./CHANGELOG.md)
+[![Status](https://img.shields.io/badge/status-v0.4.0-blue.svg)](./CHANGELOG.md)
 
 ## 安装
 
@@ -153,7 +153,7 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 
 ## 当前状态
 
-发布记录为 `v0.3.1`；当前源码内核为尚未发布的 `0.4.0-dev`，普通工作流变更见 `CHANGELOG.md` 的 Unreleased。核心内核中文优先，README 提供中英双语入口，支持 Codex 和 Claude Code；其他工具可参考 AGENTS.md/CLAUDE.md 约定自行适配。
+当前发布版本为 [v0.4.0](https://github.com/gdl1605/codex-teammode-workflow/releases/tag/v0.4.0)，变更见 [CHANGELOG.md](./CHANGELOG.md)。核心内核中文优先，README 提供中英双语入口，支持 Codex 和 Claude Code；其他工具可参考 AGENTS.md/CLAUDE.md 约定自行适配。
 
 ## 贡献
 

@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-<!-- codex-teammode:managed:start scope=agent-entry version=0.4.0-dev -->
+<!-- codex-teammode:managed:start scope=agent-entry version=0.4.0 -->
 
 ## 适用范围与触发
 
