@@ -17,10 +17,13 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 | 工作流 | 什么时候用 | 谁实现 | 核验结果交给谁 |
 | --- | --- | --- | --- |
-| 普通开发 | 默认，包括只要求独立核验的任务 | 主 agent | 独立 evaluator 直接回报主 agent |
-| Team Loop | 用户明确要求 `@team-loop` 或 Leader 调度时 | Leader 派出的 Generator | Evaluator 回报 Leader，由 Leader 安排返工或人工验收 |
+| 正常业务执行 | 运行、恢复、排障及生成业务计划 / 报告 | 主 agent 沿既有业务入口执行 | 原业务合同，不新增开发审查 |
+| 普通开发 | 用户明确要求机制变更或其工程方案，且未指定 Team Loop | 主 agent | 独立 evaluator 直接回报主 agent |
+| Team Loop | 用户本轮明确要求机制变更，且指定 `@team-loop` 或 Leader 调度 | Leader 派出的 Generator | Evaluator 回报 Leader，由 Leader 安排返工或人工验收 |
 
 ## 普通开发工作流
+
+本节只用于用户本轮明确要求的机制变更及其工程方案。正常执行不会因遇到错误、写入产物或 agent 自拟修复计划而进入本流程；“仅执行 / 不要 review”等限制优先。业务自身的规划、审查、Oracle 和返工仍沿原合同，用户专项核验只做其指定范围。
 
 **主 agent 负责规划、实现和验证，独立 evaluator 负责核验。** 一次任务按下面的顺序走：
 
@@ -38,7 +41,7 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 ## Team Loop 工作流
 
-用户明确要求 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。**Leader 是同一聊天里的唯一调度者，负责交接和验证，不直接改文件；Generator 负责实现。** 各 subagent 只向 Leader 回报。
+用户本轮明确要求机制变更或其工程方案，并指定 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。**Leader 是同一聊天里的唯一调度者，负责交接和验证，不直接改文件；Generator 负责实现。** 各 subagent 只向 Leader 回报。
 
 ### 一轮怎样调度
 

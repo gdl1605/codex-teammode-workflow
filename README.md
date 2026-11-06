@@ -22,10 +22,13 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 | 工作流 | 什么时候用 | 谁实现 | 核验结果交给谁 |
 | --- | --- | --- | --- |
-| 普通开发 | 默认，包括只要求独立核验的任务 | 主 agent | 独立 evaluator 直接回报主 agent |
-| Team Loop | 用户明确要求 `@team-loop` 或 Leader 调度时 | Leader 派出的 Generator | Evaluator 回报 Leader，由 Leader 安排返工或人工验收 |
+| 正常业务执行 | 运行、恢复、排障及生成业务计划 / 报告 | 主 agent 沿既有业务入口执行 | 原业务合同，不新增开发审查 |
+| 普通开发 | 用户明确要求机制变更或其工程方案，且未指定 Team Loop | 主 agent | 独立 evaluator 直接回报主 agent |
+| Team Loop | 用户本轮明确要求机制变更，且指定 `@team-loop` 或 Leader 调度 | Leader 派出的 Generator | Evaluator 回报 Leader，由 Leader 安排返工或人工验收 |
 
 ## 普通开发工作流
+
+本节只用于用户本轮明确要求的机制变更及其工程方案。正常执行不会因遇到错误、写入产物或 agent 自拟修复计划而进入本流程；“仅执行 / 不要 review”等限制优先。业务自身的规划、审查、Oracle 和返工仍沿原合同，用户专项核验只做其指定范围。
 
 **主 agent 负责规划、实现和验证，独立 evaluator 负责核验。** 一次任务按下面的顺序走：
 
@@ -43,7 +46,7 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 ## Team Loop 工作流
 
-用户明确要求 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。**Leader 是同一聊天里的唯一调度者，负责交接和验证，不直接改文件；Generator 负责实现。** 各 subagent 只向 Leader 回报。
+用户本轮明确要求机制变更或其工程方案，并指定 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。**Leader 是同一聊天里的唯一调度者，负责交接和验证，不直接改文件；Generator 负责实现。** 各 subagent 只向 Leader 回报。
 
 ### 一轮怎样调度
 
@@ -107,7 +110,7 @@ Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、�
 
 ## 核心概念
 
-- **普通工作流**：主 agent 澄清关键取舍后，在正式计划交付前派 fresh evaluator 轻量审查（含仅规划）；实现前回查原话，授权实现后再独立核验。明确遗漏直接修，事实补证，真实歧义交用户。
+- **普通工作流**：仅针对用户明确要求的机制变更或其工程方案；主 agent 澄清关键取舍后，在正式计划交付前派 fresh evaluator 轻量审查（含仅规划）；实现前回查原话，授权实现后再独立核验。明确遗漏直接修，事实补证，真实歧义交用户。
 - **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
 - **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
 - **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
@@ -196,7 +199,7 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 
 Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
 
-Default development keeps planning and implementation in the main agent, clarifies consequential choices, and dispatches a fresh read-only evaluator for a lightweight review before formal plan delivery, including plan-only tasks. Implementation still checks the original request and corrections; another fresh evaluator reviews actual behavior and completion claims afterward. Explicit Team Loop uses a Leader coordinating the same two review stages with planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
+For explicit user-requested mechanism changes and their engineering plans, default development keeps planning and implementation in the main agent, clarifies consequential choices, and dispatches a fresh read-only evaluator for a lightweight review before formal plan delivery, including plan-only tasks. Implementation still checks the original request and corrections; another fresh evaluator reviews actual behavior and completion claims afterward. Explicit Team Loop uses a Leader coordinating the same two review stages with planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
 
 The bundled `docs-review` skill is optional and installed separately through
 `install.sh --install-docs-review`; bootstrap does not modify personal skill directories.
@@ -214,7 +217,9 @@ Upgrade an existing target project by copying in the newer package and pasting [
 
 ### Default Development At A Glance
 
-**The main agent plans, implements, and runs focused checks. A fresh read-only evaluator independently reviews the result.** Asking for independent review alone uses this workflow.
+Only the current user's explicit mechanism-change request or engineering plan for that change activates this workflow. Normal execution, recovery, troubleshooting, business plans / RequestSpecs and reports follow the existing runtime contract. Faults, file writes, or agent-authored repair plans do not authorize development; execution-only / no-review instructions take precedence. Standalone review stays within the user's requested scope.
+
+**The main agent plans, implements, and runs focused checks for the authorized mechanism change. A fresh read-only evaluator reviews the engineering plan and implementation.**
 
 1. **Draft the plan.** Read the original request, governing contracts, and current code. Separate facts, confirmed decisions, and proposed choices.
 2. **Clarify with Grill-me.** Before delivering the plan, including plan-only work, cite existing decisions or explicit delegation and ask about consequential choices that remain open. Use native question cards (`request_user_input_async` when Codex exposes it), with options, consequences, and a recommendation. Ask independent questions together and wait for actual answers before asking dependent questions. Explain an actual tool restriction before using text choices. Recommendations and preselection are not answers. Record answers and their sources in the same plan.
@@ -230,7 +235,7 @@ See [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)
 
 ### Team Loop At A Glance
 
-Start Team Loop only when the user explicitly requests `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven delegation. **Leader coordinates and validates within the chat without editing files; Generator implements.** Subagents report to Leader.
+Start Team Loop only when the current user explicitly requests a mechanism change or its engineering plan and selects `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven delegation. **Leader coordinates and validates within the chat without editing files; Generator implements.** Subagents report to Leader.
 
 1. **Dispatch Planner first.** The read-only Planner returns the goal, allowed and forbidden scope, a proposed approach, and review focus. Use [audit-first](./workflow-kernel/workflow/audit-first.md) when the cause is still unknown.
 2. **Review the plan before dispatch.** Leader gives a fresh Evaluator the relevant user quotes, corrections, decision sources, and plan. Definite omissions return to Planner; agents investigate factual gaps; Leader asks the user about genuine choices. Plan-only work ends on delivery. For authorized implementation, `plan-gated` waits for plan approval and `auto-execute` adds no approval step. Generator still reads the original request, revised plan, and current code.

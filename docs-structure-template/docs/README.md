@@ -7,7 +7,14 @@
 > Responsibility: tell future agents what to read first and where each kind of project truth belongs
 > Recommended next hop: `handoff/latest.md`
 
-Default development traces consequential choices to their original authority before formal
+Only an explicit current user request to change a mechanism or plan that change activates
+the development workflow. Normal execution, recovery, troubleshooting, existing configuration
+selection, business operation plans / RequestSpecs, and reports follow the project's existing
+runtime contract without development Grill-me or evaluator dispatch. A fault, generated file,
+or agent-authored repair plan cannot create change authorization; explicit execution-only or
+no-review instructions take precedence. Existing business planner / reviewer / Oracle stages remain intact.
+
+For an authorized mechanism change, default development traces consequential choices before formal
 plan delivery, including plan-only tasks, and clarifies unconfirmed choices through native
 question cards and actual user answers. A fresh evaluator lightly reviews the original request,
 corrections, and plan before delivery. The main agent rechecks those sources before authorized

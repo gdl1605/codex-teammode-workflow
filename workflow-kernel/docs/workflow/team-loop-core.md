@@ -1,14 +1,14 @@
 # Team Loop Core
 
-> 最后更新时间：2026-11-05
+> 最后更新时间：2026-11-06
 > 适用范围：Team Loop subagent 的默认 slim Context Bootstrap
 > 本文主职责：提供 Team Loop 核心合同；完整规范见 `team-loop.md`
 
 ## 触发边界
 
-Team Loop 只在用户明确声明 `@team-loop`、`Team Loop`、`teamloop`，或明确要求 Leader 调度 subagent 时启用。
+Team Loop 只在用户本轮明确要求机制变更或其工程方案，并明确声明 `@team-loop`、`Team Loop`、`teamloop`，或要求 Leader 调度 subagent 时启用。
 
-未明确触发时，开发维护使用 `default-workflow.md`，主 agent 可以直接实现并派独立 evaluator；仅要求独立核验不启动 Team Loop。任务复杂、根因未锁或风险较高都不是触发条件；仅讨论、引用或修改规则也不构成触发。
+未明确触发时，仅当前用户明确要求的机制变更及其工程方案使用 `default-workflow.md`；正常执行、恢复、排障和业务操作计划产出不进入开发流程。agent 自拟修复计划、任务复杂、根因未锁或风险较高都不构成触发；“仅执行 / 不要 review”等明确限制优先。仅讨论、引用、安装、修改规则或历史上用过 Team Loop，也不等于本轮启用它。
 
 ## 模式
 

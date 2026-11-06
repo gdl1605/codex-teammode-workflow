@@ -2,14 +2,14 @@
 
 <!-- codex-teammode:managed:start scope=docs-index version=0.5.0 -->
 
-> 最后更新时间：2026-11-05
+> 最后更新时间：2026-11-06
 > 适用范围：整个 `docs/` 目录的阅读入口与分工说明
 > 本文主职责：告诉新线程先看什么、每份文档写什么、哪些内容只能去别处找
 > 推荐下一跳：`handoff/latest.md`
 
 ## 先读顺序
 
-本索引是项目资料地图，按任务读取，不要求全量读取。普通开发由主 agent 规划和实现，澄清关键取舍后、正式计划交付前派 evaluator 轻量核对原要求与计划，授权实现后再独立核验实际行为与声明；Team Loop 仅在用户明确触发后启用。
+本索引是项目资料地图，按任务读取，不要求全量读取。正常运行、恢复、排障及业务操作计划 / 报告产出沿项目原流程，不触发本包开发工作流。只有用户本轮明确要求机制变更或其工程方案，才适用普通开发的澄清和独立核验；Team Loop 还须用户本轮明确指定。
 
 1. `handoff/latest.md`
 2. `product/current-state.md`
@@ -27,13 +27,14 @@
 
 ## 任务先看什么
 
+- 要正常执行业务、恢复、排障或产出业务计划 / 报告：沿项目业务入口和既有运行合同，不派开发 planner / evaluator；故障或 agent 自拟修复计划不能把任务升级成机制变更
 - 只想快速建立上下文：先看 `handoff/latest.md`，再看 `product/current-state.md`
 - 要确认顶层 IA 或底栏：先看 `architecture/ia-and-navigation.md`
 - 要确认跨域边界和合同：先看 `architecture/domain-boundaries.md`
 - 要改接口、状态或职责：沿项目现有规范索引（或领域边界文档）找到正式合同，再核对可执行定义、实际生产者 / 消费者和该范围的正式校验入口；规格及写回规则见 [文档维护](workflow/docs-maintenance.md#已确认规格接口合同与校验入口)
 - 要确认目录、服务、后端映射：先看 `architecture/system-map.md`
-- 要做普通开发、需求追问、正式计划交付前的轻量核验（含仅规划）或实现后的独立核验：看 `workflow/default-workflow.md`；Grill-me 用原生卡片收取实际答案、更新同一计划；evaluator 按 `workflow/independent-evaluator.md` 检查要求弱化 / 遗漏及事实 / 决定 / 假设，明确缺口直接回主 agent，真实歧义交用户
-- 要发起 `@team-loop` / Leader 调度多个 subagent 的类 team-mode 闭环：只有用户明确声明 Team Loop 时才看 `workflow/team-loop.md`；派生 subagent 时附带 core、对应 role 和本轮必要原话 / docs / code / evidence，evaluator 另附共用核验原则。规划与实现分别核验，只回 Leader；仅规划交付后结束，不要求实现结果
+- 用户明确要求机制变更或规划该变更：看 `workflow/default-workflow.md`；工程计划的未决关键取舍才 Grill-me，工程规划和实现分别核验；派发依据须回到用户原话，不用 agent 自拟计划触发
+- 用户本轮明确要求机制变更或其工程方案，并指定 `@team-loop` / Leader 调度时才看 `workflow/team-loop.md`；派生 subagent 时附带 core、对应 role 和本轮必要原话 / docs / code / evidence，evaluator 另附共用核验原则。规划与实现分别核验，只回 Leader；仅规划交付后结束，不要求实现结果
 - Team Loop 涉及规格或接口变更时，Leader 按 [文档维护](workflow/docs-maintenance.md#已确认规格接口合同与校验入口) 在现有 `Evaluation Bundle` 中引用适用的已确认规格、正式合同和实际验证证据
 - Team Loop 中根因未锁、需要“只读审计 -> evidence -> Evidence Pack”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实

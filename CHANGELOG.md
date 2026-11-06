@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Activate development workflows only for the current user's explicit mechanism-change request or its engineering plan. Normal execution, recovery, troubleshooting, business plans and reports do not self-trigger Grill-me or development review, even after a fault or an agent-authored repair proposal.
+- Preserve explicit execution-only / no-review limits and existing business planner, reviewer, Oracle and feedback stages. Verify task authorization before development-review dispatch; a misrouted evaluator ends as not applicable without blocking the business task.
 - Review the authority, reasoning, and scope of consequential rules and test expectations, including the reviewer's own findings. Existing code, tests, or self-labelled confirmed documents do not establish authorization, and same-algorithm replay does not independently prove business semantics.
 - Carry rule and expectation sources through the existing Spec, Review Request, and Team Loop Evaluation Bundle. Verify findings before acting, investigate missing evidence, and reserve user arbitration for genuine business choices or contract conflicts; preserve existing validation roles and permissions.
 
