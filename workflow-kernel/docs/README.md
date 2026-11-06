@@ -36,6 +36,7 @@
 - 用户明确要求机制变更或规划该变更：看 `workflow/default-workflow.md`；工程计划的未决关键取舍才 Grill-me，工程规划和实现分别核验；派发依据须回到用户原话，不用 agent 自拟计划触发
 - 用户本轮明确要求机制变更或其工程方案，并指定 `@team-loop` / Leader 调度时才看 `workflow/team-loop.md`；派生 subagent 时附带 core、对应 role 和本轮必要原话 / docs / code / evidence，evaluator 另附共用核验原则。规划与实现分别核验，只回 Leader；仅规划交付后结束，不要求实现结果
 - Team Loop 涉及规格或接口变更时，Leader 按 [文档维护](workflow/docs-maintenance.md#已确认规格接口合同与校验入口) 在现有 `Evaluation Bundle` 中引用适用的已确认规格、正式合同和实际验证证据
+- 两种工作流的规划 / 实现核验均区分首次 / 复审：首次检查本次承诺，复审只核对原问题、修复及直接影响，未变且已通过的部分不重开，达到原要求就收口；具体边界见 `workflow/independent-evaluator.md`
 - Team Loop 中根因未锁、需要“只读审计 -> evidence -> Evidence Pack”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实
 - 要整理 docs 维护：先看 `workflow/docs-maintenance.md`
@@ -68,7 +69,7 @@
 - `workflow/default-workflow.md`
   - 普通开发的需求追问、轻量规划核验、主 agent 实现、实现核验、Review Request 与缺口 / 争议回流；不要求 Team Loop 或新建 schema
 - `workflow/independent-evaluator.md`
-  - 普通工作流与 Team Loop 共用的 fresh 只读核验原则，分别对照原要求与计划 / 实际行为及声明，不以计划与实现互相自证；调度和回报对象沿各自工作流
+  - 普通工作流与 Team Loop 共用的 fresh 只读核验原则、首次 / 复审边界和收口条件，分别对照原要求与计划 / 实际行为及声明，不以计划与实现互相自证；调度和回报对象沿各自工作流
 - `workflow/team-loop.md`
   - 只写 prompt 显式触发的 Team Loop 流程、Leader 调度规则、planner / scout 复用、generator / evaluator fresh-only、model policy、plan-gated / auto-execute、scout request、Evidence Pack 和 Evaluation Bundle
 - `workflow/team-loop-core.md`

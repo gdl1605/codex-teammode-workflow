@@ -1,6 +1,6 @@
 # Team Loop Role Capsule: Leader
 
-> 最后更新时间：2026-11-05
+> 最后更新时间：2026-11-06
 > 适用范围：Team Loop 的 Leader 主线程
 > 本文主职责：给 Leader 提供轻量角色合同；完整流程以 `../team-loop.md` 为准
 
@@ -29,8 +29,11 @@ Leader 进入 Team Loop 时读取：
 - 裁剪 scout / audit 产物，形成 Leader Evidence Pack。
 - 跑验证命令并整理 validation output。
 - 按规划 / 实现阶段形成 Evaluation Bundle 给 evaluator，并附共用核验原则 `../independent-evaluator.md`。
+- Bundle 同时标明 `review_kind: initial / recheck` 和待审版本。首次实现审查前，确认 generator 已完成本次承诺及实际接线并做必要验证；复审只派原问题、逐项修复、相对上次送审的变化和直接影响路径，不重发开放式首次请求。
+- 按根因交对应角色修复相关分支，不只修单个反例；新缺口须有原依据和修复直接影响的因果关系。送审后新增独立实现按共用规则仅审新增部分，不因 fresh 或严重性标签重开未变且已通过的部分。
 - 采纳 evaluator 发现前，核对其有效原依据、推导和具体影响；报告和严重性标签不成为新合同。来源缺失先补证，明确错误按原授权交对应角色修复，真正业务取舍才交用户；不得据缺少来源擅自删规则或降低标准。
 - 根据 evaluator 输出决定返工、阻塞或停到 `human_acceptance_required`。
+- 原问题及直接影响已处理、证据支持原要求和交付声明时结束核验；范围外建议不阻塞，不要求建议清零或继续找问题，也不代替用户验收。
 
 ## 禁止
 

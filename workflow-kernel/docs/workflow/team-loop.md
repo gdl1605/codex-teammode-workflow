@@ -67,7 +67,7 @@ Leader 接收任务
 -> generator 实现
 -> Leader 验证
 -> Leader 派 evaluator subagent
--> P0 / P1 不通过则返工
+-> 修复范围内有依据的缺口，fresh 只复审原问题及直接影响
 -> 通过则停在 human_acceptance_required
 ```
 
@@ -96,7 +96,7 @@ Leader 接收任务
 -> generator 实现
 -> Leader 验证
 -> Leader 派 evaluator subagent
--> P0 / P1 不通过则返工
+-> 修复范围内有依据的缺口，fresh 只复审原问题及直接影响
 -> 通过则停在 human_acceptance_required
 ```
 
@@ -157,6 +157,7 @@ Leader 是唯一调度者。
 - 汇总 scout 输出，形成 Leader Evidence Pack。
 - 跑验证命令并整理 validation output。
 - 形成 Evaluation Bundle 给 evaluator。
+- 区分 `initial / recheck`：首次审查前确认本次承诺已实现、接线及必要验证已完成；复审提供原问题、逐项修复、相对上次送审的变化和直接影响，不重新布置开放式全量审查。按根因交对应角色修复相关分支，达到原要求就收口。
 - 根据 evaluator 输出决定返工、阻塞或停到 `human_acceptance_required`。
 
 禁止：
@@ -207,6 +208,7 @@ generator subagent 是默认唯一写代码角色。
 - 若 `Context Bootstrap`、Evidence Pack、docs 与 current code 冲突，先向 Leader 回报“当前实现行为”和冲突的 claim 类型；实现事实以代码为准，业务意图不得被代码静默覆盖。
 - 如审计范围过大，向 Leader 提交 Scout Request。
 - 输出 touched files、修改摘要、验证建议和给 Leader 的 evaluator notes。
+- 首次送审前完成本次承诺中的真实入口与生产消费接线；返工按原问题的根因修复相关分支，说明逐项修复及直接影响，不只修审查给出的单个反例，也不顺手加入独立改进。
 - 明确 docs impact。
 
 禁止：
@@ -246,7 +248,8 @@ evaluator subagent 是独立核验角色。
 
 职责：
 
-- 以 Leader 的 Evaluation Bundle 为叙事入口，按 `review_phase: plan / implementation` 和 `independent-evaluator.md` 核验，摘要不能替代相关用户原话及后续纠正。
+- 以 Leader 的 Evaluation Bundle 为叙事入口，按 `review_phase: plan / implementation`、`review_kind: initial / recheck` 和 `independent-evaluator.md` 核验，摘要不能替代相关用户原话及后续纠正。
+- 首次审查围绕本次交付集中回报确定问题；复审仅核对原问题及修复直接影响，新缺口须证明因果关系。无关旧问题、额外能力与设计偏好不阻塞，不因 fresh 或 P0 / P1 标签重开未变且已通过的部分。
 - 输出 `Read Scope Ack`，说明本阶段实际核验的来源、计划或实现证据和未覆盖范围；每阶段都不继承规划者或实现者完整对话。
 - 规划时轻量检查原要求与计划解释，找遗漏、约束弱化、无来源取舍、事实与假设混淆及真实歧义，不要求尚不存在的实现结果。
 - 实现时重新对照原要求、修订计划、真实消费路径、generator 读取范围、验证记录和完成声明，检查说了没做、计划与实现不一致及同源错误互证。
@@ -472,6 +475,9 @@ Leader 给 evaluator：
 ## Evaluation Bundle
 
 - review_phase: plan / implementation
+- review_kind: initial / recheck
+- review_baseline: 本次原要求 / 确认计划、待审版本及改动边界；已通过且未受影响的部分
+- recheck_request: 仅 recheck；原问题及依据 → 对应修复、相对上次送审的修复 diff / 计划变化、直接影响路径和已有验证
 - original_problem:
 - original_requirements_and_corrections: 相关用户原话、后续纠正及有效合同的准确位置
 - confirmed_decisions_and_assumptions: 决定、实际回答 / 委托及来源；假设和未决项分开
@@ -492,6 +498,8 @@ Leader 给 evaluator：
 ```
 
 Evaluation Bundle 应避免包含规划者或实现者完整对话历史，保留相关原话和纠正及其准确来源。Leader 的摘要仅用于导航，不能替代原始依据或静默省略不利于当前计划的要求。涉及规格或接口时，引用适用 Spec、正式合同、实际生产消费路径与已有唯一校验入口，区分拟用检查和实际结果。
+
+`review_phase` 和 `review_kind` 分别指定。首次实现审查前先完成本次承诺及必要验证；复审保留原问题的标识或原文，不能只重发整份首次请求。按 `independent-evaluator.md` 的「首次审查与复审」确定直接影响；送审后确需补做原授权内的独立实现，Leader 说明对应原条款、原因及新增改动，仅新增部分按 `initial` 核验，已通过且未受影响的部分不重开。
 
 Evaluator 还按 `independent-evaluator.md` 核对关键规则和测试预期本身的依据，不能只检查实现符合既有断言。Leader 核对发现所引的原始依据、推导与具体影响后，再交对应角色处理；来源缺失先补证，不据此擅自删规则、降低标准或宣布业务失败。确认规则和测试共同维护错误假设时，在原授权及测试权限内修正规则、实现和相关测试；真实业务取舍或有效合同冲突才交用户。
 
@@ -515,13 +523,7 @@ human_acceptance_required
 blocked
 ```
 
-默认：
-
-```text
-max_rounds = 3
-```
-
-返工条件：
+是否继续由本次原要求的未解决缺口及修复直接影响决定，不以固定轮数判通过 / 失败。以下返工条件仅适用于本次审查范围；复审限原问题及直接影响，严重性标签不授权扩审：
 
 - 原要求、有效合同或已确认决定被遗漏、弱化或违反；规划缺口由 Leader 交 planner 修订，实现缺口交 generator 修复。
 - evaluator 发现 P0 / P1。
@@ -537,7 +539,7 @@ max_rounds = 3
 - 可由人工验收覆盖的小视觉差异。
 - 已明确标注 residual risk 的非阻塞项。
 
-以上不默认返工的项不包括明确违反本次要求的缺口，不能用低严重性标签或 residual risk 改低要求。规划修正仅 fresh 复核原发现及直接影响，不把实现返工参数变成规划审查的新轮数门槛。
+以上不默认返工的项不包括范围内明确违反本次要求的缺口，不能用低严重性标签或 residual risk 改低要求。规划和实现修正都只派 fresh 定向复审，逐项说明原问题是否关闭及有无修复直接引入的偏差；范围外建议不阻塞。原问题及直接影响已处理、证据支持原要求和交付声明后结束核验，不要求建议清零或继续寻找其他问题。
 
 终态：
 
@@ -553,7 +555,6 @@ max_rounds = 3
 
 task_id: <short-task-id>
 mode: plan-gated / auto-execute
-max_rounds: 3
 
 role_session_reuse:
   reusable_roles:
@@ -623,6 +624,7 @@ team_loop:
 - Leader 在正式计划交付前派 fresh evaluator 轻量核对原要求、纠正与计划；明确遗漏回 planner，真实歧义沿原生卡片交用户
 - Leader 在实现后再派 fresh evaluator 独立核验实际行为与完成声明
 - 仅在实现核验阶段，缺少 generator_result 或 generator_read_scope_ack 时标记 blocked / protocol_violation；仅规划不要求这些实现字段
-- P0 / P1 不通过则最多返工 3 轮
+- Evaluation Bundle 区分 review_phase: plan / implementation 与 review_kind: initial / recheck；首次审本次承诺，复审只核对原问题、逐项修复及直接影响
+- 返工项须有本次原依据及具体影响；范围外建议和严重性标签不重开已通过部分，达到原要求即收口，不设固定轮数
 - 仅规划交付经核验的计划并注明未实施；授权实施后最后停在 human_acceptance_required
 ```

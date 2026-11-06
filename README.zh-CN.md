@@ -37,6 +37,8 @@ Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项�
 
 规划与实现核验都会检查关键规则和测试预期本身的依据。代码、测试或文档写了什么，不会自动证明这条规则正确；reviewer 的判断也要给出原依据和具体影响。明确错误在授权内修，事实不明由 agent 补证，真实业务取舍沿原生卡片交用户。
 
+两种工作流都区分 `review_phase: plan / implementation`（规划 / 实现）与 `review_kind: initial / recheck`（首次 / 复审）。首次实现审查前完成承诺中的实现、真实接线和必要验证；复审只核对原问题、修复及直接影响，新阻塞项须说明与修复的因果关系。已通过且未受影响的部分不重开，独立新增实现仅审新增部分；达到原要求就收口，无关旧问题和额外建议不阻塞、不要求清零。
+
 完整流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，核验角色见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
 
 ## Team Loop 工作流
@@ -55,7 +57,7 @@ Leader 派 Planner → 澄清关键取舍 → fresh Evaluator 轻量审计划 �
 2. **先核验计划，再按模式放行。** Leader 把相关原话、纠正、决定来源和计划交 fresh Evaluator 轻量核对；明确遗漏回 Planner 修订，事实补证，真实歧义由 Leader 发原生卡片。仅规划交付后结束；已授权实施时，`plan-gated` 等用户批准计划，`auto-execute` 不新增批准。Generator 仍回查原话、修订计划和当前代码。
 3. **需要时插入 Scout。** Generator 缺证据时向 Leader 提出 `Scout Request`。Leader 决定是否派只读 Scout；Scout 把证据交回 Leader，由 Leader 整理成 `Evidence Pack` 再交 Generator。Scout 不是每轮固定步骤。
 4. **验证后再派 Evaluator。** Leader 运行必要验证，提供原话、纠正、修订计划、实际 diff、读取范围、验证结果及完成声明。Evaluator 按共用核验原则追真实行为，检查要求弱化、遗漏、计划与实际偏离、假设混写及声称已做却无证据，只向 Leader 回报。
-5. **Leader 处理返工或交回用户。** 确定缺口交对应角色修正，不能仅因 P2 / P3 标签或列为 residual risk 就忽略明确违反要求的项。授权实施后核验收口停在 `human_acceptance_required`，真实阻塞报 `blocked`；仅规划注明未实施，不能因没有 Generator 结果判阻塞。最终验收由用户决定。
+5. **Leader 处理返工或交回用户。** 确定缺口交对应角色按根因修复，Leader 用原问题、修复变化及直接影响派定向复审；严重性标签不能重开未变部分，也不能用低严重性忽略范围内违反要求的项。达到原要求就结束核验。授权实施后停在 `human_acceptance_required`，真实阻塞报 `blocked`；仅规划注明未实施，不能因没有 Generator 结果判阻塞。最终验收由用户决定。
 
 Leader 派发时提供裁剪过的 `Context Bootstrap`，用 `Read Scope Ack` 确认角色实际读了哪些材料。Planner 和 Scout 核对材料仍有效后可以复用；Generator 和 Evaluator 每轮使用新会话。
 

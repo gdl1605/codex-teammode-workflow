@@ -123,11 +123,14 @@ Leader 先核验该回执，再采纳 subagent 结论、Evidence Pack 或 evalua
 - Leader 整理 Evidence Pack 后再交给 generator。
 - Evidence Pack 不能替代 generator 重新审计 current code。
 - generator 实现前仍回查用户原话、纠正与修订计划；计划经过核验不能替代原要求。
-- evaluator 只消费 Leader 提供的 Evaluation Bundle 作为叙事入口，沿原话、纠正和合同独立核验，不能只认 Leader 的摘要。Bundle 区分规划 / 实现阶段；规划不要求尚不存在的 diff、generator 结果或运行证据，实现核验追真实消费路径与完成声明。
+- evaluator 只消费 Leader 提供的 Evaluation Bundle 作为叙事入口，沿原话、纠正和合同独立核验，不能只认 Leader 的摘要。Bundle 同时区分 `review_phase: plan / implementation` 和 `review_kind: initial / recheck`；规划不要求实现证据，实现核验追真实消费路径与完成声明。
+- 首次审查指明本次原要求、确认计划、待审版本和改动边界；generator 先完成承诺中的实现与实际接线，Leader 做必要验证后再送实现首次审查，不能边补实施边送审。
+- 复审由 Leader 提供原问题及依据、逐项修复、相对上次送审的变化和直接影响路径；evaluator 只核对这些问题及影响。新缺口须证明“修复 → 受影响路径 → 违反本次原要求 / 相关合同”，不因 fresh 或严重性标签重开未变且已通过的部分。
+- 按共用核验原则处理送审后新增独立实现：Leader 说明其原授权和原因，仅新增部分按首次核验；范围外建议不阻塞本次交付。原问题及直接影响已处理、证据支持原要求后收口，不要求建议清零。
 
 ## 返工和终态
 
-返工或 blocked 条件：
+以下返工或 blocked 条件仅适用于本次审查范围；复审限原问题及修复的直接影响，P0 / P1 标签本身不授权扩审：
 
 - 发现本次原要求、有效合同或已确认决定被遗漏、弱化或违反；规划缺口回 planner，实现缺口回 generator，均由 Leader 调度。
 - evaluator 发现 P0 / P1。
@@ -143,6 +146,6 @@ Leader 先核验该回执，再采纳 subagent 结论、Evidence Pack 或 evalua
 - 可由人工验收覆盖的小视觉差异。
 - 已标注 residual risk 的非阻塞项。
 
-上述非阻塞项不包括明确违反本次要求的缺口，不能用严重性标签或 residual risk 改低要求。规划修正只 fresh 复核发现及直接影响；没有本阶段应有的证据时报告缺失，不为规划补造实现结果或增加验证门槛。
+上述非阻塞项不包括范围内明确违反本次要求的缺口，不能用严重性标签或 residual risk 改低要求。规划和实现修正都只派 fresh 定向复审；没有本阶段应有的证据时报告缺失，不为规划补造实现结果或增加验证门槛。达到原要求即结束核验，不以固定轮数判通过 / 失败。
 
 `accepted` 永远只能由用户人工表达，不由 Team Loop 自动写入。

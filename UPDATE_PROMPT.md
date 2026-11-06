@@ -29,6 +29,7 @@ Use ownership-based updates:
   acceptance, legal, and release claims require their own direct evidence.
 - Preserve all target-project content outside managed blocks.
 - Existing explicit target restrictions on permissions, roles, and subagents still apply; an evaluator request alone does not start Team Loop.
+- Update default and Team Loop dispatch to distinguish `review_kind: initial / recheck` from `review_phase: plan / implementation`. Initial implementation review follows completed promises and wiring; recheck only original findings, repairs, and direct effects. New blocking findings need original grounds and a causal link to the repair. Do not reopen unchanged reviewed work; review independent additions only within their added scope, and stop at the original requirements without clearing unrelated issues or optional suggestions.
 - Preserve the native question-card interaction for Grill-me: use `request_user_input_async` when exposed and permitted by its current schema/mode; wait for actual user answers before updating decisions and asking dependent choices. A recommendation, preselected option, tool return, closed request, or timeout is not an answer. Text choices are for an actual tool limitation, not the default when native cards are available.
 - Do not create `.new` files for workflow-owned files. The goal is to replace old workflow files, not keep old and new copies side by side.
 - If a mixed file cannot be updated safely because managed markers are missing, report the required managed block insertion instead of creating `.new`.

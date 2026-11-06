@@ -21,6 +21,9 @@ corrections, and plan before delivery. The main agent rechecks those sources bef
 implementation, then uses another fresh evaluator to review actual behavior and completion claims.
 Team Loop requires an explicit user prompt and uses the same two review stages, reporting only to Leader.
 Plan-only work ends on reviewed plan delivery without requiring Generator results or implementation evidence.
+Both stages distinguish initial review from recheck: finish the promised delivery before initial review,
+recheck only original findings and repair effects, keep unchanged reviewed work closed, and stop when
+the original requirements are met without clearing unrelated issues or optional suggestions.
 This index is a project reference map; read only what the task needs.
 
 ## Read Order

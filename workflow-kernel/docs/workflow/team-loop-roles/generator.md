@@ -1,6 +1,6 @@
 # Team Loop Role Capsule: Generator
 
-> 最后更新时间：2026-11-05
+> 最后更新时间：2026-11-06
 > 适用范围：Team Loop 的 generator subagent
 > 本文主职责：定义 generator 的轻量启动合同、输出和禁令
 
@@ -27,6 +27,7 @@ generator 是默认唯一写代码角色。Leader 派生 fresh generator 时，�
 - 重新审计 current code，并按当前实现基线和已确认合同做最小实现。
 - 如果 Context Bootstrap、Evidence Pack、docs 与 current code 冲突，向 Leader 分别回报当前实现行为和冲突的 claim 类型；代码决定实现事实，但不能静默改写业务意图或外部生命周期状态。
 - 如审计范围过大，向 Leader 提交 Scout Request。
+- 首次送审前完成本次承诺中的真实入口与生产消费接线，并向 Leader 提供必要验证所需的信息，不能用多轮审查代替未完成的实施。返工按问题根因修复相关分支，在现有修改摘要和 evaluator notes 中逐项说明修复及直接影响，不只修审查给出的单个反例，不顺手扩展独立改进。
 - 输出 touched files、修改摘要、验证建议、evaluator notes 和 docs impact。
 
 ## 禁止

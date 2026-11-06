@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Distinguish initial review from recheck in both default development and Team Loop, across shared evaluator rules, dispatch bundles, role capsules, and entry docs. Complete the promised implementation and wiring before initial review; recheck original findings, repairs, and direct effects rather than reopening unchanged work.
+- Require original grounds and a repair-to-impact causal link for new blocking recheck findings. Review independent additions only within their added scope, keep unrelated issues and optional suggestions non-blocking, and end at the original requirements instead of clearing every suggestion or using a fixed review-round limit.
 - Activate development workflows only for the current user's explicit mechanism-change request or its engineering plan. Normal execution, recovery, troubleshooting, business plans and reports do not self-trigger Grill-me or development review, even after a fault or an agent-authored repair proposal.
 - Preserve explicit execution-only / no-review limits and existing business planner, reviewer, Oracle and feedback stages. Verify task authorization before development-review dispatch; a misrouted evaluator ends as not applicable without blocking the business task.
 - Review the authority, reasoning, and scope of consequential rules and test expectations, including the reviewer's own findings. Existing code, tests, or self-labelled confirmed documents do not establish authorization, and same-algorithm replay does not independently prove business semantics.

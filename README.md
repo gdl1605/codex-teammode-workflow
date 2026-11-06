@@ -231,6 +231,8 @@ For example, an interface that lacks cancellation is a fact about the current co
 
 Both review stages check the sources, reasoning, and scope of consequential rules and test expectations. Existing code, tests, and self-labelled confirmed docs do not independently justify a rule; reviewer findings also need original evidence and a concrete impact. Correct established errors within authorization, investigate missing facts, and ask the user about genuine business choices.
 
+In both workflows, `review_phase: plan / implementation` is separate from `review_kind: initial / recheck`. Complete the promised implementation, real wiring, and focused checks before its initial review. Rechecks close the original findings and examine only repairs and their direct effects; explain the causal link for any new blocking finding. Keep unchanged, already reviewed work closed, review independent additions only within their added scope, and end when the original requirements are met. Unrelated old issues and optional improvements do not block delivery or need to be cleared.
+
 See [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md) and [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md).
 
 ### Team Loop At A Glance
@@ -241,7 +243,7 @@ Start Team Loop only when the current user explicitly requests a mechanism chang
 2. **Review the plan before dispatch.** Leader gives a fresh Evaluator the relevant user quotes, corrections, decision sources, and plan. Definite omissions return to Planner; agents investigate factual gaps; Leader asks the user about genuine choices. Plan-only work ends on delivery. For authorized implementation, `plan-gated` waits for plan approval and `auto-execute` adds no approval step. Generator still reads the original request, revised plan, and current code.
 3. **Add Scout on demand.** Generator sends a Scout Request to Leader. If approved, a read-only Scout returns evidence to Leader, who curates an Evidence Pack and hands it back to Generator.
 4. **Validate and review implementation.** Leader sends original quotes and corrections, the revised plan, actual diff, read scope, results, and completion claims to another fresh Evaluator. It checks requirements against real behavior and reports only to Leader, using the shared review criteria.
-5. **Route rework or hand off.** Definite gaps return to the responsible role; low severity or a residual-risk label cannot waive an explicit requirement. Authorized implementation stops at `human_acceptance_required` or a real `blocked` state. Plan-only delivery states that no implementation occurred and does not require Generator results. The user makes the acceptance decision.
+5. **Route rework or hand off.** Definite gaps return to the responsible role for a cause-level repair. Leader sends a scoped `recheck` with the original findings, repair delta, and direct effects; severity alone cannot reopen unchanged work, and low severity cannot waive an in-scope requirement. End review when the original requirements are met. Authorized implementation stops at `human_acceptance_required` or a real `blocked` state. Plan-only delivery states that no implementation occurred and does not require Generator results. The user makes the acceptance decision.
 
 Leader sends a scoped Context Bootstrap and checks each role's Read Scope Ack. Planner and Scout can be reused after checking freshness. Generator and Evaluator use fresh sessions each round.
 
