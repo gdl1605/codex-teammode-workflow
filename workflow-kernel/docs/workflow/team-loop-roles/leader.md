@@ -1,6 +1,6 @@
 # Team Loop Role Capsule: Leader
 
-> 最后更新时间：2026-11-06
+> 最后更新时间：2026-11-19
 > 适用范围：Team Loop 的 Leader 主线程
 > 本文主职责：给 Leader 提供轻量角色合同；完整流程以 `../team-loop.md` 为准
 
@@ -61,3 +61,5 @@ Leader 最终输出至少包含：
 - evaluator 结论
 - 人工验收清单
 - docs impact check
+
+默认不贴完整文件，除非用户明确要求。需要验证时，优先写清人工验收清单。涉及数据库 schema、migration 或服务端函数（如 RPC、存储过程、serverless / edge function）时，说明改了哪个对象、语义差异、是否需要部署或应用，以及当前是否已生效。

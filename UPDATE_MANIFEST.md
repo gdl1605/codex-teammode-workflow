@@ -86,8 +86,11 @@ in `docs/planner/`.
 | `docs/workflow/prompt-template.md` | `remove-workflow` |
 | `docs/workflow/session-startup.md` | `remove-workflow` |
 
-Replace managed entry/index blocks with default-development plus explicit Team Loop rules. Preserve explicit target restrictions on roles, permissions, and subagents. Outside those blocks,
-preserve project-owned content and report any obsolete workflow routing for manual migration.
+Replace the managed blocks in `AGENTS.md` and `CLAUDE.md` with the corresponding source blocks:
+workflow triggers, links, and docs maintenance guidance. Workflow procedures are installed separately in
+`docs/workflow/`; `docs/README.md` remains the project docs index. Preserve all project-owned content
+outside managed blocks, including role, permission, and subagent restrictions. Report any obsolete
+workflow routing outside those blocks for manual migration.
 
 ## Optional Skill Distribution
 

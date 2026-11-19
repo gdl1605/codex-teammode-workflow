@@ -88,6 +88,7 @@ Then inspect the target repo:
      `<!-- codex-teammode:managed:start ... -->`
      and
      `<!-- codex-teammode:managed:end -->`
+   - For `AGENTS.md` and `CLAUDE.md`, replace the old entry content with the source block's triggers, links, and docs maintenance guidance. Install workflow procedures through the separate `docs/workflow/` entries in the manifest.
    - Preserve all text outside the block.
    - If markers are missing, do not rewrite the file and do not create `.new`. Report the exact managed block that should be inserted or ask for human review.
 

@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Keep the managed root agent entries short: workflow triggers, links, and docs maintenance. Install the ordinary and Team Loop procedures under `docs/workflow/`, replacing old managed entry text while preserving project-owned rules.
 - Distinguish initial review from recheck in both default development and Team Loop, across shared evaluator rules, dispatch bundles, role capsules, and entry docs. Complete the promised implementation and wiring before initial review; recheck original findings, repairs, and direct effects rather than reopening unchanged work.
 - Require original grounds and a repair-to-impact causal link for new blocking recheck findings. Review independent additions only within their added scope, keep unrelated issues and optional suggestions non-blocking, and end at the original requirements instead of clearing every suggestion or using a fixed review-round limit.
 - Activate development workflows only for the current user's explicit mechanism-change request or its engineering plan. Normal execution, recovery, troubleshooting, business plans and reports do not self-trigger Grill-me or development review, even after a fault or an agent-authored repair proposal.

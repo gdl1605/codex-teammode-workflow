@@ -1,6 +1,6 @@
 # Team Loop Workflow
 
-> 最后更新时间：2026-11-06
+> 最后更新时间：2026-11-19
 > 适用范围：需要由 Leader 主线程调度多个独立 subagent 的类 team-mode 闭环
 > 本文主职责：定义 plan-gated / auto-execute 两种模式、角色边界、通信规则、Context Bootstrap、Read Scope Ack、scout 支援机制和人工验收停点
 > 推荐下一跳：`team-loop-core.md`、`team-loop-roles/`
@@ -42,7 +42,7 @@ Team Loop 不做：
 
 ### 3.1 plan-gated
 
-进入 Team Loop 后，`plan-gated` 适用于用户希望先批准 plan 再执行的轮次。模式选择只影响 Team Loop 内部节奏，不作为自动触发 Team Loop 的条件。
+进入 Team Loop 后，`plan-gated` 适合涉及数据合同、权限、状态机、项目界定的高风险领域、复杂资源链路或根因未锁的任务。用户明确要求先批准计划时，按此模式执行。模式选择只影响 Team Loop 内部节奏，不作为自动触发 Team Loop 的条件。
 
 特点：
 
@@ -73,7 +73,7 @@ Leader 接收任务
 
 ### 3.2 auto-execute
 
-进入 Team Loop 后，`auto-execute` 适用于用户允许 Leader 在 planner 快速收口后直接派 generator 的轮次。
+进入 Team Loop 后，`auto-execute` 适用于用户允许 Leader 在 planner 快速收口后直接派 generator 的轮次，例如文案、轻 UI、局部样式、docs 小修等修改范围明确的低风险任务。
 
 特点：
 
@@ -547,6 +547,8 @@ blocked
 - `blocked`
 
 `accepted` 永远只能由用户人工表达，不由 Team Loop 自动写入。
+
+每轮结束前按[文档维护规则](docs-maintenance.md#docs-impact-check)检查本轮影响；最终回报见 [Leader 输出要求](team-loop-roles/leader.md#输出收口)。
 
 ## 14. 触发 prompt 模板
 

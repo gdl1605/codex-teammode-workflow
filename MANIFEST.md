@@ -26,7 +26,7 @@ workflow-kernel/
   workflow/audit-first.md
 ```
 
-`AGENTS.md` and `CLAUDE.md` are intentionally synchronized so Codex and Claude Code start from the same process rules. Team Loop dispatch should use the current tool's primary entry file instead of reading both by default.
+`AGENTS.md` and `CLAUDE.md` share a short managed entry for workflow triggers, links, and docs maintenance. The ordinary development and Team Loop procedures live in `docs/workflow/`. Team Loop dispatch uses the current tool's primary entry file instead of reading both by default.
 
 `VERSION`, `UPDATE_MANIFEST.md`, `UPDATE_PROMPT.md`, and `docs/workflow/update-policy.md` define the upgrade protocol for replacing old workflow installs without overwriting target project facts.
 

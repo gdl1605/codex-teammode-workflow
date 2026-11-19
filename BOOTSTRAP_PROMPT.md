@@ -24,7 +24,7 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
   - Leader dispatches lightweight plan review before plan delivery and implementation review after authorized changes, preserving relevant user quotes and corrections. Plan-only delivery does not require Generator results or authorize implementation
 - audit-first evidence flow
 - docs impact check
-- synchronized `AGENTS.md` and `CLAUDE.md` entry files
+- synchronized workflow routing and docs-maintenance guidance in `AGENTS.md` and `CLAUDE.md`, with procedures in `docs/workflow/`
 
 ## Hard Rules
 
@@ -77,13 +77,12 @@ Then inspect the target repo:
 ## Install Tasks
 
 1. Create or merge `AGENTS.md`.
-   - Preserve target-specific rules if they exist.
-   - Add the workflow rules from `workflow-kernel/AGENTS.md`.
+   - Use the managed `agent-entry` block from `workflow-kernel/AGENTS.md`. Replace any existing managed entry block in place, or add one if it is missing.
+   - Preserve target-specific rules outside the block. Keep the block to triggers, workflow links, and docs maintenance guidance; put workflow procedures in the docs listed below. Report any unmarked legacy workflow prose for manual migration.
    - Normalize handoff paths consistently. Prefer `docs/handoff/latest.md` unless the target repo already has another clear convention.
 
 2. Create or merge `CLAUDE.md`.
-   - Keep it synchronized with `AGENTS.md` unless the target repo already has Claude Code-specific rules.
-   - If Claude-specific rules exist, preserve them and add the shared workflow rules from `workflow-kernel/CLAUDE.md`.
+   - Apply the same managed-block strategy with `workflow-kernel/CLAUDE.md`. Keep the shared entry in sync with `AGENTS.md` and preserve any Claude Code-specific rules outside the block.
 
 3. Create or merge workflow docs:
    - `docs/workflow/default-workflow.md`
