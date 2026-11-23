@@ -2,7 +2,7 @@
 
 <!-- codex-teammode:managed:start scope=docs-index version=0.5.0 -->
 
-> 最后更新时间：2026-11-19
+> 最后更新时间：2026-11-23
 > 适用范围：整个 `docs/` 目录的阅读入口与分工说明
 > 本文主职责：告诉新线程先看什么、每份文档写什么、哪些内容只能去别处找
 > 推荐下一跳：`handoff/latest.md`
@@ -37,7 +37,6 @@
 - 用户本轮明确要求机制变更或其工程方案，并指定 `@team-loop` / Leader 调度时才看 `workflow/team-loop.md`；派生 subagent 时附带 core、对应 role 和本轮必要原话 / docs / code / evidence，evaluator 另附共用核验原则。规划与实现分别核验，只回 Leader；仅规划交付后结束，不要求实现结果
 - Team Loop 涉及规格或接口变更时，Leader 按 [文档维护](workflow/docs-maintenance.md#已确认规格接口合同与校验入口) 在现有 `Evaluation Bundle` 中引用适用的已确认规格、正式合同和实际验证证据
 - 两种工作流的规划 / 实现核验均区分首次 / 复审：首次检查本次承诺，复审只核对原问题、修复及直接影响，未变且已通过的部分不重开，达到原要求就收口；具体边界见 `workflow/independent-evaluator.md`
-- Team Loop 中根因未锁、需要“只读审计 -> evidence -> Evidence Pack”：先看根目录 `workflow/audit-first.md`
 - 要升级已安装的旧工作流：先看包内 `UPDATE_MANIFEST.md`、`UPDATE_PROMPT.md` 和 `workflow/update-policy.md`，按 ownership 策略更新，不覆盖目标项目事实
 - 要整理 docs 维护：先看 `workflow/docs-maintenance.md`
 - 要做跨文档整体事实校正：只有用户显式触发 `$docs-review` 时，先看 `workflow/docs-maintenance.md`，再由已安装的可选 skill 在 Plan Mode 只读核验；v3 使用 scanner schema 5 / plan schema 3、封闭 audit scope、结构化 edit contracts、分片独立审计和全新 synthesis 终审，docs impact 不自动进入该流程
@@ -81,9 +80,6 @@
 - `workflow/update-policy.md`
   - 放旧工作流升级到新版工作流时的覆盖 / 合并 / 永不覆盖策略
   - 不放产品事实，不替代 `UPDATE_MANIFEST.md`
-- `../workflow/audit-first.md`
-  - 放 Team Loop 条件使用的“只读审计 -> evidence -> Evidence Pack”机制
-  - 根因未锁时要求 evidence 沉淀到 `docs/evidence/<feature>-audit.md` 后再回流执行 prompt
 - `plans/active/`
   - 放当前还在跑的计划工件；跨会话交接且无既有规格惯例时，在同一计划记录「已确认规格」，引用正式合同和适用校验
 - `plans/completed/`

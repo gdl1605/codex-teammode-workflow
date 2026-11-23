@@ -1,6 +1,6 @@
 # Team Loop Core
 
-> 最后更新时间：2026-11-06
+> 最后更新时间：2026-11-23
 > 适用范围：Team Loop subagent 的默认 slim Context Bootstrap
 > 本文主职责：提供 Team Loop 核心合同；完整规范见 `team-loop.md`
 
@@ -71,7 +71,6 @@ Leader 自身参考 `team-loop-roles/leader.md`。每个 subagent 只需要自�
   - docs/workflow/independent-evaluator.md（仅 evaluator，规划 / 实现共用核验原则）
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
-  - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - code_scope:
 - handoff_or_evidence:

@@ -1,6 +1,6 @@
 # Team Loop Role Capsule: Leader
 
-> 最后更新时间：2026-11-19
+> 最后更新时间：2026-11-23
 > 适用范围：Team Loop 的 Leader 主线程
 > 本文主职责：给 Leader 提供轻量角色合同；完整流程以 `../team-loop.md` 为准
 
@@ -26,7 +26,7 @@ Leader 进入 Team Loop 时读取：
 - 向 planner、generator 和 evaluator 提供相关用户原话、后续纠正、有效合同和决定来源；裁剪范围不能静默丢掉约束或以自己的摘要取代原话。
 - 关键取舍未定时复用 `../default-workflow.md` 的 Grill-me / 原生提问卡片规则；仅复用问答方式，不启用普通工作流的实现角色。实际答案回写同一份计划。
 - 正式计划交付前派 fresh evaluator 轻量审查；明确缺口回 planner 修订 handoff，事实先补证，真实歧义交用户。修正只复核发现及直接影响。
-- 裁剪 scout / audit 产物，形成 Leader Evidence Pack。
+- 将 Scout 返回的线索和本轮相关证据整理成 Leader Evidence Pack。
 - 跑验证命令并整理 validation output。
 - 按规划 / 实现阶段形成 Evaluation Bundle 给 evaluator，并附共用核验原则 `../independent-evaluator.md`。
 - Bundle 同时标明 `review_kind: initial / recheck` 和待审版本。首次实现审查前，确认 generator 已完成本次承诺及实际接线并做必要验证；复审只派原问题、逐项修复、相对上次送审的变化和直接影响路径，不重发开放式首次请求。

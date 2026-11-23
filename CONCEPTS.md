@@ -58,16 +58,6 @@ Two execution modes inside Team Loop:
 - **plan-gated** — planner output must be approved by the human before generator runs.
 - **auto-execute** — Leader hands off to generator immediately after a fast plan. Both modes still end at human acceptance.
 
-## audit-first
-
-An evidence flow inside an already triggered Team Loop, used when the **root cause of a bug is not yet locked**. Instead of jumping to a fix:
-
-1. Run a read-only audit.
-2. Sink the findings into `docs/evidence/<feature>-audit.md`.
-3. Leader curates an Evidence Pack and required read scope for generator.
-
-Goal: stop "imagined fixes" — every change must trace back to evidence, not vibes.
-
 ## Fact-priority order
 
 For current implementation behavior in either workflow, this is the descriptive-fact routing order:

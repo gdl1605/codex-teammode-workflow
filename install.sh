@@ -139,6 +139,7 @@ PAYLOAD=(
   "CURRENT_DOCS_STRUCTURE.md"
   "README.md"
   "README.zh-CN.md"
+  "assets"
   "CONCEPTS.md"
   "FAQ.md"
   "CONTRIBUTING.md"

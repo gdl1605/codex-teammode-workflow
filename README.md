@@ -18,35 +18,39 @@
 
 ## 这是什么
 
-Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项目里的协作规则、启动提示和文档结构。安装后有两条开发路径：
+Codex-teammode Workflow 为 **Codex** 和 **Claude Code** 提供可安装到项目里的协作规则、启动提示和文档结构。两种执行模式共用一个项目 Wiki。
 
-| 工作流 | 什么时候用 | 谁实现 | 核验结果交给谁 |
-| --- | --- | --- | --- |
-| 正常业务执行 | 运行、恢复、排障及生成业务计划 / 报告 | 主 agent 沿既有业务入口执行 | 原业务合同，不新增开发审查 |
-| 普通开发 | 用户明确要求机制变更或其工程方案，且未指定 Team Loop | 主 agent | 独立 evaluator 直接回报主 agent |
-| Team Loop | 用户本轮明确要求机制变更，且指定 `@team-loop` 或 Leader 调度 | Leader 派出的 Generator | Evaluator 回报 Leader，由 Leader 安排返工或人工验收 |
+**普通执行**是默认入口。日常运行、恢复、排障和业务报告沿项目原流程；用户明确要求改机制或规划该变更时，进入[普通开发](#普通开发工作流)。[Team Loop](#team-loop-工作流) 在用户显式启用后由 Leader 调度团队。
+
+安装时，agent 自动生成或合并 `docs/` **项目 Wiki**，索引为 `docs/README.md`。开发收口时，agent 按[文档维护规则](./workflow-kernel/docs/workflow/docs-maintenance.md)更新受影响的主文档；长期积累的冗余和过期内容用 [`$docs-review`](#docs-review-skill) 定期清理。
+
+![项目 Wiki：安装生成 → 增量更新 → 定期用 $docs-review 清理](./assets/project-wiki.svg)
 
 ## 普通开发工作流
 
-本节只用于用户本轮明确要求的机制变更及其工程方案。正常执行不会因遇到错误、写入产物或 agent 自拟修复计划而进入本流程；“仅执行 / 不要 review”等限制优先。业务自身的规划、审查、Oracle 和返工仍沿原合同，用户专项核验只做其指定范围。
+**先计划，再实现。** 影响行为、范围、成本或验收的实施细节或交付粒度仍待决定时，必须在定稿前用 **Grill-me** 确认。主 agent 负责实现和验证，独立 evaluator 分别审查计划和实现，审查限于原要求及改动的直接影响。仅执行、仅规划或专项核验按用户指定的范围交付。
 
-**主 agent 负责规划、实现和验证，独立 evaluator 负责核验。** 一次任务按下面的顺序走：
+![普通开发：计划 → Grill-me（取舍待定时） → 实现 → 独立审查](./assets/default-development.svg)
 
-1. **形成草案。** 主 agent 核对原要求、已有合同和实际代码，区分当前事实、已确认的决定和自己的建议。
-2. **用 Grill-me 澄清取舍。** 正式计划交付前（包括仅规划），沿用已有决定，按明确委托自行选择，并说明依据。仍会影响行为、范围、成本或验收的未确认取舍，用原生卡片问。Codex 暴露 `request_user_input_async` 时调用它，每题给出选项、影响和推荐；工具不可用或受限时说明限制，再用文本选项。互不依赖的问题同轮问，依赖问题等到实际回答后再问，答案及其来源写回同一份计划。推荐或预选不算确认。
-3. **轻量核验计划。** 正式交付前派 fresh 只读 evaluator，对照原话、后续纠正和计划，找遗漏、约束弱化、无来源取舍及假设混写。明确遗漏直接修正，事实由 agent 补查，真实歧义沿原生卡片交用户；修正只复核发现及直接影响。仅规划在交付后结束，不要求实现结果。
-4. **按授权实现。** 主 agent 仍回查原话、纠正和修订计划，再改动并运行直接相关的验证。规划核验不新增整份计划批准，也不能替代实施授权。
-5. **独立核验并收口。** 把原要求、修订计划、实际 diff、相关调用路径、验证证据及完成声明交给另一个 fresh 只读 evaluator。它检查实际行为是否满足原要求、是否说了没做、假设是否被写成事实或门禁；不能用实现与测试共享同一假设来证明要求已满足。确定缺口回主 agent 修复，事实补证，真实争议交用户。
+1. **形成草案。** 对照原要求、有效合同和当前实现，区分事实、已确认的决定和建议，按任务规模拟定方案。
+2. **用 Grill-me 澄清取舍。** 事实由主 agent 查证，明确决定和委托直接沿用。仍需用户决定的取舍用原生卡片给出选项、影响和推荐；工具受限时说明原因并用文本选项。独立的问题同轮提交，依赖前置决定的问题等实际回答后再提交，回答及其来源写回同一份计划。
+3. **轻量核验计划。** 正式交付前，由新的只读 evaluator 对照原话、后续纠正和计划，核对遗漏、约束变化和关键决定的依据。主 agent 修正明确缺口、补查事实，真实歧义交用户确认。仅规划任务在计划交付后结束。
+4. **按授权实现。** 主 agent 回查原要求、后续纠正与修订计划，完成实现和实际接线，再运行直接相关的验证。
+5. **独立核验实现。** 由另一位新的只读 evaluator 对照原要求、修订计划、实际 diff、调用路径、验证证据和完成声明，检查漏做、越界实现及额外验收条件。主 agent 按原要求和直接影响核对审查发现，在授权内修复明确缺口，事实缺口补证，真实取舍交用户。
 
-例如，代码没有取消入口是**现状**；本次是“等当前请求结束再退出（推荐）”，还是“增加取消、停止确认和部分结果保存”，则是**交付取舍**。用户还没决定时，就把这两个选项发成卡片。
+例如，等待当前请求结束后退出和增加主动取消，对应不同交付范围。范围仍待决定时，主 agent 用 Grill-me 说明两种做法的行为和成本差异。
 
-规划与实现核验都会检查关键规则和测试预期本身的依据。代码、测试或文档写了什么，不会自动证明这条规则正确；reviewer 的判断也要给出原依据和具体影响。明确错误在授权内修，事实不明由 agent 补证，真实业务取舍沿原生卡片交用户。
+普通开发与 Team Loop 都区分 `review_phase: plan / implementation`（规划 / 实现）和 `review_kind: initial / recheck`（首次 / 复审）。关键规则、测试预期和审查发现都需要原始依据。复审只覆盖原问题、修复及直接影响，新阻塞项须说明与修复的因果关系；独立新增实现只审新增部分。达到原要求即收口。
 
 完整流程和 Review Request 见 [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md)，核验角色见 [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md)。
 
 ## Team Loop 工作流
 
-用户本轮明确要求机制变更或其工程方案，并指定 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。**Leader 是同一聊天里的唯一调度者，负责交接和验证，不直接改文件；Generator 负责实现。** 各 subagent 只向 Leader 回报。
+**Leader 拆分任务，调度 agent 团队自动推进规划、实现、验收和返工。** 基本错误由团队在交付前处理；计划里由团队负责的验收条款全部通过后，Leader 把结果和证据交给人做最终验收。
+
+![Team Loop：规划 → 实现 → 内部验收（缺口返工） → 人工验收](./assets/team-loop.svg)
+
+用户本轮明确要求机制变更或其工程方案，并指定 `@team-loop`、`Team Loop` / `teamloop` 或 Leader 调度时启用。同一会话中，Leader 统一调度、交接和验证；Generator 负责实现，各 subagent 只向 Leader 回报。
 
 ### 一轮怎样调度
 
@@ -56,7 +60,7 @@ Leader 派 Planner → 澄清关键取舍 → fresh Evaluator 轻量审计划 �
 → Leader 验证并派 fresh Evaluator → 回报 Leader → 返工或人工验收
 ```
 
-1. **先派 Planner。** 只读核对需求和当前代码，给 Leader 返回目标、允许与禁止的修改范围、实现建议和核验重点。根因未锁时，先按 [audit-first](./workflow-kernel/workflow/audit-first.md) 只读查明，再安排实现。
+1. **先派 Planner。** 只读核对需求和当前代码，给 Leader 返回目标、允许与禁止的修改范围、实现建议和核验重点。
 2. **先核验计划，再按模式放行。** Leader 把相关原话、纠正、决定来源和计划交 fresh Evaluator 轻量核对；明确遗漏回 Planner 修订，事实补证，真实歧义由 Leader 发原生卡片。仅规划交付后结束；已授权实施时，`plan-gated` 等用户批准计划，`auto-execute` 不新增批准。Generator 仍回查原话、修订计划和当前代码。
 3. **需要时插入 Scout。** Generator 缺证据时向 Leader 提出 `Scout Request`。Leader 决定是否派只读 Scout；Scout 把证据交回 Leader，由 Leader 整理成 `Evidence Pack` 再交 Generator。Scout 不是每轮固定步骤。
 4. **验证后再派 Evaluator。** Leader 运行必要验证，提供原话、纠正、修订计划、实际 diff、读取范围、验证结果及完成声明。Evaluator 按共用核验原则追真实行为，检查要求弱化、遗漏、计划与实际偏离、假设混写及声称已做却无证据，只向 Leader 回报。
@@ -79,7 +83,6 @@ Leader 派发时提供裁剪过的 `Context Bootstrap`，用 `Read Scope Ack` �
 ```text
 AGENTS.md                          # Codex / AGENTS.md-aware tools 入口
 CLAUDE.md                          # Claude Code 入口，与 AGENTS.md 同步
-workflow/audit-first.md            # 根因审计优先流程
 docs/
   README.md                        # docs 入口地图
   workflow/                        # 普通开发、独立 evaluator、Team Loop、docs maintenance
@@ -96,7 +99,7 @@ docs/
 
 升级流程按 [`UPDATE_MANIFEST.md`](./UPDATE_MANIFEST.md) 的 ownership 策略执行：
 
-- **workflow kernel**：清单内的普通开发 / Team Loop 内核及 `workflow/audit-first.md` 原地替换旧版文件；按 `remove-workflow` 清单删除退役 planner schema 等精确文件，不生成 `.new`，并清理旧升级遗留的 workflow `.new` 文件。
+- **workflow kernel**：按清单原地替换普通开发与 Team Loop 内核，移除精确列出的退役文件及其旧 `.new` 副本。
 - **mixed files**：`AGENTS.md`、`CLAUDE.md`、`docs/README.md` 只替换 `codex-teammode:managed` block，保留 block 外的目标项目规则。
 - **target facts**：`docs/product/*`、`docs/architecture/*`、`docs/handoff/*`、`docs/plans/*`、`docs/evidence/*` 永不自动覆盖。
 
@@ -104,59 +107,22 @@ docs/
 
 ## 重要边界
 
-这个项目只安装 **工作流机制**，不安装任何业务事实。
-
-Bootstrap prompt 会要求目标 agent 不要复制本仓库的产品状态、计划、证据、架构结论或领域示例。普通实现事实仍以目标仓库的 current code 为首要证据；显式运行 `$docs-review` 时则按 claim 类型路由权限，业务意图、部署、人工验收和法务状态不能被“代码已实现”替代。
-
-## 核心概念
-
-- **普通工作流**：仅针对用户明确要求的机制变更或其工程方案；主 agent 澄清关键取舍后，在正式计划交付前派 fresh evaluator 轻量审查（含仅规划）；实现前回查原话，授权实现后再独立核验。明确遗漏直接修，事实补证，真实歧义交用户。
-- **Team Loop**：由 Leader 在同一个会话里调度 planner / generator / scout / evaluator。
-- **audit-first**：根因未锁定时先审计、写 evidence，再进入执行。
-- **Fact priority**：普通实现事实按 current code > topic docs > `docs/handoff/latest.md` > archive；`$docs-review` 对业务意图、部署、验收和法务 claim 使用各自权限。
-- **docs impact / docs-review**：前者是每轮增量微循环；后者是人工触发、Plan/Apply 两阶段的事实校正宏循环。
-- **docs-review v3 plan gate**：scanner schema 5 的每条 finding 都绑定 source fingerprint、结构化 resolution group、精确人工权限和批准文件；完整 audit scope 与每项 edit contract 同时冻结，机器 Claim ID / 稳定锚点不得写进业务 docs。
-- **docs-review sharded closure**：大型全文审查按预算分片，原始 auditor JSON 无损校验；所有 shard pass 后再由全新 synthesis auditor 做跨分片终审，任一不足先停在人类确认门。
-- **human_acceptance_required**：Team Loop 的人工验收停点，只有人类可以验收。
-
-更多术语见 [`CONCEPTS.md`](./CONCEPTS.md)。
+安装包提供**工作流规则和文档骨架**，项目事实以目标项目为来源。当前代码是实现事实的首要证据；业务意图、部署、人工验收和法务状态各有相应依据。
 
 ## Docs Review Skill
 
-[`skills/docs-review/`](./skills/docs-review/) 是随工作流包版本化、但只允许人工显式触发的
-项目事实校正 skill。它解决的是长期增量维护后常见的宏观偏差：同一业务事实散落在多份
-docs 中、current 与 candidate 混写、active/completed 生命周期错位、历史状态伪装成当前
-状态，以及实现、部署、验收、法务和发布被压缩成一个模糊的“已完成”。
+[`$docs-review`](./skills/docs-review/SKILL.md) 是项目 Wiki 的定期清理 skill，可通过安装器的 `--install-docs-review` 选项安装。日常 `docs impact` 写回本轮变化；`$docs-review` 由人显式启动，集中处理多轮积累的重复、过期说法和混入当前说明的历史记录。
 
-它和普通 `docs impact` 的分工是：
+**Agent 整理文档。** 自动扫描并对照代码、合同和已有证据，提出合并重复说明、替换过期结论、归档已验收计划的方案。每项长期事实归到一份主文档，其他位置留简短链接；有用的历史和证据按时间或版本保留。
 
-- `docs impact` 是每轮结束时维护受影响主落点的微循环。
-- `$docs-review` 是人工触发、跨文档对账和清理的宏循环，不会被普通 docs 修改自动调用。
+**人确认边界和关键事实。** 人确定清理范围和可改的文档，裁决需要人工确认的业务意图和历史验收。Agent 把结论锚定到相应证据或人工确认的具体范围，证据待补的事项保留为待核实。
 
-Codex 中推荐分两阶段使用：
+建议在每月复盘或里程碑收口时运行：
 
-```text
-Plan Mode:  $docs-review [scope=<domain-or-docs-path>]
-Default Mode: $docs-review apply
-```
+1. **Plan Mode**：`$docs-review` 只读检查整个 Wiki；`$docs-review scope=docs/product` 只检查指定目录及其直接依赖。Agent 给出清理方案、证据和待确认事项。
+2. **Default Mode**：人批准方案后，在同一任务运行 `$docs-review apply`。Agent 核对文档基线，只修改批准的 Markdown 文档，再由独立核验者复核清理结果。
 
-Plan Mode 只读 docs、current code、schema、tests 和已有 evidence，逐类判断事实权限并向人类
-询问无法由仓库证据唯一决定的业务含义。`apply` 只消费同一任务中已经批准、通过 schema-3
-计划门且 baseline 未漂移的方案，只修改批准列表中的 Markdown docs；它不会顺手修改业务
-代码、migration、测试、部署环境或外部系统。
-
-v3 为每条 scanner-schema-5 finding 记录 source fingerprint、结构化 disposition、目标语义、
-证据和精确人工权限，并冻结完整 `audit_scope_manifest` 与结构化 `edit_contracts`，验证
-canonical transfer、path rewrite 和 lifecycle move 的后置条件；自然语言业务含义交给独立
-审计，不把 Claim ID、audit ID 或 validator 专用锚点写进项目 docs。Apply 后，大型全文范围
-会按预算拆成多个 fresh shard auditor，原始 JSON 报告必须无损保存并通过严格校验。全部 shard
-pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical owner、跨分片 consumer 和
-原始 evidence。任一 deficiency 或协议错误都会立即停在人类确认门，不能在同一失败轮自行修复。
-
-最终 verdict 只有 `consistent`、`partially_consistent` 或 `blocked`；这些结果都不会自动推导
-`human_accepted`、`legal_accepted`、`deployed` 或 `released`。完整协议见
-[`SKILL.md`](./skills/docs-review/SKILL.md)，事实模型与独立审计角色见
-[`skills/docs-review/references/`](./skills/docs-review/references/)。
+完整协议见 [`SKILL.md`](./skills/docs-review/SKILL.md)，各类事实的依据见[事实模型](./skills/docs-review/references/fact-model.md)。
 
 ## 当前状态
 
@@ -197,49 +163,35 @@ pass 后，还要由一个全新的 synthesis auditor 重新核验 canonical own
 
 ### About
 
-Codex-teammode Workflow is a prompt-first workflow package for **Codex** and **Claude Code**. It is not a runtime framework. It is a portable set of Markdown rules, a bootstrap prompt, and a docs scaffold that helps solo developers and small teams run a consistent AI coding process.
+Codex-teammode Workflow provides installable collaboration rules, a bootstrap prompt, and a docs scaffold for **Codex** and **Claude Code**. The two execution modes share a project wiki.
 
-For explicit user-requested mechanism changes and their engineering plans, default development keeps planning and implementation in the main agent, clarifies consequential choices, and dispatches a fresh read-only evaluator for a lightweight review before formal plan delivery, including plan-only tasks. Implementation still checks the original request and corrections; another fresh evaluator reviews actual behavior and completion claims afterward. Explicit Team Loop uses a Leader coordinating the same two review stages with planner, generator, scout, and evaluator roles. Both use evidence appropriate to the claim and scoped docs impact checks. The optional explicit-only `$docs-review` skill remains separately installable.
+**Default execution** follows the project's existing process for routine work. Explicit requests to change a mechanism or plan that change enter [default development](#default-development-at-a-glance). [Team Loop](#team-loop-at-a-glance) is an explicit choice to have a Leader coordinate the agent team.
 
-The bundled `docs-review` skill is optional and installed separately through
-`install.sh --install-docs-review`; bootstrap does not modify personal skill directories.
-
-Docs Review v3 uses scanner schema 5 and a schema-3 plan gate: each deterministic finding
-binds its source fingerprint to scoped authority, intended semantics, evidence, and approved
-docs. The plan also freezes the complete audit scope and executable edit contracts. Audit-only
-IDs and validator phrases stay out of project documentation. After apply, large full-read
-scopes are split into bounded independent shards; raw reports are validated losslessly and a
-fresh synthesis auditor must pass before the final verdict. Any deficiency stops at a human
-approval gate. Unchanged passing shards may be safely reused by hash in a correction round,
-but synthesis is always fresh.
-
-Upgrade an existing target project by copying in the newer package and pasting [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md). Updates are ownership-based: workflow kernel files replace old workflow files in place, mixed files use managed blocks, and target project facts are never overwritten.
+The agent creates or merges the `docs/` **project wiki** during installation, with `docs/README.md` as its index. It [updates the affected docs](./workflow-kernel/docs/workflow/docs-maintenance.md) after development work. [`$docs-review`](#docs-review-at-a-glance) periodically clears accumulated duplicates and stale material.
 
 ### Default Development At A Glance
 
-Only the current user's explicit mechanism-change request or engineering plan for that change activates this workflow. Normal execution, recovery, troubleshooting, business plans / RequestSpecs and reports follow the existing runtime contract. Faults, file writes, or agent-authored repair plans do not authorize development; execution-only / no-review instructions take precedence. Standalone review stays within the user's requested scope.
+**Planning comes before implementation.** Open choices about implementation details or how much to deliver require **Grill-me** before plan delivery when they affect behavior, scope, cost, or acceptance. The main agent plans, implements, and verifies the change. Separate independent evaluators review the plan and the implementation against the original requirements and direct effects. Execution-only, plan-only, and standalone review requests follow the user's requested scope.
 
-**The main agent plans, implements, and runs focused checks for the authorized mechanism change. A fresh read-only evaluator reviews the engineering plan and implementation.**
+1. **Draft the plan.** Read the original request, governing contracts, and current implementation. Separate facts, confirmed decisions, and proposals. Match the plan's detail to the task.
+2. **Clarify with Grill-me.** Investigate facts and use existing decisions or explicit delegation. Present open choices that need a user decision in native question cards, with options, consequences, and a recommendation. Explain any tool restriction before falling back to text choices. Ask independent questions together, wait for actual answers before asking dependent questions, and record answers and sources in the same plan.
+3. **Review the plan.** Before delivery, a fresh read-only evaluator checks the plan against the user's original requirements and corrections for omissions, changed constraints, and the basis for key decisions. The main agent corrects confirmed gaps, investigates facts, and asks the user to settle genuine ambiguities. Plan-only work ends on delivery.
+4. **Implement within authorization.** Recheck the original request, corrections, and revised plan, then complete the implementation and its wiring and run directly relevant checks.
+5. **Review the implementation independently.** A different fresh read-only evaluator checks the original requirements, revised plan, actual diff, affected paths, validation evidence, and completion claims for omissions, work outside scope, and extra acceptance conditions. The main agent checks findings against the original requirements and direct effects, fixes confirmed gaps within authorization, investigates missing facts, and brings genuine choices back to the user.
 
-1. **Draft the plan.** Read the original request, governing contracts, and current code. Separate facts, confirmed decisions, and proposed choices.
-2. **Clarify with Grill-me.** Before delivering the plan, including plan-only work, cite existing decisions or explicit delegation and ask about consequential choices that remain open. Use native question cards (`request_user_input_async` when Codex exposes it), with options, consequences, and a recommendation. Ask independent questions together and wait for actual answers before asking dependent questions. Explain an actual tool restriction before using text choices. Recommendations and preselection are not answers. Record answers and their sources in the same plan.
-3. **Review the plan lightly.** Before formal delivery, a fresh read-only evaluator checks the original request, corrections, decisions, and plan for omissions, weakened constraints, unsupported choices, and assumptions stated as facts. Correct definite omissions directly, investigate factual gaps, and ask the user about genuine ambiguities through native questions. Recheck only findings and their effects. Plan-only work ends on delivery without implementation evidence.
-4. **Implement when authorized.** Recheck the original request, corrections, and revised plan, then implement and run directly relevant checks. Plan review neither replaces implementation authorization nor adds a whole-plan approval step.
-5. **Review behavior and claims.** Give another fresh evaluator the original requirements, revised plan, actual diff, consumers, validation evidence, and completion claims. Check missing behavior, plan/implementation differences, unsupported claims, and assumptions shared by code and tests. Route confirmed gaps to the main agent, factual gaps to investigation, and genuine business disputes to the user.
+For example, waiting for the current request to finish before exiting and adding active cancellation are different delivery scopes. If the choice is open, use Grill-me to explain the differences in behavior and cost.
 
-For example, an interface that lacks cancellation is a fact about the current code. Waiting for the current request or adding cancellation is a scope choice to ask about before finalizing the plan.
-
-Both review stages check the sources, reasoning, and scope of consequential rules and test expectations. Existing code, tests, and self-labelled confirmed docs do not independently justify a rule; reviewer findings also need original evidence and a concrete impact. Correct established errors within authorization, investigate missing facts, and ask the user about genuine business choices.
-
-In both workflows, `review_phase: plan / implementation` is separate from `review_kind: initial / recheck`. Complete the promised implementation, real wiring, and focused checks before its initial review. Rechecks close the original findings and examine only repairs and their direct effects; explain the causal link for any new blocking finding. Keep unchanged, already reviewed work closed, review independent additions only within their added scope, and end when the original requirements are met. Unrelated old issues and optional improvements do not block delivery or need to be cleared.
+Both development workflows distinguish `review_phase: plan / implementation` from `review_kind: initial / recheck`. Key rules, test expectations, and review findings need original evidence. Rechecks cover only the original findings, fixes, and their direct effects. A new blocking finding must explain its causal link to a fix. Review independent additions within their own scope and end when the original requirements are met.
 
 See [`default-workflow.md`](./workflow-kernel/docs/workflow/default-workflow.md) and [`independent-evaluator.md`](./workflow-kernel/docs/workflow/independent-evaluator.md).
 
 ### Team Loop At A Glance
 
-Start Team Loop only when the current user explicitly requests a mechanism change or its engineering plan and selects `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven delegation. **Leader coordinates and validates within the chat without editing files; Generator implements.** Subagents report to Leader.
+**The Leader splits the task across an agent team and automatically coordinates planning, implementation, and internal acceptance checks.** When a check finds a gap, the Leader sends it back for rework and a focused recheck. Once every acceptance criterion assigned to the team in the plan passes, the Leader hands the result and evidence to the user for final acceptance. The team handles basic errors before handoff.
 
-1. **Dispatch Planner first.** The read-only Planner returns the goal, allowed and forbidden scope, a proposed approach, and review focus. Use [audit-first](./workflow-kernel/workflow/audit-first.md) when the cause is still unknown.
+Start Team Loop when the current user explicitly requests a mechanism change or its engineering plan and selects `@team-loop`, `Team Loop`, `teamloop`, or Leader-driven delegation. The Leader coordinates handoffs and validation within the chat. The Generator implements, and each subagent reports to the Leader.
+
+1. **Dispatch Planner first.** The read-only Planner returns the goal, allowed and forbidden scope, a proposed approach, and review focus.
 2. **Review the plan before dispatch.** Leader gives a fresh Evaluator the relevant user quotes, corrections, decision sources, and plan. Definite omissions return to Planner; agents investigate factual gaps; Leader asks the user about genuine choices. Plan-only work ends on delivery. For authorized implementation, `plan-gated` waits for plan approval and `auto-execute` adds no approval step. Generator still reads the original request, revised plan, and current code.
 3. **Add Scout on demand.** Generator sends a Scout Request to Leader. If approved, a read-only Scout returns evidence to Leader, who curates an Evidence Pack and hands it back to Generator.
 4. **Validate and review implementation.** Leader sends original quotes and corrections, the revised plan, actual diff, read scope, results, and completion claims to another fresh Evaluator. It checks requirements against real behavior and reports only to Leader, using the shared review criteria.
@@ -249,22 +201,21 @@ Leader sends a scoped Context Bootstrap and checks each role's Read Scope Ack. P
 
 See [`team-loop.md`](./workflow-kernel/docs/workflow/team-loop.md) for the dispatch protocol, trigger template, and rework criteria, and [`team-loop-core.md`](./workflow-kernel/docs/workflow/team-loop-core.md) for the minimal context.
 
+### Updating An Existing Project
+
+Copy in the newer package and paste [`UPDATE_PROMPT.md`](./UPDATE_PROMPT.md). Updates replace the workflow kernel in place, remove the exact retired files listed in the [update manifest](./UPDATE_MANIFEST.md), and preserve the target project's facts.
+
 ### Docs Review At A Glance
 
-[`skills/docs-review/`](./skills/docs-review/) is an explicit-only macro workflow for
-reconciling project facts after incremental documentation has accumulated duplication, stale
-state, lifecycle leakage, or conflicting business meaning. It complements the per-turn
-`docs impact` micro loop and is never invoked automatically by routine documentation edits.
+[`$docs-review`](./skills/docs-review/SKILL.md) is an optional skill for periodic project wiki cleanup, installed with the `--install-docs-review` option. Routine `docs impact` records changes from each task. A person starts `$docs-review` to address duplicates, stale claims, and historical material mixed into current docs.
 
-Run `$docs-review [scope=<domain-or-docs-path>]` in Plan Mode for a read-only audit and human
-arbitration, then run `$docs-review apply` in Default Mode only after the same task has an
-approved schema-3 plan and an unchanged baseline. Apply is docs-only: it does not change
-business code, migrations, tests, deployments, or external systems.
+**The agent organizes the wiki.** It scans the docs, checks code, contracts, and evidence, then proposes merging duplicates, updating stale claims, and archiving accepted plans. Each lasting fact has one owning doc, with brief links elsewhere and useful history kept with its date or version.
 
-Version 3 binds every scanner-schema-5 finding to an exact source fingerprint, structured
-disposition, evidence, intended semantics, and scoped authority. It also closes the complete
-audit scope and validates executable edit contracts for transfers, path rewrites, and moves.
-Post-apply closure uses bounded fresh shard auditors, losslessly validated raw JSON reports,
-and a new synthesis auditor for cross-shard consumers and original evidence. Any deficiency
-or protocol failure stops at a human approval gate. See the complete contract in
-[`skills/docs-review/SKILL.md`](./skills/docs-review/SKILL.md).
+**A person confirms the scope and key facts.** They confirm which docs can change and settle questions of business intent or historical acceptance. The agent ties each conclusion to its evidence or the scope of the human decision, and marks open facts for verification.
+
+A monthly review or the end of a milestone is a good time to start:
+
+1. **Plan Mode**: `$docs-review` reviews the whole wiki read-only, and `$docs-review scope=docs/product` covers one directory and its direct dependencies. The agent presents a cleanup plan, evidence, and questions.
+2. **Default Mode**: After approval, `$docs-review apply` runs in the same task, checks the baseline, and edits only approved Markdown files. An independent reviewer verifies the result.
+
+The [skill protocol](./skills/docs-review/SKILL.md) and [fact model](./skills/docs-review/references/fact-model.md) give the full rules.
