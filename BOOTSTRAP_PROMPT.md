@@ -22,7 +22,6 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
 - Explicit Team Loop: a user-requested mechanism change plus a current Team Loop prompt trigger; Leader + planner / generator / scout / evaluator
   - planner / scout may be reused with freshness checks; generator / evaluator are fresh per round
   - Leader dispatches lightweight plan review before plan delivery and implementation review after authorized changes, preserving relevant user quotes and corrections. Plan-only delivery does not require Generator results or authorize implementation
-- audit-first evidence flow
 - docs impact check
 - synchronized workflow routing and docs-maintenance guidance in `AGENTS.md` and `CLAUDE.md`, with procedures in `docs/workflow/`
 
@@ -63,7 +62,6 @@ First read:
 - `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/scout.md`
 - `<workflow-package>/workflow-kernel/docs/workflow/team-loop-roles/evaluator.md`
 - `<workflow-package>/workflow-kernel/docs/workflow/docs-maintenance.md`
-- `<workflow-package>/workflow-kernel/workflow/audit-first.md`
 
 Then inspect the target repo:
 
@@ -96,10 +94,7 @@ Then inspect the target repo:
    - `docs/workflow/team-loop-roles/evaluator.md`
    - `docs/workflow/docs-maintenance.md`
 
-4. Create or merge:
-   - `workflow/audit-first.md`
-
-5. Create missing docs scaffold from `docs-structure-template/`, but keep placeholders generic:
+4. Create missing docs scaffold from `docs-structure-template/`, but keep placeholders generic:
    - `docs/product/current-state.md`
    - `docs/product/active-directions.md`
    - `docs/architecture/system-map.md`
@@ -112,16 +107,16 @@ Then inspect the target repo:
    - `docs/plans/completed/README.md`
    - `docs/evidence/README.md`
 
-6. Rewrite `docs/README.md` for the target repo.
+5. Rewrite `docs/README.md` for the target repo.
    - Keep the same role as an entry map.
    - Replace generic routes, modules, domains, and validation examples with target repo facts.
    - If target facts are unknown, write `TBD after target code audit` rather than guessing.
 
-7. Adapt validation commands.
+6. Adapt validation commands.
    - Replace generic command placeholders with target project commands.
    - If unknown, write placeholders and mark `HUMAN_CHECK_REQUIRED`.
 
-8. Run a docs impact check for this install.
+7. Run a docs impact check for this install.
 
 ## Required Output
 

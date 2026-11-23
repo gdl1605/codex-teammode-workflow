@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="36" viewBox="0 0 420 36" role="img" aria-labelledby="title">
+  <title id="title">普通开发流程</title>
+  <rect width="420" height="36" fill="#fff"/>
+  <text x="8" y="24" font-family="system-ui, 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif" font-size="17" fill="#000">计划 → Grill-me（取舍待定时） → 实现 → 独立审查</text>
+</svg>

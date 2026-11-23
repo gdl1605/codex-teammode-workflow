@@ -1,6 +1,6 @@
 # Team Loop Workflow
 
-> 最后更新时间：2026-11-19
+> 最后更新时间：2026-11-23
 > 适用范围：需要由 Leader 主线程调度多个独立 subagent 的类 team-mode 闭环
 > 本文主职责：定义 plan-gated / auto-execute 两种模式、角色边界、通信规则、Context Bootstrap、Read Scope Ack、scout 支援机制和人工验收停点
 > 推荐下一跳：`team-loop-core.md`、`team-loop-roles/`
@@ -334,7 +334,6 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
   - docs/workflow/independent-evaluator.md（仅 evaluator，规划 / 实现共用核验原则）
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
-  - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
 - implementation_fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
@@ -361,8 +360,7 @@ Leader 每次派生 fresh planner / generator / scout / evaluator 时，必须�
 - `task_docs` 由 Leader 按 `docs/README.md` 的入口地图裁剪，不能要求 subagent 盲读全量 `docs/`。
 - Team Loop 的 planner subagent 规则来自 `team-loop-core.md`、本完整规范和 `team-loop-roles/planner.md`。
 - 允许 Leader 缩小专题 docs 范围，但必须说明裁剪理由，并要求 subagent 在 `Read Scope Ack` 中列出未读但可能相关的材料。
-- `handoff_or_evidence` 按阶段选择；根因未锁、高风险或审计回流时优先引用 `docs/evidence/<feature>-audit.md` 或 root `workflow/audit-first.md` 的审计产物。
-- `workflow/audit-first.md` 只有在根因未锁、高风险或审计回流时才进入 Context Bootstrap；普通 Team Loop 不默认读取。
+- `handoff_or_evidence` 按阶段引用与本轮任务直接相关的交接记录和已有证据。
 - Evidence Pack 不能替代 generator 自己读取 current code。
 - Evaluation Bundle 是 evaluator 的叙事入口；actual diff、referenced files、required docs 是 evaluator 可读取的核验材料。
 
@@ -595,7 +593,6 @@ context_bootstrap:
   - docs/workflow/independent-evaluator.md（仅 evaluator）
 - conditional_workflow_docs:
   - docs/workflow/team-loop.md（需要完整规范核对时）
-  - workflow/audit-first.md（仅根因未锁 / 高风险 / 审计回流时）
 - task_docs:
 - handoff_or_evidence:
 - implementation_fact_priority: current code > topic docs > handoff/latest.md > handoff/archive
@@ -621,7 +618,6 @@ team_loop:
 - generator 如审计范围过大，只能向 Leader 提交 Scout Request
 - scout 只读收集线索，只回 Leader
 - Leader 整理 Evidence Pack 后再交给 generator
-- audit-first 场景必须复用 workflow/audit-first.md 的必读与 evidence 回流骨架
 - Leader 跑验证
 - Leader 在正式计划交付前派 fresh evaluator 轻量核对原要求、纠正与计划；明确遗漏回 planner，真实歧义沿原生卡片交用户
 - Leader 在实现后再派 fresh evaluator 独立核验实际行为与完成声明

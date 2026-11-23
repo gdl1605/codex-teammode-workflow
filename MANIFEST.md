@@ -4,6 +4,8 @@
 
 Codex-teammode Workflow is a prompt-first workflow package for Codex and Claude Code. Default development keeps planning and implementation in the main agent, requires source-backed review of consequential choices before formal plan delivery (including plan-only tasks), clarifies unconfirmed choices through native question cards and actual user answers, and dispatches a fresh read-only evaluator after authorized implementation. Team Loop remains an explicit opt-in. The package ships bootstrap instructions and a docs scaffold, not product facts.
 
+Both READMEs use the packaged flow diagrams in `assets/`.
+
 ## Included Workflow Kernel
 
 ```text
@@ -23,7 +25,6 @@ workflow-kernel/
   docs/workflow/team-loop-roles/scout.md
   docs/workflow/team-loop-roles/evaluator.md
   docs/workflow/update-policy.md
-  workflow/audit-first.md
 ```
 
 `AGENTS.md` and `CLAUDE.md` share a short managed entry for workflow triggers, links, and docs maintenance. The ordinary development and Team Loop procedures live in `docs/workflow/`. Team Loop dispatch uses the current tool's primary entry file instead of reading both by default.
@@ -111,7 +112,7 @@ The target agent must adapt these before treating the workflow as installed:
 
 Workflow updates use `UPDATE_MANIFEST.md` and `UPDATE_PROMPT.md`.
 
-- `replace-workflow`: workflow kernel files listed in the update manifest and `workflow/audit-first.md` are replaced in place.
+- `replace-workflow`: replace workflow kernel files listed in the update manifest in place.
 - `remove-workflow`: exact retired files listed in `UPDATE_MANIFEST.md` are removed; other target files are preserved.
 - `managed-block`: mixed files such as `AGENTS.md`, `CLAUDE.md`, and `docs/README.md`.
 - `create-if-missing`: scaffold placeholders from `docs-structure-template/`.

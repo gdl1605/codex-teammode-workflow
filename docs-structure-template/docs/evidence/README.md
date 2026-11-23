@@ -1,11 +1,11 @@
 # Evidence
 
-Read-only audit evidence and verification notes go here.
+Project evidence and verification notes go here.
 
 Recommended naming:
 
 ```text
-docs/evidence/<feature>-audit.md
+docs/evidence/<feature>-evidence.md
 docs/evidence/<feature>/README.md
 ```
 
@@ -16,4 +16,3 @@ Evidence should separate:
 - inferences
 - unknowns
 - human checks required
-- execution preconditions

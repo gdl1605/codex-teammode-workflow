@@ -16,6 +16,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Review the authority, reasoning, and scope of consequential rules and test expectations, including the reviewer's own findings. Existing code, tests, or self-labelled confirmed documents do not establish authorization, and same-algorithm replay does not independently prove business semantics.
 - Carry rule and expectation sources through the existing Spec, Review Request, and Team Loop Evaluation Bundle. Verify findings before acting, investigate missing evidence, and reserve user arbitration for genuine business choices or contract conflicts; preserve existing validation roles and permissions.
 
+### Removed
+
+- Retire the standalone audit-first workflow from bootstrap and Team Loop dispatch. Upgrades remove the exact old workflow file and its stale `.new` copy.
+
 ## [0.5.0] - 2026-11-05
 
 ### Added

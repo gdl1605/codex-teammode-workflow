@@ -52,7 +52,7 @@ Then inspect the target repo:
 - `docs/README.md`, if present
 - `docs/workflow/`, if present
 - `docs/planner/`, if present
-- `workflow/audit-first.md`, if present
+- Exact retired paths listed in `UPDATE_MANIFEST.md`, if present
 - `docs/product/`, `docs/architecture/`, `docs/handoff/`, `docs/plans/`, `docs/evidence/` only to confirm they exist; do not rewrite their facts
 
 ## Update Procedure
@@ -80,7 +80,7 @@ Then inspect the target repo:
 
 4. For `remove-workflow` files:
    - Remove only the exact retired targets listed in `UPDATE_MANIFEST.md` and their stale `.new` siblings.
-   - Preserve any other files; do not recursively remove `docs/planner/`.
+   - Preserve every other file and the containing directories.
    - Drop retired paths from the marker's `managed_files`.
 
 5. For `managed-block` files:

@@ -55,7 +55,6 @@ Everything outside the block belongs to the target project and must be preserved
 | `workflow-kernel/docs/workflow/team-loop-roles/scout.md` | `docs/workflow/team-loop-roles/scout.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop-roles/evaluator.md` | `docs/workflow/team-loop-roles/evaluator.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/update-policy.md` | `docs/workflow/update-policy.md` | `replace-workflow` |
-| `workflow-kernel/workflow/audit-first.md` | `workflow/audit-first.md` | `replace-workflow` |
 | `docs-structure-template/docs/product/current-state.md` | `docs/product/current-state.md` | `create-if-missing` |
 | `docs-structure-template/docs/product/active-directions.md` | `docs/product/active-directions.md` | `create-if-missing` |
 | `docs-structure-template/docs/architecture/system-map.md` | `docs/architecture/system-map.md` | `create-if-missing` |
@@ -71,14 +70,12 @@ Everything outside the block belongs to the target project and must be preserved
 
 ## Retired Workflow Files
 
-The old normal-workflow planner schemas and round templates remain retired. The new
-lightweight default uses `default-workflow.md` and `independent-evaluator.md`; it does not
-restore these old paths. On update, remove these exact old package-owned files and their
-stale `.new` siblings, and drop their entries from `managed_files`. Preserve any other files
-in `docs/planner/`.
+On update, remove the exact package-owned files below and their stale `.new` siblings.
+Drop their entries from `managed_files` and preserve all other files in those directories.
 
 | Target path | Strategy |
 |---|---|
+| `workflow/audit-first.md` | `remove-workflow` |
 | `docs/planner/planner-system.md` | `remove-workflow` |
 | `docs/planner/planner-input-template.md` | `remove-workflow` |
 | `docs/planner/planner-output-schema.md` | `remove-workflow` |
