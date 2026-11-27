@@ -31,6 +31,8 @@ Use ownership-based updates:
 - Existing explicit target restrictions on permissions, roles, and subagents still apply; an evaluator request alone does not start Team Loop.
 - Update default and Team Loop dispatch to distinguish `review_kind: initial / recheck` from `review_phase: plan / implementation`. Initial implementation review follows completed promises and wiring; recheck only original findings, repairs, and direct effects. New blocking findings need original grounds and a causal link to the repair. Do not reopen unchanged reviewed work; review independent additions only within their added scope, and stop at the original requirements without clearing unrelated issues or optional suggestions.
 - Preserve the native question-card interaction for Grill-me: use `request_user_input_async` when exposed and permitted by its current schema/mode; wait for actual user answers before updating decisions and asking dependent choices. A recommendation, preselected option, tool return, closed request, or timeout is not an answer. Text choices are for an actual tool limitation, not the default when native cards are available.
+- Preserve mandatory Grill-me before engineering-plan review and delivery, including plan-only work. After asynchronous questions, keep the current turn active with actual interruptible wait calls while answers remain pending; check incoming user messages on each wake-up. Actual answers or an explicit user cancellation, pause, or task change determine the next action. Pending status belongs in commentary and final belongs at delivery or an explicit user ending.
+- Update the workflow-owned `scripts/codex-workflow/check_grillme.py` from the manifest. Require its real-session record check before plan review. Missing native question records require a concrete explanation and decision sources; pending answers keep the current turn waiting. The evaluator checks these prerequisites before reviewing plan content.
 - Do not create `.new` files for workflow-owned files. The goal is to replace old workflow files, not keep old and new copies side by side.
 - If a mixed file cannot be updated safely because managed markers are missing, report the required managed block insertion instead of creating `.new`.
 - Treat `package-only` skills as package content. Do not install or overwrite a personal/global skill directory during target-project update.
@@ -88,7 +90,7 @@ Then inspect the target repo:
      `<!-- codex-teammode:managed:start ... -->`
      and
      `<!-- codex-teammode:managed:end -->`
-   - For `AGENTS.md` and `CLAUDE.md`, replace the old entry content with the source block's triggers, links, and docs maintenance guidance. Install workflow procedures through the separate `docs/workflow/` entries in the manifest.
+   - For `AGENTS.md` and `CLAUDE.md`, replace the old entry with the complete source managed block, including mandatory Grill-me, current-turn wait, and the full inline default-development procedure. Retain the corresponding `docs/workflow/` topic copies and keep inline links relative to the target root.
    - Preserve all text outside the block.
    - If markers are missing, do not rewrite the file and do not create `.new`. Report the exact managed block that should be inserted or ask for human review.
 

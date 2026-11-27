@@ -46,6 +46,7 @@ Everything outside the block belongs to the target project and must be preserved
 | `workflow-kernel/docs/README.md` | `docs/README.md` | `managed-block` |
 | `workflow-kernel/docs/workflow/docs-maintenance.md` | `docs/workflow/docs-maintenance.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/default-workflow.md` | `docs/workflow/default-workflow.md` | `replace-workflow` |
+| `workflow-kernel/scripts/codex-workflow/check_grillme.py` | `scripts/codex-workflow/check_grillme.py` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/independent-evaluator.md` | `docs/workflow/independent-evaluator.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop-core.md` | `docs/workflow/team-loop-core.md` | `replace-workflow` |
 | `workflow-kernel/docs/workflow/team-loop.md` | `docs/workflow/team-loop.md` | `replace-workflow` |
@@ -84,8 +85,9 @@ Drop their entries from `managed_files` and preserve all other files in those di
 | `docs/workflow/session-startup.md` | `remove-workflow` |
 
 Replace the managed blocks in `AGENTS.md` and `CLAUDE.md` with the corresponding source blocks:
-workflow triggers, links, and docs maintenance guidance. Workflow procedures are installed separately in
-`docs/workflow/`; `docs/README.md` remains the project docs index. Preserve all project-owned content
+workflow triggers, mandatory Grill-me and current-turn wait, the complete inline default-development
+procedure, and docs maintenance guidance. The matching topic copies stay in `docs/workflow/`;
+`docs/README.md` remains the project docs index. Preserve all project-owned content
 outside managed blocks, including role, permission, and subagent restrictions. Report any obsolete
 workflow routing outside those blocks for manual migration.
 

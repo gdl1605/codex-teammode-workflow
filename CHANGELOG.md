@@ -6,9 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-11-27
+
 ### Changed
 
-- Keep the managed root agent entries short: workflow triggers, links, and docs maintenance. Install the ordinary and Team Loop procedures under `docs/workflow/`, replacing old managed entry text while preserving project-owned rules.
+- Put the complete default-development procedure directly in the managed `AGENTS.md` / `CLAUDE.md` entries and the source repository's root `AGENTS.md`. Preserve that text during installation and upgrade alongside the corresponding topic copies and project-owned rules.
+- Require Grill-me before engineering-plan review and delivery. After asynchronous native questions, keep the current turn active through actual interruptible waits until user answers or explicit task steering arrives; replace the former instruction to end the turn while answers remain pending.
+- Check real native-question calls and cited user answers with the workflow-owned `check_grillme.py` before plan review. Missing question records require an explicit explanation and original decision sources, checked by the independent evaluator before plan content.
 - Distinguish initial review from recheck in both default development and Team Loop, across shared evaluator rules, dispatch bundles, role capsules, and entry docs. Complete the promised implementation and wiring before initial review; recheck original findings, repairs, and direct effects rather than reopening unchanged work.
 - Require original grounds and a repair-to-impact causal link for new blocking recheck findings. Review independent additions only within their added scope, keep unrelated issues and optional suggestions non-blocking, and end at the original requirements instead of clearing every suggestion or using a fixed review-round limit.
 - Activate development workflows only for the current user's explicit mechanism-change request or its engineering plan. Normal execution, recovery, troubleshooting, business plans and reports do not self-trigger Grill-me or development review, even after a fault or an agent-authored repair proposal.

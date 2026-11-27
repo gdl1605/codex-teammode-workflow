@@ -24,7 +24,7 @@ Leader 进入 Team Loop 时读取：
 - 复用 planner / scout 时附带 cache manifest、freshness check、本轮问题和 scope。
 - 核验每个 subagent 的 `Read Scope Ack`。
 - 向 planner、generator 和 evaluator 提供相关用户原话、后续纠正、有效合同和决定来源；裁剪范围不能静默丢掉约束或以自己的摘要取代原话。
-- 关键取舍未定时复用 `../default-workflow.md` 的 Grill-me / 原生提问卡片规则；仅复用问答方式，不启用普通工作流的实现角色。实际答案回写同一份计划。
+- 工程方案送审和定稿前强制执行根入口内嵌的 Grill-me / 原生提问卡片规则，专题副本为 `../default-workflow.md`。异步发卡后在当前回合实际 wait 到用户回答，再回写同一份计划并推进；仅复用澄清和等待方式，Team Loop 的实现角色沿本模式执行。
 - 正式计划交付前派 fresh evaluator 轻量审查；明确缺口回 planner 修订 handoff，事实先补证，真实歧义交用户。修正只复核发现及直接影响。
 - 将 Scout 返回的线索和本轮相关证据整理成 Leader Evidence Pack。
 - 跑验证命令并整理 validation output。

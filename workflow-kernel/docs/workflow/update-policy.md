@@ -1,6 +1,6 @@
 # Workflow Update Policy
 
-> 最后更新时间：2026-11-23
+> 最后更新时间：2026-11-27
 > 适用范围：把新版 Codex-teammode Workflow 覆盖到已安装旧工作流的目标项目
 > 本文主职责：定义哪些内容可覆盖、哪些只能合并、哪些永不覆盖
 > 推荐下一跳：目标项目中的 `codex-teammode-workflow/UPDATE_MANIFEST.md`
@@ -25,6 +25,7 @@ docs/workflow/team-loop-core.md
 docs/workflow/team-loop.md
 docs/workflow/team-loop-roles/**
 docs/workflow/update-policy.md
+scripts/codex-workflow/check_grillme.py
 ```
 
 它们使用 `replace-workflow`：目标文件存在时直接原地替换为新版包里的文件；目标文件缺失时直接创建。
@@ -50,7 +51,7 @@ docs/README.md
 
 只能替换 managed block 中的工作流内容，不能覆盖 block 外的目标项目内容。
 
-根入口的 managed block 使用源模板中的触发条件、文档指针和知识库维护约定，工作流正文由 `docs/workflow/` 提供。
+根入口的 managed block 完整采用源模板：触发条件、强制 Grill-me、当前回合持续 wait、普通工作流完整正文和知识库维护约定。安装与升级保留全部内嵌正文；`docs/workflow/` 保存对应专题副本，内嵌链接使用目标项目根目录相对路径。
 block 外的项目规则（包括角色、权限和 subagent 限制）原样保留；如有旧流程正文，只报告人工迁移说明。
 
 managed block 格式：

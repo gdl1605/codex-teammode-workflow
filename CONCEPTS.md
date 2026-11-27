@@ -15,6 +15,10 @@ authorized implementation and focused checks.
 Grill-me uses native structured question cards: `request_user_input_async` when exposed,
 following the tool's current schema and mode restrictions. Independent questions share a
 round; actual user answers update the same plan before dependent questions are asked.
+The Grill-me decision check is mandatory before engineering-plan review and delivery.
+After an asynchronous question call, the current turn stays active through actual interruptible
+wait calls while answers remain pending. Each wake-up checks new user messages; actual answers
+or explicit cancellation, pause, or task changes determine continuation.
 Recommendations, preselected options, tool returns, closed requests, and elapsed time are
 not answers. Explain a real tool limitation before using numbered text choices instead.
 Facts, user decisions/contracts, agent assumptions, and unknowns stay distinct. The evaluator

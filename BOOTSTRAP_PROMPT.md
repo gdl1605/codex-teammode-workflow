@@ -23,7 +23,7 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
   - planner / scout may be reused with freshness checks; generator / evaluator are fresh per round
   - Leader dispatches lightweight plan review before plan delivery and implementation review after authorized changes, preserving relevant user quotes and corrections. Plan-only delivery does not require Generator results or authorize implementation
 - docs impact check
-- synchronized workflow routing and docs-maintenance guidance in `AGENTS.md` and `CLAUDE.md`, with procedures in `docs/workflow/`
+- synchronized mandatory workflow text in `AGENTS.md` and `CLAUDE.md`, including the complete default-development procedure; topic copies remain in `docs/workflow/`
 
 ## Hard Rules
 
@@ -40,6 +40,8 @@ Install and adapt Codex-teammode Workflow so this target project can use the sam
 - Both workflows use `independent-evaluator.md` for review criteria: check omitted or weakened requirements, unauthorized choices, assumptions promoted to facts, plan/implementation differences, and claims beyond evidence. Confirmed omissions go to the responsible agent for correction; agents investigate factual gaps; genuine intent or contract disputes go to the user through native questions. Keep plan review scoped and do not require future implementation evidence.
 - Keep `review_phase: plan / implementation` separate from `review_kind: initial / recheck` in both workflows and dispatch templates. Complete the promised implementation and wiring before initial implementation review. Recheck only original findings, repairs, and direct effects, require a causal link for new blocking findings, and keep unchanged reviewed work closed. Review independent additions only within their added scope; stop when original requirements are met, without clearing unrelated issues or optional suggestions.
 - Install Grill-me as a native-question-card interaction: use `request_user_input_async` when exposed, following current schema/mode restrictions; ask independent choices together, consume actual user answers, update the same plan, then ask dependent choices. Recommendations, preselection, tool returns, and elapsed time do not confirm a decision. Explain a real tool limitation before text fallback; do not add a WebSocket service.
+- Make Grill-me mandatory before engineering-plan review and delivery, including plan-only work. Trace existing decisions or delegation to their sources and obtain actual answers for new consequential choices. After an asynchronous question call, keep the current turn active and use the available interruptible wait tool while answers remain pending; on each wake-up check incoming user messages and continue waiting as needed. Continue dependent work after actual answers, or follow an explicit user cancellation, pause, or task change. Use commentary for pending status and final for actual delivery or an explicit user ending.
+- Install the workflow-owned `workflow-kernel/scripts/codex-workflow/check_grillme.py` as `scripts/codex-workflow/check_grillme.py`. Before plan review, run it against the real current session log. Missing native question records require the agent's concrete explanation and decision sources; pending answer evidence keeps the current turn waiting. The independent evaluator checks the record result and explanation before reviewing plan content.
 - Enable Team Loop only on an explicit user prompt trigger. Requesting only an independent evaluator does not trigger Team Loop or prohibit the main agent from implementing.
 - Installing, discussing, quoting, or editing Team Loop rules does not itself start a Team Loop.
 
@@ -76,13 +78,14 @@ Then inspect the target repo:
 
 1. Create or merge `AGENTS.md`.
    - Use the managed `agent-entry` block from `workflow-kernel/AGENTS.md`. Replace any existing managed entry block in place, or add one if it is missing.
-   - Preserve target-specific rules outside the block. Keep the block to triggers, workflow links, and docs maintenance guidance; put workflow procedures in the docs listed below. Report any unmarked legacy workflow prose for manual migration.
+   - Preserve target-specific rules outside the block. Copy the complete managed block, including mandatory Grill-me, current-turn wait, and the full inline default-development procedure. Keep inline links relative to the target root. Retain the topic copies below and report any unmarked legacy workflow prose for manual migration.
    - Normalize handoff paths consistently. Prefer `docs/handoff/latest.md` unless the target repo already has another clear convention.
 
 2. Create or merge `CLAUDE.md`.
    - Apply the same managed-block strategy with `workflow-kernel/CLAUDE.md`. Keep the shared entry in sync with `AGENTS.md` and preserve any Claude Code-specific rules outside the block.
 
 3. Create or merge workflow docs:
+   - Copy `workflow-kernel/scripts/codex-workflow/check_grillme.py` to the workflow-owned target `scripts/codex-workflow/check_grillme.py`.
    - `docs/workflow/default-workflow.md`
    - `docs/workflow/independent-evaluator.md`
    - `docs/workflow/team-loop-core.md`

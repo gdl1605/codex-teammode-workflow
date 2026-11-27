@@ -1,6 +1,6 @@
 # docs 索引
 
-<!-- codex-teammode:managed:start scope=docs-index version=0.5.0 -->
+<!-- codex-teammode:managed:start scope=docs-index version=0.5.1 -->
 
 > 最后更新时间：2026-11-23
 > 适用范围：整个 `docs/` 目录的阅读入口与分工说明
@@ -10,6 +10,8 @@
 ## 先读顺序
 
 本索引是项目资料地图，按任务读取，不要求全量读取。正常运行、恢复、排障及业务操作计划 / 报告产出沿项目原流程，不触发本包开发工作流。只有用户本轮明确要求机制变更或其工程方案，才适用普通开发的澄清和独立核验；Team Loop 还须用户本轮明确指定。
+
+普通工作流完整正文直接内嵌在项目根 `AGENTS.md` / `CLAUDE.md`。工程方案送审和定稿前强制完成 Grill-me；异步发卡后保持当前回合并实际 wait 到用户回答。下方专题链接用于定位同一份规则的对应章节。
 
 1. `handoff/latest.md`
 2. `product/current-state.md`

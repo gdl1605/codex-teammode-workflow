@@ -106,7 +106,7 @@ auto-execute 不是跳过 Team Loop 的 planner subagent，也不是让 Leader �
 
 两种模式均在关键取舍已有依据或收到实际回答后、正式计划交付前，派 fresh 只读 evaluator，以 `review_phase: plan` 轻量核对原要求、后续纠正、有效合同与计划。共用判断原则见 `independent-evaluator.md`；只按需查计划依赖的关键事实，不展开实现审计或运行回归。
 
-Leader 提供相关原话及纠正，不能只交 planner 或自己的总结。明确遗漏、弱化约束或错误转译交 planner 修订同一份 handoff；事实先补证；不同解释会改变行为、范围或验收时，Leader 复用 `default-workflow.md` 的 Grill-me / 原生卡片方式提问，实际回答回写计划。这只复用澄清规则，不启动普通工作流或转移实现职责。修正后由 fresh evaluator 只复核发现及直接影响，不因每次草案编辑全量重审。
+Leader 提供相关原话及纠正，不能只交 planner 或自己的总结。明确遗漏、弱化约束或错误转译交 planner 修订同一份 handoff；事实先补证；不同解释会改变行为、范围或验收时，Leader 复用根入口内嵌的强制 Grill-me / 原生卡片与当前回合 wait 规则，专题副本为 `default-workflow.md`。实际回答回写计划后推进。这只复用澄清和等待规则，Team Loop 的实现职责沿本模式执行。修正后由 fresh evaluator 只复核发现及直接影响，不因每次草案编辑全量重审。
 
 仅规划时，在上述核验后交付计划并结束，注明未实施及实际核验范围；不派 generator，不要求实现 diff、generator 结果或实现验证，也不把规划通过称为实现通过。Leader、planner 和 evaluator 仍不改工程文件；尚无获授权写入角色时，按 `docs-maintenance.md` 在聊天中交付同一份计划，不为落盘提前启动实现。授权实施时，generator 仍回查原话、纠正和修订计划，实现后再派 fresh evaluator；规划核验不能替代这两步。
 

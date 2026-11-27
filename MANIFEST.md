@@ -13,6 +13,7 @@ workflow-kernel/
   VERSION
   AGENTS.md
   CLAUDE.md
+  scripts/codex-workflow/check_grillme.py
   docs/README.md
   docs/workflow/docs-maintenance.md
   docs/workflow/default-workflow.md
@@ -27,9 +28,11 @@ workflow-kernel/
   docs/workflow/update-policy.md
 ```
 
-`AGENTS.md` and `CLAUDE.md` share a short managed entry for workflow triggers, links, and docs maintenance. The ordinary development and Team Loop procedures live in `docs/workflow/`. Team Loop dispatch uses the current tool's primary entry file instead of reading both by default.
+`AGENTS.md` and `CLAUDE.md` share a complete managed entry: workflow triggers, mandatory Grill-me, current-turn wait for pending answers, the full default-development procedure, and docs maintenance. Matching topic copies and conditional Team Loop procedures remain in `docs/workflow/`. The source repository's root `AGENTS.md` embeds the same default procedure with links to `workflow-kernel/docs/`. Team Loop dispatch uses the current tool's primary entry file instead of reading both by default.
 
 `VERSION`, `UPDATE_MANIFEST.md`, `UPDATE_PROMPT.md`, and `docs/workflow/update-policy.md` define the upgrade protocol for replacing old workflow installs without overwriting target project facts.
+
+The workflow-owned `scripts/codex-workflow/check_grillme.py` checks real session question calls and cited user-answer records before plan review. Missing question records require a concrete agent explanation and sources; the evaluator checks the explanation and decision meaning before reviewing plan content.
 
 ## Included Optional Skill
 
